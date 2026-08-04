@@ -1,0 +1,1 @@
+bd77f36656d19d58862614b24a62156505e17e31c6830c3c2e0381d1d5c7f0f1  /Applications/WorkBuddy.app/Contents/Resources/app.asar

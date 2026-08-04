@@ -1,0 +1,362 @@
+{
+  "source": {
+    "application": "/Applications/WorkBuddy.app",
+    "asar": "/Applications/WorkBuddy.app/Contents/Resources/app.asar",
+    "asar_unpacked": "/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked"
+  },
+  "destination": "/Users/x/code/workbuddy-cli/extracted-app",
+  "application_version": "5.3.8",
+  "asar_sha256": "bd77f36656d19d58862614b24a62156505e17e31c6830c3c2e0381d1d5c7f0f1",
+  "asar_header_size": 4751456,
+  "asar_header_json_size": 4751445,
+  "asar_data_base": 4751464,
+  "logical_header_bytes": 684401221,
+  "actual_extracted_bytes": 639576238,
+  "counts": {
+    "header_file_entries": 18019,
+    "extracted_files": 18009,
+    "missing_unpacked_files": 10,
+    "directories": 2427,
+    "packed_files": 17216,
+    "unpacked_files": 793,
+    "executable_files": 78,
+    "verified_packed_sha256_files": 17216,
+    "packed_integrity_mismatches": 0,
+    "unpacked_metadata_matches": 764,
+    "unpacked_metadata_differences": 29,
+    "files_without_integrity": 0
+  },
+  "packed_integrity_mismatches": [],
+  "missing_unpacked_files": [
+    {
+      "path": "cli/vendor/ripgrep/x64-win32/rg.exe",
+      "expected_size": 5407744,
+      "expected_sha256": "f162b54de2adfc72d78adb1dbada2dedda111ae0a5e2f6e9500f4f909664c5d2",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    },
+    {
+      "path": "cli/vendor/ripgrep/x64-win32/ripgrep.node",
+      "expected_size": 6965760,
+      "expected_sha256": "5315175fc2b13d8c1b77c8bf6bf6c724f6c58be9e93c4cd2fac77320b8d9038e",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    },
+    {
+      "path": "cli/vendor/ripgrep/x64-linux/rg",
+      "expected_size": 6597984,
+      "expected_sha256": "f401154e2393f9002ac77e419f9ee5521c18f4f8cd3e32293972f493ba06fce7",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    },
+    {
+      "path": "cli/vendor/ripgrep/x64-linux/ripgrep.node",
+      "expected_size": 5002216,
+      "expected_sha256": "64c2d622043f9c75e8121a2f62f2eb8e2b5289d4b24bf7b3d873f000b159127f",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    },
+    {
+      "path": "cli/vendor/ripgrep/x64-darwin/rg",
+      "expected_size": 5162504,
+      "expected_sha256": "923dcc25cab57d33f4e7dd0476d4b74a554401a38817e246a8d6101dcd51c50f",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    },
+    {
+      "path": "cli/vendor/ripgrep/x64-darwin/ripgrep.node",
+      "expected_size": 6138416,
+      "expected_sha256": "c0b043a1507e140487ec699ba4a8f9158df6cf83207116eaf1b2735bb19bb0f9",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    },
+    {
+      "path": "cli/vendor/ripgrep/arm64-linux/rg",
+      "expected_size": 5248072,
+      "expected_sha256": "717b20bd9176b6b81ecc9930d342cac9dfa3a129f194ea3923ac5a7fedad7ddf",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    },
+    {
+      "path": "cli/vendor/ripgrep/arm64-linux/ripgrep.node",
+      "expected_size": 4654360,
+      "expected_sha256": "45b787d7b3ca36c4cf9c0c3a7d92f5b182085f6bd88b942496fe772ff6e8e73b",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/build/node_gyp_bins/python3",
+      "expected_size": 33816,
+      "expected_sha256": "71468590282be18e2254f0896999f2e26933ceadfd35d1971c1225e661255ddc",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    },
+    {
+      "path": "node_modules/nunjucks/node_modules/fsevents/build/node_gyp_bins/python3",
+      "expected_size": 33816,
+      "expected_sha256": "71468590282be18e2254f0896999f2e26933ceadfd35d1971c1225e661255ddc",
+      "reason": "Referenced by the ASAR header but absent from this macOS arm64 installation."
+    }
+  ],
+  "unpacked_metadata_differences": [
+    {
+      "path": "resources/builtin-mcp-apps/agently-cli/bin/agently-cli",
+      "expected_size": 8492146,
+      "actual_size": 8510432,
+      "expected_sha256": "f38310c3625eecd01bb55fb98e377a47d00587b39cb20e48cdc9e65ea24a89f5",
+      "actual_sha256": "21fc26fdd1cf77625571826fbfd0f7584e59a2cee6f604dec5e087221d2fccbe",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "native/wechat-copydata-decoder/build/Release/wechat_copydata_decoder.node",
+      "expected_size": 51392,
+      "actual_size": 69664,
+      "expected_sha256": "bcca84ce39bda0c1c4d0b2e22f3acadf7e0525121262b7931207a44d39ab8b0c",
+      "actual_sha256": "5580fc7de4aac001e197de3893798d5f6b047bd2d048d63bf8b812396cbe6f08",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "cli/vendor/sandbox/5.3.3/sandbox-cli",
+      "expected_size": 3472704,
+      "actual_size": 3493024,
+      "expected_sha256": "129914a76c0742dd4bbe98a5879dfe62cfad07b7b0779d115d2553ca40778b3e",
+      "actual_sha256": "67dbc50512ca4fadfcd5247c78178126b1174d232a8bed63536352912282ea79",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "cli/vendor/ripgrep/arm64-darwin/rg",
+      "expected_size": 6482768,
+      "actual_size": 6501024,
+      "expected_sha256": "0c299e894f59350379217e52cee06bf86c2606f6193d92161e5359a49a1a5508",
+      "actual_sha256": "b34e4b1a3a46c8a0a3ad4e38fe7403a36a11fc74c143c49e4e98b3d2eef06c56",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "cli/vendor/ripgrep/arm64-darwin/ripgrep.node",
+      "expected_size": 6183792,
+      "actual_size": 6202048,
+      "expected_sha256": "920cdefc6184643ddabdd3d34c5544e6bb3a3a65fa8b7361ab1cb168648747d1",
+      "actual_sha256": "96f9a27971c268c55e9e3ac41fd1af2cbd1cf42eedda8c753e58c143b6e3e828",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "cli/vendor/genie-trash/darwin-arm64",
+      "expected_size": 889568,
+      "actual_size": 907824,
+      "expected_sha256": "aa768b27431cdb8c2594e914213b862175b6c791ccc8f5d33cf49ed2b5ec4490",
+      "actual_sha256": "147a2192a6a483694a349d0f72a5d8689808775a48e34cb481ae2ad85d75131e",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@lydell/node-pty-darwin-arm64/prebuilds/darwin-arm64/pty.node",
+      "expected_size": 86904,
+      "actual_size": 105168,
+      "expected_sha256": "72ea0c3d8bdaa7fdb850ab28d09caa900b653f6b3a6db3db243624c671047e37",
+      "actual_sha256": "f6b76a3dd778ff756591b26393aba0ec3c16fee21ce6791b55237d57d61a11bc",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@lydell/node-pty-darwin-arm64/prebuilds/darwin-arm64/spawn-helper",
+      "expected_size": 50480,
+      "actual_size": 68752,
+      "expected_sha256": "926dfd78b6a4967a40f1e2fe85f6978237096ecfd55735c29de1ad38bba34deb",
+      "actual_sha256": "928eaf76a7e44d69d22a004747eb0b41c56974440cc1a7679ba763895053e446",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/src/mac/QimeiSDKMac.xcframework/macos-arm64_x86_64/QimeiSDKMac.framework/_CodeSignature/CodeDirectory",
+      "expected_size": 152,
+      "actual_size": 167,
+      "expected_sha256": "819d7c4c8500419c0e1c998d15426c4934e36e00b2af2d8fb99007656729614f",
+      "actual_sha256": "d3ecb151b4ed6494c9d17f7f7df2ccb2b84ae98416dcdb1d2399b5be81e2462c",
+      "file_magic_hex": "fade0c02",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/src/mac/QimeiSDKMac.xcframework/macos-arm64_x86_64/QimeiSDKMac.framework/_CodeSignature/CodeRequirements",
+      "expected_size": 12,
+      "actual_size": 184,
+      "expected_sha256": "987920904eab650e75788c054aa0b0524e6a80bfc71aa32df8d237a61743f986",
+      "actual_sha256": "827e736aad537b5261ae0ed15e23be36fd78193c55ba0cb85b1cce526885633f",
+      "file_magic_hex": "fade0c01",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/src/mac/QimeiSDKMac.xcframework/macos-arm64_x86_64/QimeiSDKMac.framework/_CodeSignature/CodeRequirements-1",
+      "expected_size": 200,
+      "actual_size": 215,
+      "expected_sha256": "749760cd40da8c0bcbc720fe02f793e380208f16fa88ad40ec4e77371f93031c",
+      "actual_sha256": "4cfe26bb7df2d4a57fe5c84ba96a02cfca7cd7fd974947bdd148a7794843f0d9",
+      "file_magic_hex": "fade0c02",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/src/mac/QimeiSDKMac.xcframework/macos-arm64_x86_64/QimeiSDKMac.framework/_CodeSignature/CodeSignature",
+      "expected_size": 0,
+      "actual_size": 9191,
+      "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actual_sha256": "f45a850a1d41e522d2e7a1fa75b380e54c1f971c8ecd02328b1392aa22dc9367",
+      "file_magic_hex": "30800609",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/build/Release/qimei.node",
+      "expected_size": 1897656,
+      "actual_size": 1915920,
+      "expected_sha256": "52033c14b438e36218beb9b83ad5bc8d188dbf2a1733f760d2c0f975fa147f1c",
+      "actual_sha256": "3820006a2ef3790b9ae5adfb6e50621ffd2e6f6ea7d1985e72f3402e3d138a14",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/build/Release/QimeiSDKMac.xcframework/macos-arm64_x86_64/QimeiSDKMac.framework/_CodeSignature/CodeDirectory",
+      "expected_size": 152,
+      "actual_size": 167,
+      "expected_sha256": "819d7c4c8500419c0e1c998d15426c4934e36e00b2af2d8fb99007656729614f",
+      "actual_sha256": "d3ecb151b4ed6494c9d17f7f7df2ccb2b84ae98416dcdb1d2399b5be81e2462c",
+      "file_magic_hex": "fade0c02",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/build/Release/QimeiSDKMac.xcframework/macos-arm64_x86_64/QimeiSDKMac.framework/_CodeSignature/CodeRequirements",
+      "expected_size": 12,
+      "actual_size": 184,
+      "expected_sha256": "987920904eab650e75788c054aa0b0524e6a80bfc71aa32df8d237a61743f986",
+      "actual_sha256": "827e736aad537b5261ae0ed15e23be36fd78193c55ba0cb85b1cce526885633f",
+      "file_magic_hex": "fade0c01",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/build/Release/QimeiSDKMac.xcframework/macos-arm64_x86_64/QimeiSDKMac.framework/_CodeSignature/CodeRequirements-1",
+      "expected_size": 200,
+      "actual_size": 215,
+      "expected_sha256": "749760cd40da8c0bcbc720fe02f793e380208f16fa88ad40ec4e77371f93031c",
+      "actual_sha256": "4cfe26bb7df2d4a57fe5c84ba96a02cfca7cd7fd974947bdd148a7794843f0d9",
+      "file_magic_hex": "fade0c02",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/qimei-node/build/Release/QimeiSDKMac.xcframework/macos-arm64_x86_64/QimeiSDKMac.framework/_CodeSignature/CodeSignature",
+      "expected_size": 0,
+      "actual_size": 9191,
+      "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actual_sha256": "506616f5d6e7a7dbf134d95476c577aa445e888f8564b2904a384dcf4a5dd20d",
+      "file_magic_hex": "30800609",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/@tencent/tencent-docs-ai-engine/bin/darwin-arm64/editor_sdk",
+      "expected_size": 202521960,
+      "actual_size": 202541440,
+      "expected_sha256": "609abe708b5d86b5d8e514cfd76c467b6741269a7b9ef21f2945d49573cbbff6",
+      "actual_sha256": "7d55e4c0840465dcd91fc1d865126b6e79321392cbb0d999b9d450d4f4b8bba2",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/koffi/build/koffi/darwin_x64/koffi.node",
+      "expected_size": 1601744,
+      "actual_size": 1632672,
+      "expected_sha256": "f7ba306880ab40286c4443577fa95c47615111ce0a958442e4eb0a5e83928b67",
+      "actual_sha256": "689f1b0b9c651824f1faadda22368a851606cab81576aec796a0193184e0d283",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/koffi/build/koffi/darwin_arm64/koffi.node",
+      "expected_size": 1244231,
+      "actual_size": 1262496,
+      "expected_sha256": "6c88b2173bdf403046265f859201c13504eba2b258b23da61fff23f7659797b0",
+      "actual_sha256": "5ae598e5520a16f32095224fb6964da4f5a3134b55d4a6240dcf11cba9d38598",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/node-pty/prebuilds/darwin-x64/pty.node",
+      "expected_size": 52864,
+      "actual_size": 72080,
+      "expected_sha256": "edab585d5c5c7bf35143a7a53b7d72652e90723b5f9635dfd55b2333f7069198",
+      "actual_sha256": "8f4d8c8da1f6270d6a9a5307bcecd8ef012dc087c0a077e2b82db8a2a974cfe5",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/node-pty/prebuilds/darwin-x64/spawn-helper",
+      "expected_size": 9248,
+      "actual_size": 27968,
+      "expected_sha256": "46a4455777c6122d7e71cd706ea4b37b19bedd297684be8b6dabb833ff2a3965",
+      "actual_sha256": "618ec46c8fa626f0ffc5f20577322643661a81fcf63099b8ee40dd1ea86822bb",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/node-pty/prebuilds/darwin-arm64/pty.node",
+      "expected_size": 85496,
+      "actual_size": 103760,
+      "expected_sha256": "e6457d66f45af3facd02920a5b212164e80fe0bb758afe6e6eab1eceeba3fc9a",
+      "actual_sha256": "17b7887f840c06964816889f52d96e86828eac257efcfaba1d877d8eb4371f73",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper",
+      "expected_size": 50480,
+      "actual_size": 68752,
+      "expected_sha256": "21c589109bca43e287df884f3c34ab888033a83927ea7d273949ac5030583f26",
+      "actual_sha256": "ec8edea90323ed15ce85cdd0b6a7258d3169c7f403d2d882528e7245db504a6b",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/nunjucks/node_modules/fsevents/build/Release/.node",
+      "expected_size": 16728,
+      "actual_size": 34976,
+      "expected_sha256": "41f0c6e4e5578f57fb209d778d06460aa1cf4ece4a58c24f5d3ab5991655bac6",
+      "actual_sha256": "4c082659a982bb371e4e399d2028d93d74ca270b03f74cac9fe93b1ec86eedf0",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/nunjucks/node_modules/fsevents/build/Release/fse.node",
+      "expected_size": 65528,
+      "actual_size": 83792,
+      "expected_sha256": "a557654abea309f75dafad6fa4195172bcd155d724c32168b59d92293180641b",
+      "actual_sha256": "c06ea2e47a2e25096a6419c3138adcdbb10f937373d682020bfe9926c9225913",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/better-sqlite3/build/Release/better_sqlite3.node",
+      "expected_size": 1913760,
+      "actual_size": 1932032,
+      "expected_sha256": "709b58d875ef8b6c36e25e7ccca49e202b3efa2781122544630a2da6e5f9af37",
+      "actual_sha256": "5cafc2b70bfccc11b07baa65fc3feb2bf520696b71ad834fbe7de7e47bcb138e",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/better-sqlite3/build/Release/test_extension.node",
+      "expected_size": 16880,
+      "actual_size": 35152,
+      "expected_sha256": "7e41e40cf1c81692bc2230850f4eadcff14e0e8534e1ee57628543d74048dbf2",
+      "actual_sha256": "4ae5568ab8a8630c9ba378f357a08b7e4b875973fa0746cd5dd22ba6a78ed193",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    },
+    {
+      "path": "node_modules/better-sqlite3/bin/darwin-arm64-136/better-sqlite3.node",
+      "expected_size": 1913760,
+      "actual_size": 1932032,
+      "expected_sha256": "709b58d875ef8b6c36e25e7ccca49e202b3efa2781122544630a2da6e5f9af37",
+      "actual_sha256": "ec3d98b974e4ac4d5478fd1ec584588e627aaf367150d4f61fec2a15566c6117",
+      "file_magic_hex": "cffaedfe",
+      "note": "Unpacked files can change after ASAR creation, notably during macOS code signing."
+    }
+  ],
+  "verification_notes": [
+    "Every present packed ASAR file was checked against its SHA-256 value in the ASAR header.",
+    "Present unpacked files were copied from app.asar.unpacked and hashed as installed.",
+    "Ten platform-specific or build-helper unpacked entries referenced by the cross-platform ASAR header are absent from this macOS arm64 installation and are listed explicitly.",
+    "Unpacked metadata differences are recorded rather than treated as packed-archive corruption because macOS code signing can modify Mach-O files and signature metadata after ASAR metadata generation."
+  ],
+  "elapsed_seconds": 4.469
+}
