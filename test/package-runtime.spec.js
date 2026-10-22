@@ -272,6 +272,12 @@ const {
   parseNpxPackageSpec,
   getManagedNpmCliPath,
   getStableNpxPackageDir,
+  classifyMcpInvokeErrorKind,
+  classifyMcpListErrorKind,
+  setConnectorMetricReporter,
+  ConnectorMetricReporter,
+  toHeaderRecord,
+  withExtraHeaders,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1224,6 +1230,32 @@ async function main() {
   assert.strictEqual(parseNpxPackageSpec(['--yes']), undefined);
   assert.ok(getManagedNpmCliPath({ nodeInfo: { executablePath: '/tmp/node/bin/node' } }).endsWith(path.join('node_modules', 'npm', 'bin', 'npm-cli.js')));
   assert.strictEqual(getStableNpxPackageDir('demo@1').length, path.join(CLI_CONNECTOR_PACKAGES_DIR, 'mcp-npx-packages').length + 13);
+  assert.strictEqual(classifyMcpInvokeErrorKind(new Error('server is reconnecting')), 'reconnecting');
+  assert.strictEqual(classifyMcpInvokeErrorKind(new Error('timeout waiting')), 'timeout');
+  assert.strictEqual(classifyMcpListErrorKind(new Error('Method not found (-32601)')), 'method_not_found');
+  assert.strictEqual(classifyMcpListErrorKind(new Error('HTTP 401 unauthorized')), 'auth');
+  const metricEvents = [];
+  setConnectorMetricReporter({ recordDuration: (...event) => metricEvents.push(['duration', ...event]), addCounter: (...event) => metricEvents.push(['counter', ...event]) });
+  const metric = new ConnectorMetricReporter();
+  metric.invoke({ dims: { mcpServer: 'docs', toolName: 'search' }, durationMs: 12, result: { isError: true } });
+  metric.connect({ serverShortName: 'docs', silent: false, outcome: 'success', durationMs: 12.4 });
+  metric.list({ serverShortName: 'docs', kind: 'tool', outcome: 'error', durationMs: 5, errorKind: 'timeout' });
+  assert.strictEqual(metricEvents[0][1], 'wb.connector.invoke.biz_error');
+  assert.strictEqual(metricEvents[1][1], 'wb.connector.main.connect.success');
+  assert.deepStrictEqual(metricEvents[1][3], { mcp_server: 'docs', silent: 'false', duration_ms: '12' });
+  assert.strictEqual(metricEvents[2][1], 'wb.connector.list.tool.error');
+  setConnectorMetricReporter(undefined);
+  const headerMap = new Map([['Authorization', 'Bearer token']]);
+  assert.deepStrictEqual(toHeaderRecord(headerMap), { Authorization: 'Bearer token' });
+  assert.deepStrictEqual(toHeaderRecord([['X-Test', 3]]), { 'X-Test': '3' });
+  const transport = { _requestInit: { headers: { Existing: 'yes' } } };
+  const transportClient = { _transport: transport };
+  const headerResult = await withExtraHeaders(transportClient, { Added: 'ok' }, async () => {
+    assert.deepStrictEqual(transport._requestInit.headers, { Existing: 'yes', Added: 'ok' });
+    return 'done';
+  });
+  assert.strictEqual(headerResult, 'done');
+  assert.deepStrictEqual(transport._requestInit, { headers: { Existing: 'yes' } });
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
