@@ -185,6 +185,12 @@ const {
   isHostedCliRuntimeSessionId,
   extractHttpEndpoint,
   formatSidecarLogArgs,
+  buildPrewarmActivateArgs,
+  summarizePrewarmArgs,
+  normalizeRuntimeConfig,
+  stableJsonStringify,
+  extractCliOutcome,
+  materializeWorkbuddyRuntimePrompt,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1060,6 +1066,12 @@ async function main() {
   assert.strictEqual(isHostedCliRuntimeSessionId('__workbuddy_cli_host__-1'), true);
   assert.strictEqual(extractHttpEndpoint('http://127.0.0.1:1/api/v1/acp'), 'http://127.0.0.1:1');
   assert.strictEqual(formatSidecarLogArgs(['x', { value: 1 }]), 'x {"value":1}');
+  assert.deepStrictEqual(buildPrewarmActivateArgs(['/cli', '--model', 'm'], 123), ['--serve', '--model', 'm', '--port', '123']);
+  assert.strictEqual(summarizePrewarmArgs(['--settings', '{"secret":1}', '--model', 'm']), '--settings=<len=12> --model=m');
+  assert.deepStrictEqual(normalizeRuntimeConfig({ model: 'm', welcomeMode: 'welcome', extra: true }).welcomeMode, 'welcome');
+  assert.strictEqual(stableJsonStringify({ b: 1, a: 2 }), '{"a":2,"b":1}');
+  assert.strictEqual(extractCliOutcome({ 'codebuddy.ai/outcome': 'completed' }), 'completed');
+  assert.deepStrictEqual(materializeWorkbuddyRuntimePrompt([{ type: 'text', text: '/mcp:docs:search hi' }]), [{ type: 'text', text: '/docs:search (MCP) hi' }]);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }

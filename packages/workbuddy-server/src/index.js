@@ -51,6 +51,7 @@ module.exports = Object.freeze({
   ...require("./runtime/stdio-framing"),
   ...require("./runtime/stdio-rpc"),
   ...require("./runtime/sidecar-utils"),
+  ...require("./runtime/codebuddy-backend-utils"),
   ...require("./runtime/interaction-registries"),
   ...require("./runtime/document-paths"),
   ...require("./runtime/document-prompt"),
