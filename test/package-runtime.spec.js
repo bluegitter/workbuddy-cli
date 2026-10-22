@@ -20,6 +20,11 @@ const {
   gatewaySecretEnv,
   gatewaySecretHeaders,
   getGatewaySecret,
+  resolveActiveAuthMode,
+  resolveTokenHeaderName,
+  resolveOneidAppType,
+  resolveModeTools,
+  resolveResponseLocaleIsZh,
 } = require('../packages/authentication/src');
 const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
@@ -161,6 +166,12 @@ async function main() {
   assert.strictEqual(deriveAccountContext({ enterpriseId: 'e1' }).kind, 'enterprise');
   assert.strictEqual(gatewaySecretEnv().CODEBUDDY_GATEWAY_PASSWORD, getGatewaySecret());
   assert.strictEqual(gatewaySecretHeaders().Authorization, `Bearer ${getGatewaySecret()}`);
+  const connectorEntry = { auth_mode: 'oneid-token', enterprise_variants: { enterprise: { auth_mode: 'server-side', token_header: { name: 'X-Custom-Token' }, oneid_app_type: 'enterprise-doc' } } };
+  assert.strictEqual(resolveActiveAuthMode(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'server-side');
+  assert.strictEqual(resolveTokenHeaderName(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'X-Custom-Token');
+  assert.strictEqual(resolveOneidAppType(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'enterprise-doc');
+  assert.ok(resolveModeTools('ask').includes('AskUserQuestion'));
+  assert.strictEqual(resolveResponseLocaleIsZh('en-US', 'zh-CN'), false);
   assert.strictEqual(buildQuery({ q: 'a b', empty: null }), '?q=a%20b');
   assert.strictEqual(resolveTeamsAcceptLanguage({ resolveIsOverseas: () => true }), 'en-US');
   assert.strictEqual(unwrap({ code: 0, data: 'ok' }, 'demo'), 'ok');
