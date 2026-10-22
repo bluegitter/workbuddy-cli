@@ -22,6 +22,11 @@ const {
   initMainStartupContext,
   buildStartupContextEnv,
   initStartupContextFromEnv,
+  RingBuffer,
+  SessionReadyRegistry,
+  controlSocketPath,
+  dataSocketPath,
+  sidecarRuntimeDir,
 } = require('../packages/runtime/src');
 const {
   ArtifactIndex,
@@ -145,6 +150,23 @@ async function main() {
   assert.strictEqual(connectors[0].authMode, 'oauth');
   assert.deepStrictEqual(connectors[1].skills, ['writer-skill']);
   assert.strictEqual(buildConnectorConfig({}, {}), undefined);
+
+  const ring = new RingBuffer(5);
+  ring.write(Buffer.from('abc'));
+  ring.write(Buffer.from('def'));
+  assert.strictEqual(ring.snapshot().toString(), 'bcdef');
+  assert.strictEqual(ring.totalWritten, 6);
+  const sidecarEnv = { WORKBUDDY_CONFIG_DIR: path.join(root, 'config') };
+  assert.notStrictEqual(sidecarRuntimeDir(sidecarEnv), sidecarRuntimeDir({ WORKBUDDY_CONFIG_DIR: path.join(root, 'other') }));
+  assert.ok(controlSocketPath(sidecarEnv).endsWith('sidecar.sock'));
+  assert.ok(dataSocketPath('session/one', sidecarEnv).includes('s-'));
+  const ready = new SessionReadyRegistry({ createToken: () => 'token', replayTtlMs: 1000 });
+  const waiter = ready.register('ready-1', 1000);
+  waiter.arm(42);
+  assert.deepStrictEqual(ready.accept({ protocolVersion: 1, sessionId: 'ready-1', token: 'token', pid: 42, port: 4321 }), { pid: 42, port: 4321 });
+  assert.deepStrictEqual(await waiter.promise, { pid: 42, port: 4321 });
+  assert.deepStrictEqual(ready.accept({ protocolVersion: 1, sessionId: 'ready-1', token: 'token', pid: 42, port: 4321 }), { pid: 42, port: 4321 });
+  assert.throws(() => ready.accept({ protocolVersion: 2, sessionId: 'ready-1', token: 'token', pid: 42, port: 4321 }), /protocol version/);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
