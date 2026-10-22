@@ -218,6 +218,11 @@ const {
   withTimeout,
   resolveMemoryDirs,
   acquireFileLock,
+  BufferedFileLogger,
+  canonicalizeStoredPath,
+  escapeSqliteLikePattern,
+  parseJsonArray,
+  configureWorkbuddySqliteConnection,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1172,6 +1177,13 @@ async function main() {
   await assert.rejects(() => withTimeout(() => new Promise(() => {}), 5, 'test-timeout'), (error) => error.name === 'TimeoutError');
   const lockPath = path.join(root, 'memory.lock');
   const lock = await acquireFileLock(lockPath, { maxRetries: 0 }); assert(lock); await lock.release();
+  assert.strictEqual(canonicalizeStoredPath('/tmp//work'), '/tmp/work');
+  assert.strictEqual(escapeSqliteLikePattern('a%b_'), 'a\\%b\\_');
+  assert.deepStrictEqual(parseJsonArray('["a",1,"b"]'), ['a', 'b']);
+  const pragmas = []; configureWorkbuddySqliteConnection({ pragma: (value) => pragmas.push(value) });
+  assert.deepStrictEqual(pragmas, ['journal_mode = WAL', 'busy_timeout = 10000', 'wal_autocheckpoint = 1000']);
+  const fileLogger = new BufferedFileLogger({ logDir: path.join(root, 'logs'), filePrefix: 'test', flushIntervalMs: 100000 });
+  fileLogger.info('hello'); await fileLogger.flush(); assert(fs.readFileSync(fileLogger.getLogFilePath(), 'utf8').includes('hello')); fileLogger.dispose();
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
