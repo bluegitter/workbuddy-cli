@@ -123,4 +123,5 @@ module.exports = Object.freeze({
   ...require("./runtime/expert-resource-loader"),
   ...require("./runtime/expert-history-service"),
   ...require("./runtime/connector-proxy-utils"),
+  ...require("./runtime/connector-proxy-security"),
 });

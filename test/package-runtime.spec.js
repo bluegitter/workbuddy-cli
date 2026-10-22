@@ -297,6 +297,10 @@ const {
   classifyToolStatus,
   extractErrorCode,
   inferConnectorKind,
+  extractHostname,
+  isAllowedLoopbackHost,
+  validateOrigin,
+  isValidProxyBearer,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1381,6 +1385,14 @@ async function main() {
   assert.strictEqual(classifyToolStatus(new Error('operation aborted')), 'cancelled');
   assert.strictEqual(extractErrorCode(new Error('E_CONN: details')), 'E_CONN');
   assert.strictEqual(inferConnectorKind({ type: 'cli' }), 'oauthCli');
+  assert.strictEqual(extractHostname('[::1]:18484'), '::1');
+  assert.strictEqual(isAllowedLoopbackHost('localhost:1234'), true);
+  assert.strictEqual(isAllowedLoopbackHost('attacker.example:1234'), false);
+  assert.deepStrictEqual(validateOrigin('http://127.0.0.1:3000'), { allowed: true });
+  assert.deepStrictEqual(validateOrigin('https://attacker.example'), { allowed: false, reason: 'invalid origin' });
+  assert.deepStrictEqual(validateOrigin('not-a-url'), { allowed: false, reason: 'malformed origin' });
+  assert.strictEqual(isValidProxyBearer('Bearer secret', 'secret'), true);
+  assert.strictEqual(isValidProxyBearer('Bearer wrong', 'secret'), false);
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
