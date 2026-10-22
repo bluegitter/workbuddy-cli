@@ -10,6 +10,9 @@ class AgentSession {
     this.permissionMode = options.permissionMode || 'default';
     this.abortController = new AbortController();
     this.status = 'idle';
+    this.turn = 0;
+    this.createdAt = Date.now();
+    this.metadata = { ...(options.metadata || {}) };
   }
 
   append(message) {

@@ -13,6 +13,11 @@
 | `agent-session.js` | session / task state | WorkBuddy Session、SubAgent Session、AbortController |
 | `context-builder.js` | query context | Project、Memory、Skill、Connector、历史消息注入 |
 | `tool-registry.js` | `Tool.ts` / `tools.ts` | built-in tool、MCP tool、Skill tool 注册 |
+| `hook-registry.js` | `services/tools/toolHooks.ts` | PreToolUse、PostToolUse、Failure、Session 和 Subagent Hook |
+| `interruption-controller.js` | permission prompt / bridge callbacks | ACP 审批请求、超时和异步恢复 |
+| `session-manager.js` | session/task registry | 主会话与后台会话生命周期 |
+| `subagent-runner.js` | `tools/AgentTool/runAgent.ts` | 子 Agent 上下文继承、取消传播和生命周期 Hook |
+| `messages.js` | `types/message.ts`、`utils/messages.ts` | 模型响应和 tool_use block 规范化 |
 
 ## WorkBuddy 适配边界
 
@@ -21,5 +26,6 @@
 - Skill、Plugin 与 MCP App 发现位于 `plugin-core`。
 - Sandbox 二进制和策略位于 `sandbox-cli`。
 - 本目录只包含与宿主无关的 Agent 编排核心。
+- Context Builder 已迁移到独立 `context` 包；`agent-provider` 保留兼容导出。
 
 `agent-provider/test/runtime.spec.js` 覆盖只读工具并发分组、Agent 循环以及 Plan 模式阻止写工具等关键行为。

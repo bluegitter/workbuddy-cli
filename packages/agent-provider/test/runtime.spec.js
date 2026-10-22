@@ -3,9 +3,15 @@
 const assert = require('assert');
 const {
   AgentSession,
+  HookEvent,
+  HookRegistry,
+  InterruptionController,
   PermissionController,
   PermissionMode,
+  SessionManager,
+  SubagentRunner,
   ToolRegistry,
+  mapWithConcurrency,
   partitionToolCalls,
   runAgentLoop,
 } = require('../src');
@@ -37,6 +43,53 @@ async function main() {
   const denied = await new PermissionController({ mode: PermissionMode.PLAN })
     .canUse(tools.get('write'), {}, {});
   assert.strictEqual(denied.behavior, 'deny');
+
+  const hooks = new HookRegistry();
+  hooks.register(HookEvent.POST_TOOL_USE, ({ output, ...rest }) => ({ payload: { ...rest, output: `${output}!` } }));
+  const hooked = new AgentSession({ messages: [{ role: 'user', content: 'read' }] });
+  turn = 0;
+  await runAgentLoop(hooked, {
+    hooks,
+    tools,
+    permissions: new PermissionController(),
+    model: { complete: async () => turn++ === 0
+      ? { content: '', toolCalls: [{ id: 'hooked', name: 'read', input: { value: 'changed' } }] }
+      : { content: 'done' } },
+  });
+  assert.strictEqual(hooked.messages.at(-2).content, 'changed!');
+
+  let active = 0;
+  let peak = 0;
+  await mapWithConcurrency([1, 2, 3, 4], 2, async () => {
+    active += 1;
+    peak = Math.max(peak, active);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    active -= 1;
+  });
+  assert.strictEqual(peak, 2);
+
+  let permissionRequest;
+  const interruptions = new InterruptionController({ onRequest: (request) => { permissionRequest = request; } });
+  const pending = interruptions.request({ id: 'approval-1', type: 'tool_permission' });
+  assert.strictEqual(permissionRequest.id, 'approval-1');
+  interruptions.resolve('approval-1', { behavior: 'allow', source: 'user' });
+  assert.strictEqual((await pending).behavior, 'allow');
+
+  const sessions = new SessionManager();
+  const parent = sessions.create({ project: { id: 'project' } });
+  const subagents = new SubagentRunner({
+    sessions,
+    hooks,
+    runtimeFactory: async () => ({
+      tools,
+      permissions: new PermissionController(),
+      model: { complete: async () => ({ content: 'child done' }) },
+    }),
+  });
+  const childResult = await subagents.run(parent, { name: 'explore' }, 'inspect');
+  assert.strictEqual(childResult.session.parentSessionId, parent.id);
+  assert.strictEqual(childResult.session.project.id, 'project');
+  assert.strictEqual(childResult.session.status, 'completed');
   console.log('agent runtime tests passed');
 }
 
