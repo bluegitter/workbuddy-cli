@@ -36,6 +36,8 @@ module.exports = Object.freeze({
   ...require("./runtime/agent-cli-language"),
   ...require("./runtime/session-replay"),
   ...require("./runtime/media-types"),
+  ...require("./runtime/terminal-proxy"),
+  ...require("./runtime/app-server-runtime"),
   ...require("./runtime/interaction-registries"),
   ...require("./runtime/document-paths"),
   ...require("./runtime/document-prompt"),

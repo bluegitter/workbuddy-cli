@@ -161,6 +161,10 @@ const {
   buildSessionReplayRequestHeaders,
   getMediaInfo,
   inferMediaInfoForUnknownExt,
+  extractSessionId,
+  extractToken,
+  assertWorkbuddyAppServerStdioMode,
+  createWorkbuddyAppServerPlatformFromEnv,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -986,6 +990,10 @@ async function main() {
   assert.deepStrictEqual(await parseCliJsonResponse({ text: async () => '{"data":{"items":[1]}}' }), { data: { items: [1] }, bytes: 22 });
   assert.deepStrictEqual(getMediaInfo('.png'), { mimeType: 'image/png', contentType: 'image' });
   assert.deepStrictEqual(inferMediaInfoForUnknownExt('glb'), { mimeType: 'model/gltf-binary', contentType: 'document' });
+  assert.strictEqual(extractSessionId('/pty/session_1?token=x'), 'session_1');
+  assert.strictEqual(extractToken('/pty/session_1?token=x'), 'x');
+  assert.throws(() => assertWorkbuddyAppServerStdioMode([]), /Missing --stdio/);
+  assert.strictEqual(createWorkbuddyAppServerPlatformFromEnv({ processEnv: { WORKBUDDY_IS_PACKAGED: 'true' }, runtime: { configDir: '/tmp/config' } }).isPackaged, true);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
