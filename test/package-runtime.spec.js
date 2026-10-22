@@ -125,6 +125,10 @@ const {
   SidecarSessionManager,
   MemoryLocalStorage,
   DefaultWorkspace,
+  DefaultNotifier,
+  DefaultUserinfoProvider,
+  DefaultExternalUriOpener,
+  DefaultPagePreviewer,
 } = require('../packages/runtime/src');
 const {
   ArtifactIndex,
@@ -676,6 +680,16 @@ async function main() {
   disposeStorageListener();
   assert.deepStrictEqual(storageChanges, ['theme', 'theme']);
   assert.deepStrictEqual(new DefaultWorkspace(['/tmp/project']).workspaceFolders, ['/tmp/project']);
+  const notifier = new DefaultNotifier();
+  assert.strictEqual(notifier.formatMessage('Hello {0} {1}', ['WorkBuddy', 2]), 'Hello WorkBuddy 2');
+  assert.strictEqual(await new DefaultUserinfoProvider().provide(), undefined);
+  const opener = new DefaultExternalUriOpener();
+  let openedUri;
+  opener.urlSubject.subscribe((uri) => { openedUri = uri; });
+  opener.urlSubject.next('https://example.test');
+  assert.strictEqual(openedUri, 'https://example.test');
+  assert.strictEqual(await opener.open('https://example.test'), false);
+  assert.strictEqual(await new DefaultPagePreviewer().preview('https://example.test'), true);
 
   const expertManifest = mergeExpertManifests(
     { version: '1', categories: [{ id: 'writing', name: 'Writing' }], experts: [{ id: 'editor', name: 'Editor' }] },

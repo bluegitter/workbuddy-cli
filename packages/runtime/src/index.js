@@ -18,4 +18,7 @@ module.exports = Object.freeze({
   ...require("./runtime/sidecar-session-manager"),
   ...require("./runtime/memory-local-storage"),
   ...require("./runtime/workspace"),
+  ...require("./runtime/notifier"),
+  ...require("./runtime/userinfo"),
+  ...require("./runtime/uri-services"),
 });
