@@ -121,6 +121,7 @@ const {
   CryptoMode,
   ImaBackendClient,
   getDefaultPathPrefix,
+  ImaAuthApi,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -264,6 +265,8 @@ async function main() {
   const imaClient = new ImaBackendClient({ productManager: { getEndpoint: () => 'https://api.example/' }, authenticationManager: { buildAuthHeaders: () => ({ Authorization: 'Bearer test' }) }, fetchFn: async (url, init) => { imaRequests.push({ url, init }); return { ok: true, status: 200, headers: new Headers(), text: async () => JSON.stringify({ code: 0, data: { ok: true } }) }; } });
   assert.deepStrictEqual(await imaClient.post('/openapi/test', { value: 1 }), { ok: true });
   assert.strictEqual(imaRequests[0].url, 'https://api.example/console/agent-gateway/ima/openapi/test');
+  const authApi = new ImaAuthApi({}, { productManager: { getEndpoint: () => 'https://api.example' }, authenticationManager: { currentSessionSubject: { getValue: () => ({ account: { uid: 'u1' }, auth: { accessToken: 'a1' } }) } }, connectorName: 'ima', fetchFn: async (url) => ({ ok: true, status: 200, json: async () => ({ code: 0, data: { status: 'connected', extra: { user_id: 'u1' } } }), text: async () => '' }) });
+  assert.deepStrictEqual((await authApi.status()).userId, 'u1');
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
