@@ -52,6 +52,8 @@ module.exports = Object.freeze({
   ...require("./runtime/stdio-rpc"),
   ...require("./runtime/sidecar-utils"),
   ...require("./runtime/codebuddy-backend-utils"),
+  ...require("./runtime/traceparent"),
+  ...require("./runtime/service-handlers"),
   ...require("./runtime/interaction-registries"),
   ...require("./runtime/document-paths"),
   ...require("./runtime/document-prompt"),

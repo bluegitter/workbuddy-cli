@@ -191,6 +191,9 @@ const {
   stableJsonStringify,
   extractCliOutcome,
   materializeWorkbuddyRuntimePrompt,
+  isValidW3CTraceId,
+  formatTraceparent,
+  registerServiceHandlers,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1072,6 +1075,11 @@ async function main() {
   assert.strictEqual(stableJsonStringify({ b: 1, a: 2 }), '{"a":2,"b":1}');
   assert.strictEqual(extractCliOutcome({ 'codebuddy.ai/outcome': 'completed' }), 'completed');
   assert.deepStrictEqual(materializeWorkbuddyRuntimePrompt([{ type: 'text', text: '/mcp:docs:search hi' }]), [{ type: 'text', text: '/docs:search (MCP) hi' }]);
+  assert.strictEqual(isValidW3CTraceId('a'.repeat(32)), true);
+  assert.strictEqual(formatTraceparent({ traceId: 'a'.repeat(32), spanId: 'b'.repeat(16) }), `00-${'a'.repeat(32)}-${'b'.repeat(16)}-01`);
+  const handlers = new Map();
+  assert.deepStrictEqual(registerServiceHandlers({ handle: (channel, fn) => handlers.set(channel, fn) }, 'demo', { ping() { return 'pong'; } }, {}, { info() {} }), ['ping']);
+  assert.strictEqual(handlers.get('demo:ping')(), 'pong');
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
