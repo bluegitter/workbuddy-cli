@@ -7,7 +7,14 @@ const path = require('path');
 const { createDecoder, encode } = require('../packages/agent-client-protocol/src');
 const { parseFrontmatter } = require('../packages/plugin-core/src');
 const { CommandPolicy } = require('../packages/sandbox-cli/src');
-const { CredentialStore } = require('../packages/authentication/src');
+const {
+  AuthSession,
+  CredentialStore,
+  deriveAccountContext,
+  gatewaySecretEnv,
+  gatewaySecretHeaders,
+  getGatewaySecret,
+} = require('../packages/authentication/src');
 const { EventBuffer, LogSampler, StructuredLogger } = require('../packages/telemetry/src');
 const { PathPolicy } = require('../packages/enterprise-policy/src');
 const { AgentViewModel } = require('../packages/agent-ui/src');
@@ -58,6 +65,22 @@ async function main() {
   credentials.set('workbuddy', { token: 'test' });
   assert.strictEqual(credentials.get('workbuddy').token, 'test');
   assert.strictEqual(fs.statSync(path.join(root, 'credentials.json')).mode & 0o777, 0o600);
+  const auth = new AuthSession();
+  assert.deepStrictEqual(auth.getStatus(), { loggedIn: false });
+  auth.setSession({
+    account: { uid: 'user-1', nickname: 'Tester', enterpriseId: 'enterprise-1', departmentFullName: 'R&D' },
+    auth: { accessToken: 'access', refreshToken: 'refresh', domain: 'workbuddy' },
+  });
+  assert.strictEqual(auth.getStatus().user.id, 'user-1');
+  assert.strictEqual(auth.getAccount().type, 'personal');
+  assert.deepStrictEqual(auth.buildAuthHeaders(true, true, true), {
+    'X-User-Id': 'user-1', Authorization: 'Bearer access', 'X-Enterprise-Id': 'enterprise-1',
+    'X-Tenant-Id': 'enterprise-1', 'X-Domain': 'workbuddy', 'X-Department-Info': 'R&D', 'X-Refresh-Token': 'refresh',
+  });
+  assert.strictEqual(deriveAccountContext({ accountType: 'exclusive' }).deploymentKind, 'vpc');
+  assert.strictEqual(deriveAccountContext({ enterpriseId: 'e1' }).kind, 'enterprise');
+  assert.strictEqual(gatewaySecretEnv().CODEBUDDY_GATEWAY_PASSWORD, getGatewaySecret());
+  assert.strictEqual(gatewaySecretHeaders().Authorization, `Bearer ${getGatewaySecret()}`);
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);

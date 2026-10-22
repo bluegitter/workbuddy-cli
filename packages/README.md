@@ -18,7 +18,7 @@ cover the same behavior. `scripts/check-packages.js` validates source syntax;
 | `runtime` | Sidecar manager, session process adapter, protocol paths, readiness handshake, ring buffer, runtime HTTP, context and isolated CLI environment | Sidecar/runtime entries |
 | `plugin-core` | Skill and Plugin discovery | Built-in resources |
 | `sandbox-cli` | Command/path policy and runner | Sandbox binary/config |
-| `authentication` | Atomic credential store | Auth/session compiled entries |
+| `authentication` | Credential store, auth session/headers, account context and gateway secret | Auth/session compiled entries |
 | `telemetry` | Bounded event buffer, log sampling and structured logger | Logger/trace compiled entries |
 | `enterprise-policy` | Workspace path policy | File protection compiled entries |
 | `workbuddy-server` | HTTP, sessions/tasks, automation, MCP, Connector and Expert manifest boundaries | Daemon/MCP compiled entries |
