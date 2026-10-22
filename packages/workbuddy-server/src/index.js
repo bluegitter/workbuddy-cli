@@ -102,4 +102,5 @@ module.exports = Object.freeze({
   ...require("./runtime/automation-run-coordinator"),
   ...require("./runtime/connector-locale"),
   ...require("./runtime/connector-server-side-oauth-refresher"),
+  ...require("./runtime/connector-state-utils"),
 });

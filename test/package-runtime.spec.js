@@ -240,6 +240,12 @@ const {
   resolveConnectorDisplayText,
   ConnectorServerSideOauthRefresher,
   FALLBACK_REFRESH_INTERVAL_MS,
+  resolveStatesFilePaths,
+  isAnonymousUser,
+  coerceConnectorUserDisabledState,
+  coerceStringArrayMap,
+  coercePlainMap,
+  extractNonSensitiveFields,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -392,6 +398,14 @@ async function main() {
   assert.deepStrictEqual(oauthApplied, [{ Authorization: 'Bearer initial' }]);
   assert.strictEqual(oauth.isScheduled('cfg-1'), true);
   oauth.stopAll();
+  assert.deepStrictEqual(resolveStatesFilePaths('/tmp/connectors', '/tmp/keys'), { storageDir: '/tmp/connectors', v3Path: '/tmp/connectors/connector-states.v3.json', legacyPath: '/tmp/connectors/connector-states.json', masterKeyBackupBaseDir: '/tmp/keys' });
+  assert.strictEqual(isAnonymousUser('default'), true);
+  assert.strictEqual(isAnonymousUser('user-1'), false);
+  assert.deepStrictEqual(coerceConnectorUserDisabledState(['a', 1, 'b']), { a: true, b: true });
+  assert.deepStrictEqual(coerceConnectorUserDisabledState({ a: true, b: 'yes' }), { a: true });
+  assert.deepStrictEqual(coerceStringArrayMap({ a: ['x', 1], b: [], c: 'bad' }), { a: ['x'] });
+  assert.deepStrictEqual(coercePlainMap({ cfg: { Authorization: 'Bearer token', invalid: 1 }, bad: null }), { cfg: { Authorization: 'Bearer token' } });
+  assert.deepStrictEqual(extractNonSensitiveFields({ enabled: ['a', 1], userDisabled: ['a'], disabledToolsOverrides: { a: ['read', 1] }, secret: 'drop' }), { enabled: ['a'], userDisabled: { a: true }, disabledToolsOverrides: { a: ['read'] }, headerOverridesBearerStripped: undefined, staleManagedAuthHeadersPurged: undefined, accountIdentityKey: undefined, everConnected: undefined, mcpSecurityMigrated: undefined, cSideAutoBoundDefaultDisabledMigrated: undefined });
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
