@@ -14,4 +14,5 @@ module.exports = Object.freeze({
   ...require("./runtime/ring-buffer"),
   ...require("./runtime/session-ready-registry"),
   ...require("./runtime/session-process"),
+  ...require("./runtime/runtime-http"),
 });

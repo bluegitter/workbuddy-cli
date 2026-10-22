@@ -28,6 +28,9 @@ const {
   dataSocketPath,
   sidecarRuntimeDir,
   createChildProcessSession,
+  createRuntimeHttp,
+  createHttpError,
+  tryParseEnvelope,
 } = require('../packages/runtime/src');
 const {
   ArtifactIndex,
@@ -175,6 +178,19 @@ async function main() {
     childSession.onExit((event) => { try { assert.strictEqual(event.exitCode, 0); resolve(); } catch (error) { reject(error); } });
   });
   assert.strictEqual(childOutput, 'ready');
+  assert.deepStrictEqual(tryParseEnvelope('{"code":"401","msg":"expired","data":{"retry":true}}'), { code: 401, msg: 'expired', data: { retry: true }, requestId: undefined });
+  const requests = [];
+  const runtimeHttp = createRuntimeHttp({
+    productManager: { getEndpoint: () => 'https://api.test/' },
+    authenticationManager: { currentSessionSubject: { getValue: () => ({ auth: { accessToken: 'token' }, account: { uid: 'u1' } }) } },
+    fetch: async (url, init) => { requests.push({ url, init }); return { ok: true, status: 200, json: async () => ({ code: 0, data: { ok: true } }) }; },
+  });
+  assert.deepStrictEqual(await runtimeHttp.post('/v1/test', { value: 1 }, { params: { q: 'a b' } }), { code: 0, data: { ok: true } });
+  assert.strictEqual(requests[0].url, 'https://api.test/v1/test?q=a%20b');
+  assert.strictEqual(requests[0].init.headers.Authorization, 'Bearer token');
+  const httpError = createHttpError('get', '/x', { status: 401, statusText: 'Unauthorized' }, '{"code":401,"msg":"Nope"}');
+  assert.strictEqual(httpError.code, 401);
+  assert.strictEqual(httpError.message, 'Nope');
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }

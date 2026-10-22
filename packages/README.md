@@ -15,7 +15,7 @@ cover the same behavior. `scripts/check-packages.js` validates source syntax;
 | `agent-provider` | Agent loop, tools, hooks, permissions, subagents | CLI bundle/provider registry |
 | `agent-client-protocol` | JSON-RPC/NDJSON connection | ACP compiled entries |
 | `context` | Agent context builder | Renderer context chunks |
-| `runtime` | Sidecar manager, session process adapter, protocol paths, readiness handshake, ring buffer, runtime context and isolated CLI environment | Sidecar/runtime entries |
+| `runtime` | Sidecar manager, session process adapter, protocol paths, readiness handshake, ring buffer, runtime HTTP, context and isolated CLI environment | Sidecar/runtime entries |
 | `plugin-core` | Skill and Plugin discovery | Built-in resources |
 | `sandbox-cli` | Command/path policy and runner | Sandbox binary/config |
 | `authentication` | Atomic credential store | Auth/session compiled entries |
