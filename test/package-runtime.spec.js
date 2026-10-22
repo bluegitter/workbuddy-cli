@@ -286,6 +286,17 @@ const {
   ExpertHistoryStorage,
   ExpertCenterResourceLoader,
   ExpertHistoryService,
+  ALLOWED_LOOPBACK_HOSTS,
+  matchesUriTemplate,
+  formatProxyServerLog,
+  readHeader,
+  sanitizeProxyServerLogValue,
+  serializeProxyServerErrorForLog,
+  summarizeProxyCallArgsForLog,
+  buildConnectorMcpCallContext,
+  classifyToolStatus,
+  extractErrorCode,
+  inferConnectorKind,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1353,6 +1364,23 @@ async function main() {
   assert.deepStrictEqual((await historyService.getRecentExperts('session-x')).map((item) => item.id), ['new', 'old']);
   await historyService.addExpert('session-x', { id: 'latest', name: 'Latest' });
   assert.strictEqual(serviceWrites.length > 0, true);
+  assert.strictEqual(ALLOWED_LOOPBACK_HOSTS.has('127.0.0.1'), true);
+  assert.strictEqual(matchesUriTemplate('starrocks://tables/foo', 'starrocks://tables/{name}'), true);
+  assert.strictEqual(matchesUriTemplate('starrocks://tables/foo?limit=1', 'starrocks://tables/{name}{?limit}'), true);
+  assert.strictEqual(matchesUriTemplate('starrocks://tables/foo/bar', 'starrocks://tables/{name}'), false);
+  assert.strictEqual(formatProxyServerLog('event', { ok: true }), 'event {"ok":true}');
+  assert.strictEqual(readHeader({ headers: { 'x-test': ['a', 'b'] } }, 'X-Test'), 'a');
+  const sanitized = sanitizeProxyServerLogValue({ a: { b: { c: { d: 'hidden' } } }, list: Array.from({ length: 12 }, (_, i) => i) });
+  assert.strictEqual(sanitized.a.b.c, '[truncated]');
+  assert.strictEqual(sanitized.list.length, 10);
+  const proxyError = serializeProxyServerErrorForLog(Object.assign(new Error('bad: detail'), { code: 'E_BAD', data: { token: 'redacted' } }));
+  assert.deepStrictEqual({ name: proxyError.name, message: proxyError.message, code: proxyError.code }, { name: 'Error', message: 'bad: detail', code: 'E_BAD' });
+  assert.deepStrictEqual(summarizeProxyCallArgsForLog({ a: { b: 1 } }), { a: { b: 1 } });
+  const proxyContext = buildConnectorMcpCallContext(() => ({ workbuddySessionId: 's1', projectId: 'p1' }), { 'workbuddy.ai/requestId': 'r1', 'workbuddy.ai/triggerSource': 'skill', modelId: 'm1' });
+  assert.deepStrictEqual(proxyContext, { workbuddySessionId: 's1', projectId: 'p1', conversationId: undefined, requestId: 'r1', messageId: undefined, toolCallId: undefined, agentMode: undefined, expertId: undefined, triggerSource: 'skill', modelId: 'm1' });
+  assert.strictEqual(classifyToolStatus(new Error('operation aborted')), 'cancelled');
+  assert.strictEqual(extractErrorCode(new Error('E_CONN: details')), 'E_CONN');
+  assert.strictEqual(inferConnectorKind({ type: 'cli' }), 'oauthCli');
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
