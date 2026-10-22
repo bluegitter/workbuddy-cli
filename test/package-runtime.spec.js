@@ -26,7 +26,7 @@ const {
   resolveModeTools,
   resolveResponseLocaleIsZh,
 } = require('../packages/authentication/src');
-const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger } = require('../packages/telemetry/src');
+const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger, formatLocalIsoTimestamp, formatLine, buildLifecycleLine, buildStartupPerfFields } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const {
   AgentViewModel,
@@ -268,6 +268,10 @@ async function main() {
   assert.strictEqual(resolveOneidAppType(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'enterprise-doc');
   assert.ok(resolveModeTools('ask').includes('AskUserQuestion'));
   assert.strictEqual(resolveResponseLocaleIsZh('en-US', 'zh-CN'), false);
+  assert.match(formatLocalIsoTimestamp(new Date('2026-01-02T03:04:05.006Z')), /^2026-01-02T/);
+  assert.strictEqual(formatLine('Test', { plain: 'ok', spaced: 'a b', quoted: 'x="y' }), '[Test] plain=ok spaced="a b" quoted="x=\\"y"');
+  assert.strictEqual(buildLifecycleLine('Boot', { source: 'test' }, { runtime: { getAppName: () => 'WorkBuddy', getAppVersion: () => '1.0' }, product: { getCommit: () => 'abc', getBase: () => ({ networkEnvironment: 'prod', platform: 'desktop' }) }, userIdProvider: () => 'u1', processInfo: { platform: 'darwin', arch: 'arm64', versions: { node: '22' }, uptime: () => 12 } }), '[Boot] appName=WorkBuddy appVersion=1.0 build=abc platform=darwin arch=arm64 electron=unknown node=22 chrome=unknown channel=prod productConfigType=desktop userId=u1 uptimeSec=12 source=test');
+  assert.deepStrictEqual(buildStartupPerfFields({ startupType: 'cold', flowType: 'startup', totalMs: 12, totalMarks: 3, firstInteractiveMs: 8, phases: { A: 2 } }), { startup_type: 'cold', flow_type: 'startup', total_ms: 12, total_marks: 3, first_interactive_ms: 8, phase_A_ms: 2 });
   const fakeSchema = { shape: { name: {} }, description: 'demo', safeParse: (value) => ({ success: typeof value === 'string', data: value }), isOptional: () => true, _def: { value: 'literal' } };
   assert.deepStrictEqual(getObjectShape(fakeSchema), { name: {} });
   assert.strictEqual(getSchemaDescription(fakeSchema), 'demo');

@@ -11,4 +11,5 @@ module.exports = Object.freeze({
   ...require("./runtime/structured-logger"),
   ...require("./runtime/startup-perf-exporters"),
   ...require("./runtime/perf-logger"),
+  ...require("./runtime/lifecycle-log"),
 });
