@@ -86,6 +86,10 @@ const {
   withHandoffCanaryHeaders,
   ClientInfoProvider,
   createDevEndpointProvider,
+  resolveChannelBranding,
+  toSafeAssetSegments,
+  parseElectronProxyRules,
+  getProxyEnvFromProcess,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -168,6 +172,10 @@ async function main() {
   assert.strictEqual((await clientInfo.get()).productName, 'Buddy');
   assert.strictEqual(clientInfo.clientInfo.machineId, 'machine-1');
   assert.deepStrictEqual(await createDevEndpointProvider({ resolve: () => 'https://dev.example' }).provide(), { endpoint: 'https://dev.example' });
+  assert.deepStrictEqual(toSafeAssetSegments('../logo.png'), undefined);
+  assert.strictEqual(resolveChannelBranding({ channels: { beta: { welcomeLogo: 'assets/logo.png' } } }, { env: { WORKBUDDY_USER_CHANNEL: 'beta' }, resolveAsset: () => '/tmp/logo.png' }).welcomeLogoUrl, 'local-file:///tmp/logo.png');
+  assert.strictEqual(parseElectronProxyRules('DIRECT; PROXY proxy.example:8080'), 'http://proxy.example:8080/');
+  assert.strictEqual(getProxyEnvFromProcess({ HTTP_PROXY: 'http://proxy', NO_PROXY: 'localhost' }).NODE_OPTIONS, '--use-system-ca');
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
