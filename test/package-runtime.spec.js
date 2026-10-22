@@ -32,6 +32,7 @@ const {
   ProductEnviroment,
   isPersonalAccount,
   ProductEnvService,
+  DefaultAuthenticationStorage,
 } = require('../packages/authentication/src');
 const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger, formatLocalIsoTimestamp, formatLine, buildLifecycleLine, buildStartupPerfFields } = require('../packages/telemetry/src');
 const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValueList } = require('../packages/telemetry/src');
@@ -298,6 +299,14 @@ async function main() {
   assert.strictEqual(await productEnv.getCurrent(), ProductEnviroment.Internal);
   assert.strictEqual(productEnv.matchDomain('*.corp.test', 'dev.corp.test'), true);
   assert.strictEqual(productEnv.matchDomain('*.corp.test', 'corp.test'), false);
+  const defaultAuthStorage = new DefaultAuthenticationStorage();
+  const storedSessions = [];
+  defaultAuthStorage.storeSessionSubject.subscribe((session) => storedSessions.push(session));
+  assert.strictEqual(await defaultAuthStorage.priority(), 1);
+  await defaultAuthStorage.store({ account: { uid: 'u1' } });
+  assert.deepStrictEqual(await defaultAuthStorage.restore(), { account: { uid: 'u1' } });
+  await defaultAuthStorage.clean();
+  assert.strictEqual(storedSessions.length, 3);
   credentials.set('workbuddy', { token: 'test' });
   assert.strictEqual(credentials.get('workbuddy').token, 'test');
   assert.strictEqual(fs.statSync(path.join(root, 'credentials.json')).mode & 0o777, 0o600);
