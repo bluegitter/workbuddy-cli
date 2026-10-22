@@ -248,6 +248,10 @@ const {
   extractNonSensitiveFields,
   readStates,
   writeStates,
+  McpOAuthMigrationService,
+  computeRemainingExpiresIn,
+  generateLegacyKey,
+  getSourceMaxMtime,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -470,6 +474,22 @@ async function main() {
   assert.deepStrictEqual(parseIcaclsPrincipals('BUILTIN\\Users:(RX)\nDOMAIN\\user:(R,W)\nSuccessfully processed 1 files'), ['BUILTIN\\Users', 'DOMAIN\\user']);
   assert.strictEqual(isBroadPrincipal('BUILTIN\\Users'), true);
   fs.rmSync(aclRoot, { recursive: true, force: true });
+  assert.strictEqual(computeRemainingExpiresIn({ expires_in: 60 }, { connect_time: 1000 }, 31000), 30);
+  const migrationRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-mcp-oauth-migration-'));
+  const legacyRoot = path.join(migrationRoot, 'legacy');
+  const uidRoot = path.join(legacyRoot, 'uid-1');
+  const migrationConfigDir = path.join(migrationRoot, '.workbuddy');
+  fs.mkdirSync(uidRoot, { recursive: true });
+  fs.mkdirSync(migrationConfigDir, { recursive: true });
+  const legacyKey = generateLegacyKey('github', 'https://mcp.test');
+  fs.writeFileSync(path.join(uidRoot, 'VSCode_mcp_oauth.json'), JSON.stringify({ tokens: { [legacyKey]: { access_token: 'legacy-access', expires_in: 3600 } }, clientInfo: { [legacyKey]: { client_id: 'client', client_secret: 'secret', connect_time: Date.now() } } }));
+  fs.writeFileSync(path.join(migrationConfigDir, 'mcp.json'), JSON.stringify({ mcpServers: { github: { url: 'https://mcp.test' } } }));
+  const mcpOauthMigration = new McpOAuthMigrationService(() => 'user-1', { homeDir: migrationRoot, configDir: migrationConfigDir, backupBaseDir: path.join(migrationRoot, 'backup') });
+  const migrationResult = mcpOauthMigration.migrate(legacyRoot, path.join(migrationConfigDir, 'mcp.json'));
+  assert.strictEqual(migrationResult.tokensMigrated, 1);
+  assert.strictEqual(migrationResult.clientInfoMigrated, 1);
+  assert.ok(getSourceMaxMtime(legacyRoot) > 0);
+  fs.rmSync(migrationRoot, { recursive: true, force: true });
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));

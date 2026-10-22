@@ -104,4 +104,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-server-side-oauth-refresher"),
   ...require("./runtime/connector-state-utils"),
   ...require("./runtime/connector-state-persistence"),
+  ...require("./runtime/mcp-oauth-migration"),
 });
