@@ -449,6 +449,11 @@ async function main() {
   assert.strictEqual(oauthStore.saveTokens('connector:github', 'https://mcp.test', { access_token: 'access-2', refresh_token: 'refresh-2', expires_in: 3600, token_type: 'Bearer' }, { Authorization: 'x' }), true);
   assert.strictEqual(oauthStore.loadTokens('connector:github', 'https://mcp.test', { Authorization: 'x' }).access_token, 'access-2');
   assert.strictEqual(oauthStore.peekTokens('connector:github', 'https://mcp.test', { Authorization: 'x' }).refresh_token, 'refresh-2');
+  assert.strictEqual(oauthStore.isTokenExpired('connector:github', 'https://mcp.test', 300, { Authorization: 'x' }), false);
+  assert.strictEqual(oauthStore.clearAccessTokenOnly('connector:github', 'https://mcp.test', { Authorization: 'x' }), true);
+  assert.strictEqual(oauthStore.read().mcpOAuth[oauthStore.generateServerKey('connector:github', 'https://mcp.test', { Authorization: 'x' })].accessToken, '');
+  assert.strictEqual(oauthStore.deleteClientInfo('connector:github', 'https://mcp.test', { Authorization: 'x' }), true);
+  assert.strictEqual(oauthStore.deleteAll('connector:github', 'https://mcp.test', { Authorization: 'x' }), true);
   assert.strictEqual(new ConnectorOAuthStore('default', { homeDir: storeRoot }).write({}), false);
   fs.rmSync(storeRoot, { recursive: true, force: true });
   const messages = [];
