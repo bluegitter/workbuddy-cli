@@ -34,4 +34,5 @@ module.exports = Object.freeze({
   ...require("./runtime/ima-auth-api"),
   ...require("./runtime/ima-file-utils"),
   ...require("./runtime/ima-upload-policy"),
+  ...require("./runtime/ima-files-api"),
 });

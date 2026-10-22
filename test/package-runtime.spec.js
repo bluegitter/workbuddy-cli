@@ -131,6 +131,8 @@ const {
   formatHumanSize,
   createUploadProgress,
   throwIfUploadAborted,
+  ImaFilesApi,
+  ImaKnowledgeBaseApi,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -283,6 +285,9 @@ async function main() {
   assert.strictEqual(normalizeLocalPath('file:///tmp/a.txt'), '/tmp/a.txt'); assert.strictEqual(getMaxUploadSizeBytes('xlsx'), 10 * 1024 * 1024); assert.strictEqual(formatHumanSize(1024 * 1024), '1.0 MB');
   const uploadProgress = []; createUploadProgress((event) => uploadProgress.push(event))('cosPut', 110, { loaded: 1 }); assert.deepStrictEqual(uploadProgress[0], { stage: 'cosPut', percent: 100, loaded: 1 });
   const abortUpload = new AbortController(); abortUpload.abort(); assert.throws(() => throwIfUploadAborted(abortUpload.signal), /Upload cancelled/);
+  const filesApi = new ImaFilesApi({ post: async (endpoint, body) => endpoint.includes('search_knowledge') ? { searched_knowledge_list: [], is_end: true } : endpoint.includes('preview') ? { results: { m1: { ret_code: 0, url: 'https://preview' } } } : { knowledge_list: [], current_path: [], is_end: true } }, { fetchFn: async () => ({ ok: true, status: 200, headers: new Headers({ 'content-type': 'text/plain' }), text: async () => 'content', arrayBuffer: async () => new TextEncoder().encode('blob').buffer }) });
+  assert.strictEqual((await filesApi.getViewUrl('m1')).url, 'https://preview'); assert.strictEqual((await filesApi.getContent('https://content')).content, 'content');
+  const kbApi = new ImaKnowledgeBaseApi({ post: async () => ({ results: [] }) }); assert.deepStrictEqual((await kbApi.list()).groups, []);
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
