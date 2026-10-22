@@ -121,4 +121,5 @@ module.exports = Object.freeze({
   ...require("./runtime/expert-history-cache"),
   ...require("./runtime/expert-history-storage"),
   ...require("./runtime/expert-resource-loader"),
+  ...require("./runtime/expert-history-service"),
 });

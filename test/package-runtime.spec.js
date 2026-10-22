@@ -285,6 +285,7 @@ const {
   ExpertHistoryCache,
   ExpertHistoryStorage,
   ExpertCenterResourceLoader,
+  ExpertHistoryService,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1340,6 +1341,18 @@ async function main() {
   assert.strictEqual(promptResults.get('a_zh').content.includes('/a.md'), true);
   assert.deepStrictEqual(batchProgress.at(-1), [2, 2, 0]);
   assert.ok(resourceCalls.includes('https://experts.example/internalExpert.json'));
+  const serviceCache = new ExpertHistoryCache();
+  const serviceWrites = [];
+  const historyService = new ExpertHistoryService({
+    cache: serviceCache,
+    storage: { load: async () => ({ version: 1, sessions: { one: [{ id: 'old', summonedAt: 1 }], two: [{ id: 'new', summonedAt: 2 }] }, lastUpdated: 1 }), saveAsync: (data) => serviceWrites.push(data), flush: async () => {} },
+    maxExpertsPerSession: 5,
+  });
+  assert.strictEqual(historyService.migrateToSharedHistory({ version: 1, sessions: { one: [{ id: 'old' }], two: [{ id: 'new' }] }, lastUpdated: 1 }).data.sessions[SHARED_HISTORY_KEY].length, 2);
+  await historyService.ensureInitialized();
+  assert.deepStrictEqual((await historyService.getRecentExperts('session-x')).map((item) => item.id), ['new', 'old']);
+  await historyService.addExpert('session-x', { id: 'latest', name: 'Latest' });
+  assert.strictEqual(serviceWrites.length > 0, true);
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
