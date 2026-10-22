@@ -13,4 +13,5 @@ module.exports = Object.freeze({
   ...require("./runtime/conversation-state"),
   ...require("./runtime/queue-snapshot"),
   ...require("./runtime/renderer-resource"),
+  ...require("./runtime/preload-helpers"),
 });

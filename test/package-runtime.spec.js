@@ -55,6 +55,11 @@ const {
   buildRendererResourceAttributes,
   normalizeTheme,
   normalizeLanguage,
+  applyLocalStorageMigrationPayload,
+  readLocalFilePath,
+  resolveIsMainFramePreload,
+  toFileResourceUri,
+  validateBootstrapInfo,
 } = require('../packages/workbuddy-app/src');
 const {
   CancellationTokenSource,
@@ -224,6 +229,15 @@ async function main() {
   assert.strictEqual(resolveOneidAppType(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'enterprise-doc');
   assert.ok(resolveModeTools('ask').includes('AskUserQuestion'));
   assert.strictEqual(resolveResponseLocaleIsZh('en-US', 'zh-CN'), false);
+  assert.strictEqual(resolveIsMainFramePreload({ processIsMainFrame: false, isTopWindow: true }), false);
+  assert.strictEqual(readLocalFilePath('workbuddy://open?localFilePath=%2Ftmp%2Fa.txt'), '/tmp/a.txt');
+  assert.strictEqual(toFileResourceUri('/tmp/a b.txt'), 'file:///tmp/a%20b.txt');
+  assert.ok(validateBootstrapInfo({ pendingLocalStorageMigration: { sourceSessionPath: '/tmp/session', preparedAt: 1, entries: { a: 'b' } } }).pendingLocalStorageMigration);
+  const localStorage = new Map([['workbuddy-pinned-conversations', JSON.stringify([{ id: 'a' }])], ['existing', 'keep']]);
+  const storage = { getItem: (key) => localStorage.get(key) ?? null, setItem: (key, value) => localStorage.set(key, value) };
+  const migration = applyLocalStorageMigrationPayload(storage, { entries: { 'workbuddy-pinned-conversations': JSON.stringify([{ id: 'a' }, { id: 'b' }]), existing: 'replace', empty: '' } });
+  assert.deepStrictEqual(migration.appliedKeys, ['workbuddy-pinned-conversations']);
+  assert.strictEqual(JSON.parse(localStorage.get('workbuddy-pinned-conversations')).length, 2);
   const contextMessages = [{ role: 'user', content: 'a'.repeat(100) }, { role: 'assistant', content: 'b'.repeat(100) }, { role: 'user', content: 'c'.repeat(100) }];
   assert.ok(calculateContextUsage(contextMessages, 100).usedTokens > 0);
   assert.strictEqual(shouldTriggerCompaction({ messages: contextMessages, contextWindow: 100, reserveTokens: 0, threshold: 0.1 }), true);
