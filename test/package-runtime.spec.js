@@ -252,6 +252,7 @@ const {
   computeRemainingExpiresIn,
   generateLegacyKey,
   getSourceMaxMtime,
+  ConnectorTokenRefresher,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -490,6 +491,22 @@ async function main() {
   assert.strictEqual(migrationResult.clientInfoMigrated, 1);
   assert.ok(getSourceMaxMtime(legacyRoot) > 0);
   fs.rmSync(migrationRoot, { recursive: true, force: true });
+  const refreshedTokens = [];
+  const savedClients = [];
+  const tokenRefresher = new ConnectorTokenRefresher({
+    loadTokens: () => ({ refresh_token: 'refresh' }),
+    loadClientInfo: () => undefined,
+    saveTokens: (_id, _url, tokens) => refreshedTokens.push(tokens),
+    saveClientInfo: (_id, _url, client) => savedClients.push(client),
+  }, { getMemoryClientInfo: () => ({ client_id: 'client' }) }, {
+    discoverOAuthProtectedResourceMetadata: async () => ({ authorization_servers: ['https://auth.test'] }),
+    discoverAuthorizationServerMetadata: async () => ({ token_endpoint: 'https://auth.test/token' }),
+    refreshAuthorization: async (_url, request) => ({ access_token: `new-${request.refreshToken}`, refresh_token: 'next', expires_in: 3600 }),
+  });
+  await tokenRefresher.refreshNow('github', 'https://mcp.test');
+  assert.strictEqual(refreshedTokens[0].access_token, 'new-refresh');
+  assert.deepStrictEqual(savedClients, [{ client_id: 'client' }]);
+  tokenRefresher.dispose();
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
