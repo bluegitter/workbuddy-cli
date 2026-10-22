@@ -98,6 +98,11 @@ const {
   PoiQuestionRegistry,
   TencentDocsAgentEditorTracker,
   createIsSessionStillProcessing,
+  isTencentOnlineFilePath,
+  extractTencentOnlineFileId,
+  computeLocalPreviewGlobalPadId,
+  detectDocumentFileType,
+  normalizeLocalFilePathInput,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -209,6 +214,11 @@ async function main() {
   const editorTracker = new TencentDocsAgentEditorTracker(); editorTracker.recordOpenedFile('s1', '/tmp/a.doc'); editorTracker.recordOpenedFile('s1', '/tmp/a.doc');
   assert.deepStrictEqual(editorTracker.takeAndClear('s1'), ['/tmp/a.doc']);
   assert.strictEqual(createIsSessionStillProcessing({ getSession: () => ({ status: 'working', isProcessing: false }) })('s1'), true);
+  assert.strictEqual(isTencentOnlineFilePath('tdoc://file-1'), true);
+  assert.strictEqual(extractTencentOnlineFileId('tdoc://file-1'), 'file-1');
+  assert.strictEqual(computeLocalPreviewGlobalPadId('/tmp/a.doc').length, 32);
+  assert.strictEqual(detectDocumentFileType('/tmp/a.xlsx'), 'spreadsheet');
+  assert.strictEqual(normalizeLocalFilePathInput('file:///tmp/a%20b.doc'), '/tmp/a b.doc');
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);

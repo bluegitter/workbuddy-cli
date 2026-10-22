@@ -25,4 +25,5 @@ module.exports = Object.freeze({
   ...require("./runtime/edge-sync-trace"),
   ...require("./runtime/edge-sync-recovery"),
   ...require("./runtime/interaction-registries"),
+  ...require("./runtime/document-paths"),
 });
