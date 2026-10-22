@@ -43,6 +43,9 @@ const {
   deriveRunState,
   resolveAppConfig,
   withDisplayStatus,
+  buildRendererResourceAttributes,
+  normalizeTheme,
+  normalizeLanguage,
 } = require('../packages/workbuddy-app/src');
 const {
   CancellationTokenSource,
@@ -358,6 +361,9 @@ async function main() {
   assert.strictEqual(deriveRunState('completed', { messageQueueRuntime: { pendingItemCount: 1 } }), 'idle');
   assert.strictEqual(deriveRunState('working', {}), 'busy');
   assert.deepStrictEqual(withDisplayStatus({ protocolStatus: 'working', status: 'pending' }), { protocolStatus: 'working', status: 'working' });
+  const resource = buildRendererResourceAttributes({ isDev: true, appVersion: '2.0', userId: 'u1', random: () => 0.5, now: () => 123, os: 'macOS' });
+  assert.deepStrictEqual({ env: resource.env_name, version: resource['service.version'], uid: resource.uid }, { env: 'development', version: '2.0', uid: 'u1' });
+  assert.strictEqual(normalizeTheme('unknown'), 'light'); assert.strictEqual(normalizeLanguage('zh-Hans-CN'), 'zh-CN');
   const queueStore = new QueueSnapshotStore(() => 123);
   queueStore.upsert({ sessionId: 's1', items: [{ status: 'pending' }, { status: 'sending' }], runtime: { activated: true } });
   assert.deepStrictEqual(queueStore.get('s1').runtime, { activated: true, paused: false, pauseReason: undefined, inflightItemId: undefined, pendingItemCount: 1, sendingItemCount: 1, updatedAt: 123 });
