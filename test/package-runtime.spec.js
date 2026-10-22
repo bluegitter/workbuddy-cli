@@ -249,7 +249,7 @@ const {
   readStates,
   writeStates,
 } = require('../packages/workbuddy-server/src');
-const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore } = require('../packages/authentication/src');
+const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3 } = require('../packages/authentication/src');
 const {
   ArtifactIndex,
   AutomationScheduler,
@@ -434,6 +434,16 @@ async function main() {
   assert.notStrictEqual(persistedState.headerOverrides.github.Authorization, 'Bearer token');
   assert.deepStrictEqual(readStates(stateOptions), { enabled: ['github'], userDisabled: { legacy: true }, headerOverrides: { github: { Authorization: 'Bearer token' } }, envOverrides: { github: { API_KEY: 'secret' } }, headerOverridesBearerStripped: undefined, staleManagedAuthHeadersPurged: undefined, accountIdentityKey: undefined, everConnected: undefined, disabledToolsOverrides: {}, mcpSecurityMigrated: undefined, cSideAutoBoundDefaultDisabledMigrated: undefined });
   fs.rmSync(stateRoot, { recursive: true, force: true });
+  const oauthRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-oauth-'));
+  const oauthPaths = { storageDir: path.join(oauthRoot, 'storage'), v3Path: path.join(oauthRoot, 'storage', '.credentials.v3.json'), masterKeyBackupBaseDir: path.join(oauthRoot, 'backup') };
+  const oauthOptions = { userId: 'user-1', paths: oauthPaths, logger: console };
+  assert.strictEqual(writeOAuthV3(oauthOptions, { mcpOAuth: { 'server-1': { serverName: 'server', serverUrl: 'https://mcp.test', tokenType: 'Bearer', expiresAt: 123, scope: 'read', accessToken: 'access', refreshToken: 'refresh' } }, mcpClientInfo: { 'server-1': { client_id: 'client', redirect_uris: ['http://localhost'], client_secret: 'secret' } } }), true);
+  const oauthRaw = JSON.parse(fs.readFileSync(oauthPaths.v3Path, 'utf8'));
+  assert.strictEqual(typeof oauthRaw.mcpOAuth['server-1'].accessToken.ct, 'string');
+  assert.notStrictEqual(oauthRaw.mcpClientInfo['server-1'].client_secret, 'secret');
+  assert.deepStrictEqual(readOAuthV3(oauthOptions).mcpOAuth['server-1'].accessToken, 'access');
+  assert.strictEqual(readOAuthV3(oauthOptions).mcpClientInfo['server-1'].client_secret, 'secret');
+  fs.rmSync(oauthRoot, { recursive: true, force: true });
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
