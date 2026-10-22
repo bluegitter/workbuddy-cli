@@ -28,4 +28,5 @@ module.exports = Object.freeze({
   ...require("./runtime/client"),
   ...require("./runtime/acp-json-rpc-client"),
   ...require("./runtime/cloud-http-client"),
+  ...require("./runtime/cloud-provider"),
 });

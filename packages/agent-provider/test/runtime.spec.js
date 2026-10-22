@@ -10,6 +10,7 @@ const {
   AgentClient,
   AcpJsonRpcClient,
   CloudHttpClient,
+  CloudAgentProvider,
   HookEvent,
   HookRegistry,
   InterruptionController,
@@ -107,6 +108,11 @@ async function main() {
   assert.strictEqual((await cloudClient.connect()).agentCapabilities.loadSession, true);
   assert.strictEqual((await cloudClient.createSession('/workspace')).sessionId, 'cloud-s1');
   await cloudClient.disconnect();
+  const cloudRequests = [];
+  const cloudProvider = new CloudAgentProvider({ http: { get: async (url) => { cloudRequests.push(['GET', url]); if (url.includes('/session')) return { data: { id: 'agent-1', sessionId: 'cloud-s1', link: 'https://cloud.test/mcp', token: 'token', cwd: '/workspace' } }; return { data: { id: 'agent-1', name: 'Demo', status: 'idle' } }; }, post: async (url, body) => { cloudRequests.push(['POST', url, body]); return { data: { id: 'agent-2', conversations: [] } }; } }, clientFactory: () => ({ connect: async () => {}, disconnect: async () => {}, on: () => {}, off: () => {}, once: () => {}, createSession: async () => ({ sessionId: 's' }) }) });
+  assert.strictEqual((await cloudProvider.get('agent-1')).type, 'cloud');
+  assert.strictEqual(await cloudProvider.create({ options: { prompt: 'hello' } }), 'agent-2');
+  assert.strictEqual(await cloudProvider.delete('agent-1'), true);
   let turn = 0;
   await runAgentLoop(session, {
     tools,
