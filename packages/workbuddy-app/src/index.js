@@ -14,4 +14,5 @@ module.exports = Object.freeze({
   ...require("./runtime/queue-snapshot"),
   ...require("./runtime/renderer-resource"),
   ...require("./runtime/preload-helpers"),
+  ...require("./runtime/window-policy"),
 });

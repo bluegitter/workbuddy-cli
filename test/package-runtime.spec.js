@@ -60,6 +60,11 @@ const {
   resolveIsMainFramePreload,
   toFileResourceUri,
   validateBootstrapInfo,
+  clampBoundsToWorkArea,
+  getGuestInPlaceNavigationReason,
+  isAllowedGuestWebviewRedirect,
+  isVisibleOnAnyDisplay,
+  stripFrameEmbeddingHeaders,
 } = require('../packages/workbuddy-app/src');
 const {
   CancellationTokenSource,
@@ -291,6 +296,11 @@ async function main() {
   assert.strictEqual(resolveIsMainFramePreload({ processIsMainFrame: false, isTopWindow: true }), false);
   assert.strictEqual(readLocalFilePath('workbuddy://open?localFilePath=%2Ftmp%2Fa.txt'), '/tmp/a.txt');
   assert.strictEqual(toFileResourceUri('/tmp/a b.txt'), 'file:///tmp/a%20b.txt');
+  assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
+  assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
+  assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });
+  assert.strictEqual(isAllowedGuestWebviewRedirect('https://docs.qq.com/oauth/callback'), true);
+  assert.strictEqual(getGuestInPlaceNavigationReason('https://docs.qq.com/doc/1?a=1', 'https://docs.qq.com/doc/1?a=2'), 'same-document');
   assert.ok(validateBootstrapInfo({ pendingLocalStorageMigration: { sourceSessionPath: '/tmp/session', preparedAt: 1, entries: { a: 'b' } } }).pendingLocalStorageMigration);
   const localStorage = new Map([['workbuddy-pinned-conversations', JSON.stringify([{ id: 'a' }])], ['existing', 'keep']]);
   const storage = { getItem: (key) => localStorage.get(key) ?? null, setItem: (key, value) => localStorage.set(key, value) };
