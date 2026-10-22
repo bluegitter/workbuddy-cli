@@ -115,7 +115,7 @@ async function main() {
   assert.strictEqual(await cloudProvider.create({ options: { prompt: 'hello' } }), 'agent-2');
   assert.strictEqual(await cloudProvider.delete('agent-1'), true);
   const localStorage = new Map();
-  const backendSessions = [{ sessionId: 'local-s1', cwd: '/tmp/project', status: 'active', name: 'Demo', createdAt: '2026-01-01T00:00:00Z' }];
+  const backendSessions = [{ sessionId: 'local-s1', cwd: '/tmp/project', status: 'working', name: 'Demo', createdAt: '2026-01-01T00:00:00Z' }];
   const localChannel = {
     sendNotification: () => true,
     on: () => {},
@@ -139,6 +139,7 @@ async function main() {
   assert.strictEqual((await localProvider.create({ cwd: '/tmp/project' })), '/tmp/project');
   assert.strictEqual((await localProvider.get('local-s1')).cwd, '/tmp/project');
   assert.strictEqual((await localProvider.list({ userId: 'u1' })).agents.length, 1);
+  assert.strictEqual((await localProvider.list({ userId: 'u1', filters: [{ field: 'sessionStatus', value: 'working' }] })).agents.length, 1);
   await localProvider.archive('local-s1');
   assert.strictEqual((await localProvider.list({ userId: 'u1' })).agents.length, 0);
   assert.strictEqual((await localProvider.list({ userId: 'u1', filters: [{ field: 'status', value: 'archived' }] })).agents[0].status, 'archived');

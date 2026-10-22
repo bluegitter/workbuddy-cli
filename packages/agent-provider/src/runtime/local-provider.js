@@ -3,6 +3,7 @@
 const { AcpJsonRpcClient } = require('./acp-json-rpc-client');
 const { LocalAgentConnection } = require('./provider-connections');
 const { LocalFilesystem } = require('./local-filesystem');
+const { isWorkingFamilyStatus } = require('./api-types');
 
 const EMPTY_PAGE = Object.freeze({ page: 1, size: 0, total: 0, totalPages: 0, hasNext: false, hasPrev: false });
 
@@ -123,7 +124,11 @@ class LocalAgentProvider {
     for (const filter of options.filters || []) {
       if (skipStatusArchived && filter.field === 'status' && filter.value.includes('archived')) continue;
       const values = filter.value.split(',').map((v) => v.trim());
-      result = result.filter((s) => values.includes(String(filter.field === 'sessionStatus' ? s.status : s[filter.field])));
+      result = result.filter((s) => {
+        const status = String(s.status || '').toLowerCase();
+        if (filter.field === 'sessionStatus') return values.includes(status) || (isWorkingFamilyStatus(status) && values.includes('working'));
+        return values.includes(String(s[filter.field]));
+      });
     }
     if (options.dayRange !== undefined) { const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - (options.dayRange - 1)); cutoff.setHours(0, 0, 0, 0); result = result.filter((s) => s.createdAt && s.createdAt >= cutoff); }
     if (options.sort) { const { orderBy, order = 'asc' } = options.sort; result.sort((a, b) => { const av = a[orderBy], bv = b[orderBy]; if (av === undefined) return 1; if (bv === undefined) return -1; const cmp = av instanceof Date && bv instanceof Date ? av - bv : typeof av === 'string' && typeof bv === 'string' ? av.localeCompare(bv) : av < bv ? -1 : av > bv ? 1 : 0; return order === 'desc' ? -cmp : cmp; }); }
