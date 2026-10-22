@@ -347,6 +347,7 @@ const {
   computeReconnectDelay,
   classifyRefreshFailure,
   classifyExhaustedReconnect,
+  ConnectorTokenRefreshService,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1554,6 +1555,28 @@ async function main() {
   assert.deepStrictEqual(classifyRefreshFailure(new Error('socket hang up')), { ok: false, kind: 'transient', error: 'socket hang up' });
   assert.strictEqual(classifyExhaustedReconnect({ sawTransportTrouble: false, finalError: '401 Unauthorized' }), 'auth');
   assert.strictEqual(classifyExhaustedReconnect({ sawTransportTrouble: true, finalError: '401 Unauthorized' }), 'transport');
+  let refreshedMemory;
+  const refreshEvents = [];
+  const refreshService = new ConnectorTokenRefreshService({
+    oauthStore: {
+      loadTokens: () => ({ refresh_token: 'refresh', expires_in: 10 }),
+      loadClientInfo: () => ({ client_id: 'client' }),
+      saveTokens: (_id, _url, tokens) => { refreshedMemory = tokens; refreshEvents.push('saved'); },
+    },
+    auth: {
+      discoverOAuthProtectedResourceMetadata: async () => ({ authorization_servers: ['https://auth.example'], resource: 'https://mcp.example/resource' }),
+      discoverAuthorizationServerMetadata: async () => ({ token_endpoint: 'https://auth.example/token' }),
+      refreshAuthorization: async (_url, params) => { assert.strictEqual(params.refreshToken, 'refresh'); return { access_token: 'new-token', expires_in: 3600 }; },
+    },
+    syncProviderMemoryTokens: (_id, tokens) => { refreshedMemory = tokens; },
+  });
+  assert.deepStrictEqual(await refreshService.refreshIfNeeded('connector:docs', 'https://mcp.example'), { ok: true, refreshed: true });
+  assert.strictEqual(refreshedMemory.access_token, 'new-token');
+  const validService = new ConnectorTokenRefreshService({ oauthStore: { loadTokens: () => ({ refresh_token: 'r', expires_in: 120 }) } });
+  assert.deepStrictEqual(await validService.refreshIfNeeded('docs', 'https://mcp'), { ok: true, refreshed: false });
+  const authFailureService = new ConnectorTokenRefreshService({ oauthStore: { loadTokens: () => ({ refresh_token: 'r', expires_in: 1 }), loadClientInfo: () => null }, auth: { discoverAuthorizationServerMetadata: async () => { throw new Error('invalid_grant'); } }, invalidateCredentials: () => refreshEvents.push('invalidated') });
+  assert.deepStrictEqual(await authFailureService.refreshIfNeeded('docs', 'https://mcp'), { ok: false, kind: 'auth', error: 'invalid_grant' });
+  assert.strictEqual(refreshEvents.includes('invalidated'), true);
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
