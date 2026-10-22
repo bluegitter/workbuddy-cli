@@ -146,6 +146,20 @@ async function main() {
   assert.strictEqual(localConnects, 1);
   await localProvider.rename('local-s1', 'Renamed');
   await localProvider.move('local-s1');
+  const localAcpEvents = [];
+  const localAcpConnection = new LocalAgentConnection('local-acp', {
+    client: {
+      initialize: async (request) => { localAcpEvents.push(['initialize', request]); return { agentCapabilities: { prompt: true } }; },
+      newSession: async (request) => { localAcpEvents.push(['newSession', request]); return { sessionId: 'new-local' }; },
+      prompt: async (request) => { localAcpEvents.push(['prompt', request]); return { stopReason: 'end_turn' }; },
+      cancel: async (request) => { localAcpEvents.push(['cancel', request]); },
+    },
+  });
+  await localAcpConnection.connect({ fs: true });
+  await localAcpConnection.createSession({ cwd: '/tmp/project' });
+  await localAcpConnection.prompt('new-local', { prompt: 'hi' });
+  assert.strictEqual(localAcpEvents[0][0], 'initialize');
+  assert.deepStrictEqual(localAcpEvents[2][1], { sessionId: 'new-local', prompt: 'hi' });
   let turn = 0;
   await runAgentLoop(session, {
     tools,

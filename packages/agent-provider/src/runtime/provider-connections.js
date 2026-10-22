@@ -43,7 +43,11 @@ class LocalAgentConnection extends AgentConnection {
   }
   async connect(clientCapabilities) {
     if (this.client?.initialize && !this.client.connect) {
-      return super.connect({ protocolVersion: 1, clientCapabilities });
+      this._state = 'connecting'; this.emit('connecting');
+      const result = await this.client.initialize({ protocolVersion: 1, clientCapabilities });
+      this._initializeResult = result || { protocolVersion: 1 }; this._capabilities = result?.agentCapabilities;
+      this._isInitialized = true; this._state = 'initialized'; this.emit('connected');
+      return this._initializeResult;
     }
     return super.connect(clientCapabilities);
   }
@@ -62,6 +66,22 @@ class LocalAgentConnection extends AgentConnection {
       return this.client.loadSession({ ...params, cwd: params.cwd || this.cwd });
     }
     return super.loadSession(params);
+  }
+  async prompt(sessionId, params = {}) {
+    if (this.client?.prompt && this.client.prompt.length <= 1) return this.client.prompt({ sessionId, ...params });
+    return super.prompt(sessionId, params);
+  }
+  cancel(sessionId) {
+    if (this.client?.cancel && this.client.cancel.length <= 1) return this.client.cancel({ sessionId });
+    return super.cancel(sessionId);
+  }
+  setSessionMode(sessionId, modeId) {
+    if (this.client?.setSessionMode && this.client.setSessionMode.length <= 1) return this.client.setSessionMode({ sessionId, modeId });
+    return super.setSessionMode(sessionId, modeId);
+  }
+  setSessionModel(sessionId, modelId) {
+    if (this.client?.setSessionModel && this.client.setSessionModel.length <= 1) return this.client.setSessionModel({ sessionId, modelId });
+    return super.setSessionModel(sessionId, modelId);
   }
 }
 class CloudAgentConnection extends AgentConnection { constructor(agentId, config = {}) { super(agentId, { ...config, transport: 'cloud', cwd: config.cwd || '/workspace' }); } }

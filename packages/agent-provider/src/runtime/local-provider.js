@@ -151,7 +151,23 @@ class LocalAgentProvider {
   async getModes(cwd) { try { return (await this.sharedAcpClient.sendBroadcastRequest('getModes', { cwd: cwd || '' }))?.modes || []; } catch { return []; } }
   async getProductConfiguration() { try { return await this.sharedAcpClient.sendBroadcastRequest('getProductConfiguration', {}); } catch { return {}; } }
   async getUserInfo() { try { return await this.sharedAcpClient.sendBroadcastRequest('getUserInfo', {}); } catch { return {}; } }
+  async getIdentityName() { try { return await this.sharedAcpClient.sendBroadcastRequest('getIdentityName', {}); } catch { return {}; } }
+  async getSkillSecurityAppKey() { return (await this.getProductConfiguration()).skillSecurityAppKey; }
   async openWorkspace(params) { return this.sharedAcpClient.openWorkspace(params); }
+  async pickFile(params) {
+    try { const data = await this.backend('backend:pick-file', params, 30000); return { files: data?.filePaths || [], canceled: data?.canceled ?? false, error: data?.error }; }
+    catch (error) { return { files: [], canceled: true, error: error.message }; }
+  }
+  async pickFolder(params) {
+    try { const data = await this.backend('backend:pick-folder', params, 30000); return { folderPaths: data?.folderPaths ?? data?.paths ?? [], canceled: data?.canceled ?? data?.cancelled ?? true, error: data?.error }; }
+    catch (error) { return { folderPaths: [], canceled: true, error: error.message }; }
+  }
+  async searchFile(params) {
+    try {
+      const response = await this.sharedAcpClient.sendBroadcastRequest('getWorkspaceFiles', { cwd: params.cwd, search: params.options?.search, resultNum: params.options?.resultNum });
+      return { results: response?.results || [], error: undefined };
+    } catch (error) { return { results: [], error: error.message }; }
+  }
 }
 
 module.exports = { LocalAgentProvider };
