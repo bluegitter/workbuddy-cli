@@ -175,6 +175,8 @@ const {
   formatLogDetailsSuffix,
   tryParseAcpUsageUpdate,
   ALL_MEDIA_EXTS,
+  NoResponseWatchdog,
+  appendStateTransitionEntry,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1018,6 +1020,14 @@ async function main() {
   assert.strictEqual(formatLogDetailsSuffix({ count: 1 }), ' {"count":1}');
   assert.deepStrictEqual(tryParseAcpUsageUpdate({ sessionUpdate: 'usage_update', used: 2, size: 10 }), { sessionUpdate: 'usage_update', used: 2, size: 10 });
   assert.strictEqual(ALL_MEDIA_EXTS.has('png'), true);
+  const telemetryEvents = [];
+  const watchdogSession = { sessionId: 's1', isProcessing: true, taskState: task, promptStartedAt: 0, lastBackendMessageAt: 0, stateTransitionLog: [], hasReceivedBackendActivity: false };
+  const watchdog = new NoResponseWatchdog(watchdogSession, (name, payload) => telemetryEvents.push({ name, payload }), { timeoutThresholdMs: 10 }, () => 20);
+  watchdog.tick();
+  assert.strictEqual(telemetryEvents[0].name, 'session_no_response_timeout');
+  const transitionLog = [];
+  appendStateTransitionEntry(transitionLog, { signal: 'working', fromRunState: 'running', fromTaskStatus: 'working', toRunState: 'running', toTaskStatus: 'working' });
+  assert.strictEqual(transitionLog.length, 0);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }

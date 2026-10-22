@@ -45,6 +45,7 @@ module.exports = Object.freeze({
   ...require("./runtime/log-details"),
   ...require("./runtime/usage-cache"),
   ...require("./runtime/media-extensions"),
+  ...require("./runtime/no-response-watchdog"),
   ...require("./runtime/interaction-registries"),
   ...require("./runtime/document-paths"),
   ...require("./runtime/document-prompt"),
