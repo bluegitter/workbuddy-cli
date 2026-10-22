@@ -225,6 +225,12 @@ const {
   parseDeeplink,
   isDomainObjectDeeplink,
   MockDeeplinkRepo,
+  readLocalMemoryFiles,
+  writeAiName,
+  writeUserCallName,
+  writeSoulBody,
+  writeMemoryBody,
+  createWorkbuddyIdentityService,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -311,6 +317,19 @@ async function main() {
   assert.strictEqual(scanSkillFiles(path.join(root, 'skills')).length, 2);
   assert.strictEqual(validatePluginManifest({ name: 'demo', version: '1.0.0' }).valid, true);
   assert.strictEqual(validatePluginManifest({ version: 1 }).valid, false);
+  const memoryDir = path.join(root, 'memory');
+  await writeAiName(memoryDir, 'Buddy');
+  await writeUserCallName(memoryDir, 'Yanfei');
+  await writeSoulBody(memoryDir, 'Helpful assistant');
+  await writeMemoryBody(memoryDir, 'Remember the project conventions.');
+  const localMemory = await readLocalMemoryFiles(memoryDir);
+  assert.strictEqual(localMemory.aiName.value, 'Buddy');
+  assert.strictEqual(localMemory.userCallName.value, 'Yanfei');
+  assert.strictEqual(localMemory.soul.content, 'Helpful assistant');
+  assert.strictEqual(localMemory.memory.content, 'Remember the project conventions.');
+  const identityService = createWorkbuddyIdentityService({ configDir: memoryDir });
+  assert.deepStrictEqual(await identityService.updateAiName('CodeBuddy'), { success: true });
+  assert.deepStrictEqual(await identityService.updateMemoryBody('Updated memory'), { success: true });
   assert.deepStrictEqual(mergeMarketplaceManifests(
     { plugins: [{ source: './a', name: 'A' }] },
     [{ plugins: [{ source: './a', name: 'A2' }, { source: './b', name: 'B' }] }],
