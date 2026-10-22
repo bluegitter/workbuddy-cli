@@ -40,6 +40,31 @@ class LocalAgentConnection extends AgentConnection {
   constructor(agentId, config = {}) {
     const client = config.client || (config.channel ? new AcpJsonRpcClient(config.channel, config.acpConfig) : undefined);
     super(agentId, { ...config, client, transport: 'local', cwd: config.cwd || agentId });
+    this.permissionTimeout = config.permissionTimeout ?? 30000;
+    this.permissionAutoRejectOnTimeout = config.permissionAutoRejectOnTimeout ?? false;
+    this.pendingPermissions = new Map();
+    this.artifactCache = new Map();
+    this.bindAcpEvents();
+  }
+  bindAcpEvents() {
+    this.client?.onSessionUpdate?.((params) => this.emit('sessionUpdate', params.notification));
+    this.client?.onExtNotification?.((method, params = {}) => {
+      if (method === '_codebuddy.ai/artifact') {
+        const artifact = params.artifact; if (!artifact) return;
+        if (artifact.uri && params.event !== 'deleted') this.artifactCache.set(artifact.uri, artifact);
+        if (artifact.uri && params.event === 'deleted') this.artifactCache.delete(artifact.uri);
+        if (params.sessionId) artifact.__sessionId = params.sessionId;
+        if (params.event === 'created') this.emit('artifactCreated', artifact);
+        if (params.event === 'updated') this.emit('artifactUpdated', artifact);
+        if (params.event === 'deleted') this.emit('artifactDeleted', artifact);
+      } else if (method === '_codebuddy.ai/checkpoint') {
+        if (params.checkpoint && params.sessionId) params.checkpoint.__sessionId = params.sessionId;
+        if (params.event === 'created') this.emit('checkpointCreated', params.checkpoint);
+        if (params.event === 'updated') this.emit('checkpointUpdated', params.checkpoint);
+      } else if (method === '_codebuddy.ai/command') {
+        this.emit('command', { action: params.action, params: params.params, ...(params.sessionId ? { __sessionId: params.sessionId } : {}) });
+      }
+    });
   }
   async connect(clientCapabilities) {
     if (this.client?.initialize && !this.client.connect) {
@@ -55,6 +80,7 @@ class LocalAgentConnection extends AgentConnection {
     if (this.client?.newSession && !this.client.createSession) {
       const response = await this.client.newSession({ ...params, cwd: params.cwd || this.cwd });
       this.activeSessionId = response.sessionId;
+      this.bindPermissionRequest(response.sessionId);
       return response;
     }
     return super.createSession(params);
@@ -63,12 +89,18 @@ class LocalAgentConnection extends AgentConnection {
     if (this.client?.loadSession && this.client.loadSession.length <= 1) {
       if (!params.sessionId) throw new Error('sessionId is required for loadSession');
       this.activeSessionId = params.sessionId;
-      return this.client.loadSession({ ...params, cwd: params.cwd || this.cwd });
+      const response = await this.client.loadSession({ ...params, cwd: params.cwd || this.cwd });
+      this.bindPermissionRequest(params.sessionId);
+      return response;
     }
     return super.loadSession(params);
   }
   async prompt(sessionId, params = {}) {
-    if (this.client?.prompt && this.client.prompt.length <= 1) return this.client.prompt({ sessionId, ...params });
+    if (this.client?.prompt && this.client.prompt.length <= 1) {
+      const prompt = typeof params.content === 'string' ? [{ type: 'text', text: params.content }] : params.content;
+      const metadata = params._meta || params.planMode !== undefined ? { ...params._meta, ...(params.planMode !== undefined ? { planMode: params.planMode } : {}) } : undefined;
+      return this.client.prompt({ sessionId, ...params, ...(prompt ? { prompt } : {}), ...(metadata ? { _meta: metadata } : {}) });
+    }
     return super.prompt(sessionId, params);
   }
   cancel(sessionId) {
@@ -83,6 +115,30 @@ class LocalAgentConnection extends AgentConnection {
     if (this.client?.setSessionModel && this.client.setSessionModel.length <= 1) return this.client.setSessionModel({ sessionId, modelId });
     return super.setSessionModel(sessionId, modelId);
   }
+  bindPermissionRequest(sessionId) {
+    this.client?.onRequestPermission?.(sessionId, async (params) => new Promise((resolve) => {
+      this.pendingPermissions.set(params.requestId, { resolve, params, createdAt: Date.now() });
+      this.emit('permissionRequest', { requestId: params.requestId, params: { sessionId: params.sessionId, toolCall: params.toolCall, options: params.options } });
+      setTimeout(() => {
+        const pending = this.pendingPermissions.get(params.requestId);
+        if (!pending || Date.now() - pending.createdAt < this.permissionTimeout) return;
+        this.pendingPermissions.delete(params.requestId); this.emit('permissionTimeout', { requestId: params.requestId });
+        if (this.permissionAutoRejectOnTimeout) resolve({ outcome: 'cancelled' });
+      }, this.permissionTimeout).unref?.();
+    }));
+  }
+  resolvePermission(requestId, optionId) {
+    const pending = this.pendingPermissions.get(requestId); if (!pending) return false;
+    this.pendingPermissions.delete(requestId); pending.resolve({ outcome: 'selected', optionId }); this.emit('permissionResolved', { requestId, optionId }); return true;
+  }
+  rejectPermission(requestId, reason) {
+    const pending = this.pendingPermissions.get(requestId); if (!pending) return false;
+    this.pendingPermissions.delete(requestId); pending.resolve({ outcome: 'cancelled' }); this.emit('permissionRejected', { requestId, reason }); return true;
+  }
+  getArtifacts() { return new Map(this.artifactCache); }
+  getArtifact(uri) { return this.artifactCache.get(uri); }
+  getArtifactsByType(type) { return [...this.artifactCache.values()].filter((artifact) => artifact.type === type); }
+  disconnect() { this.pendingPermissions.forEach((pending) => pending.resolve({ outcome: 'cancelled' })); this.pendingPermissions.clear(); this.client?.destroy?.(); return super.disconnect(); }
 }
 class CloudAgentConnection extends AgentConnection { constructor(agentId, config = {}) { super(agentId, { ...config, transport: 'cloud', cwd: config.cwd || '/workspace' }); } }
 

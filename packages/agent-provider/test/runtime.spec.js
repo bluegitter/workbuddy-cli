@@ -147,12 +147,14 @@ async function main() {
   await localProvider.rename('local-s1', 'Renamed');
   await localProvider.move('local-s1');
   const localAcpEvents = [];
+  let permissionResolver;
   const localAcpConnection = new LocalAgentConnection('local-acp', {
     client: {
       initialize: async (request) => { localAcpEvents.push(['initialize', request]); return { agentCapabilities: { prompt: true } }; },
       newSession: async (request) => { localAcpEvents.push(['newSession', request]); return { sessionId: 'new-local' }; },
       prompt: async (request) => { localAcpEvents.push(['prompt', request]); return { stopReason: 'end_turn' }; },
       cancel: async (request) => { localAcpEvents.push(['cancel', request]); },
+      onRequestPermission: (_sessionId, resolver) => { permissionResolver = resolver; return () => { permissionResolver = undefined; }; },
     },
   });
   await localAcpConnection.connect({ fs: true });
@@ -160,6 +162,14 @@ async function main() {
   await localAcpConnection.prompt('new-local', { prompt: 'hi' });
   assert.strictEqual(localAcpEvents[0][0], 'initialize');
   assert.deepStrictEqual(localAcpEvents[2][1], { sessionId: 'new-local', prompt: 'hi' });
+  await localAcpConnection.createSession({ cwd: '/tmp/project' });
+  let permissionEvent;
+  localAcpConnection.once('permissionRequest', (value) => { permissionEvent = value; });
+  const localAcpPermissionRequest = permissionResolver({ sessionId: 'new-local', requestId: 'permission-1', toolCall: { name: 'write' }, options: [] });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.strictEqual(permissionEvent.requestId, 'permission-1');
+  assert.strictEqual(localAcpConnection.resolvePermission('permission-1', 'allow'), true);
+  assert.deepStrictEqual(await localAcpPermissionRequest, { outcome: 'selected', optionId: 'allow' });
   const fsRequests = [];
   const fsListeners = new Set();
   const fsClient = {
