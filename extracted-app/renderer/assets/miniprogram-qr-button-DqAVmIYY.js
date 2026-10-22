@@ -19,6 +19,7 @@ var init_miniprogram_qr_button = __esmMin((() => {
 	init_useI18n();
 	import_jsx_runtime = require_jsx_runtime();
 	MiniProgramQRButton = ({ collapsed = false, triggerMode = "hover", miniProgramPath }) => {
+		return null; /* patched: hide promo - miniprogram qr chip */
 		const t = useTranslation();
 		const [isOpen, setIsOpen] = (0, import_react.useState)(false);
 		const { refs, floatingStyles, context } = useFloating({

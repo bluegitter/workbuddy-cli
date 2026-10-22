@@ -20792,6 +20792,7 @@ var init_AmbassadorBadge = __esmMin((() => {
 //#endregion
 //#region ../../packages/agent-ui/src/components/account/CheckinIndicator.tsx
 function CheckinIndicator({ credits, onClick }) {
+	return null; /* patched: hide promo - checkin nudge */
 	const t = useTranslation();
 	return /* @__PURE__ */ (0, import_jsx_runtime$136.jsxs)("div", {
 		className: "checkin-indicator",
@@ -22822,7 +22823,7 @@ function UserMenu({ account, adapter, environmentType = "cloud", collapsed = fal
 	const showEnterpriseBadge = useEnterpriseConsoleFeature();
 	const isWechatMiniProgramIntegrationEnabled = useWechatMiniProgramIntegrationFeature();
 	const isMobileConnectV2Enabled = useMobileConnectV2Feature();
-	const showWechatMpIcon = !!(account && isLocalMode && isWechatMiniProgramIntegrationEnabled);
+	const showWechatMpIcon = false; /* patched: hide promo - miniprogram promo entry */
 	const [isWechatMpOpen, setIsWechatMpOpen] = (0, import_react$225.useState)(false);
 	const [wechatMpStatus, setWechatMpStatus] = (0, import_react$225.useState)("idle");
 	(0, import_react$225.useEffect)(() => {

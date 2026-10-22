@@ -1002,6 +1002,7 @@ var init_cloud_assistant_upgrade = __esmMin((() => {
 	init_upgrade_banner_character();
 	import_jsx_runtime$28 = require_jsx_runtime();
 	CloudAssistantUpgradeBanner = ({ onUpgrade, upgraded = false, loading = false }) => {
+		return null; /* patched: hide promo - upgrade banner */
 		const t = useTranslation();
 		const actionText = t(upgraded ? "cloudAssistantUpgrade.banner.enter" : "cloudAssistantUpgrade.banner.action");
 		return /* @__PURE__ */ (0, import_jsx_runtime$28.jsx)("div", {
@@ -1107,6 +1108,7 @@ var init_credits_insufficient_bar$1 = __esmMin((() => {}));
 //#region ../../packages/agent-ui/src/components/conversation-list/msg-center/credits-insufficient-bar.tsx
 /** 积分不足横向提示 bar（对话输入框上方） */
 function CreditsInsufficientBar({ message, onClose, onShown, onRetry }) {
+	return null; /* patched: hide promo - top-up bar */
 	const shownRef = (0, import_react$33.useRef)(false);
 	const { account } = useAccountService();
 	const adapter = useAdapter();
@@ -7711,10 +7713,6 @@ var init_main_content_core$1 = __esmMin((() => {
 		{
 			labelKey: "cloudWelcome.nav.apiDocs",
 			path: "/apiDocs/index.html"
-		},
-		{
-			labelKey: "cloudWelcome.nav.promotion",
-			path: "/promotion"
 		}
 	];
 	HIDE_CUSTOM_BRANDING_LOGOS_FEATURE = "HideCustomBrandingLogos";
@@ -13950,7 +13948,7 @@ var init_main_content_core$1 = __esmMin((() => {
 		const viewingMemberId = conversationsContext?.viewingMemberId;
 		const isViewingMember = !!viewingMemberId;
 		const isWelcomeSlot = showWelcome && shouldRenderWelcome;
-		const shouldShowGrowthBuddySlot = isGrowthBuddySlotEnabled && !isViewingMember && !dependencyGateNode && !taskResultRecommendNode && (isWelcomeSlot && (!canFetchGrowthBuddy || growthBuddyFetched) || !isWelcomeSlot && canFetchGrowthBuddy && growthBuddyFetched && hasRealBuddy);
+		const shouldShowGrowthBuddySlot = false && isGrowthBuddySlotEnabled /* patched: hide promo - growth pet */&& !isViewingMember && !dependencyGateNode && !taskResultRecommendNode && (isWelcomeSlot && (!canFetchGrowthBuddy || growthBuddyFetched) || !isWelcomeSlot && canFetchGrowthBuddy && growthBuddyFetched && hasRealBuddy);
 		const { orchestratorEnabled, installed: isCloudAssistantInstalled } = useCloudAssistantEntitlement();
 		const [isOpeningCloudAssistantTeam, setIsOpeningCloudAssistantTeam] = (0, import_react.useState)(false);
 		const handleOpenCloudAssistantTeam = (0, import_react.useCallback)(async () => {
