@@ -201,6 +201,7 @@ const {
   isWhitelistedSessionEnvKey,
   managedEnvMismatchKeys,
   validateActivateReadyResponse,
+  CliPrewarmPool,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1096,6 +1097,10 @@ async function main() {
   assert.strictEqual(isWhitelistedSessionEnvKey('SERVICE_TOKEN'), true);
   assert.deepStrictEqual(managedEnvMismatchKeys({ A: '1' }, { A: '2', B: '3' }), ['A', 'B']);
   assert.throws(() => validateActivateReadyResponse({ ok: false }, { expectedPid: 1, expectedSessionId: 's' }), /invalid prewarm/);
+  const pool = new CliPrewarmPool({ poolSize: 1, spawn: () => ({ pid: 42, killed: false, exitCode: null, once() {}, kill() { this.killed = true; } }) });
+  assert.strictEqual(pool.hasReplenishCapacity(), true);
+  pool.stop();
+  assert.strictEqual(pool.hasReplenishCapacity(), false);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
