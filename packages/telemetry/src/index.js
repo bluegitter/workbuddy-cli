@@ -6,4 +6,5 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/telemetry",
   artifactRoot: __dirname + "/compiled",
+  ...require("./runtime/event-buffer"),
 });

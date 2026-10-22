@@ -6,4 +6,5 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/enterprise-policy",
   artifactRoot: __dirname + "/compiled",
+  ...require("./runtime/path-policy"),
 });

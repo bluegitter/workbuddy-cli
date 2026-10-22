@@ -6,4 +6,5 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/runtime",
   artifactRoot: __dirname + "/compiled",
+  ...require("./runtime/sidecar-manager"),
 });

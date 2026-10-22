@@ -7,4 +7,5 @@ module.exports = Object.freeze({
   packageName: "@workbuddy/agent-ui",
   sourceRoot: __dirname + "/source",
   rendererEntry: require.resolve("./source/renderer-entry.js"),
+  ...require("./runtime/agent-view-model"),
 });

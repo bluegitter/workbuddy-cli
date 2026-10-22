@@ -8,4 +8,6 @@ module.exports = Object.freeze({
   sourceRoot: __dirname + "/source",
   nodeEntry: require.resolve("./source/acp.js"),
   rendererEntry: require.resolve("./source/acp-renderer.js"),
+  ...require("./runtime/connection"),
+  ...require("./runtime/ndjson"),
 });

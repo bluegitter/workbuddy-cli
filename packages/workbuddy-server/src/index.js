@@ -6,4 +6,5 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/workbuddy-server",
   artifactRoot: __dirname + "/compiled",
+  ...require("./runtime/local-server"),
 });

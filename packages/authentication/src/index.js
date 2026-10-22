@@ -6,4 +6,5 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/authentication",
   artifactRoot: __dirname + "/compiled",
+  ...require("./runtime/credential-store"),
 });

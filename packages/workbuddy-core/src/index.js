@@ -6,4 +6,6 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/workbuddy-core",
   artifactRoot: __dirname + "/compiled",
+  ...require("./runtime/invariant"),
+  ...require("./runtime/serialization"),
 });

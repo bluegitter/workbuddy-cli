@@ -8,4 +8,6 @@ module.exports = Object.freeze({
   sourceRoot: __dirname + "/source",
   mainEntry: require.resolve("./source/electron-main.js"),
   preloadEntry: require.resolve("./source/preload.js"),
+  ...require("./runtime/app-config"),
+  ...require("./runtime/window-state"),
 });

@@ -6,4 +6,6 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/sandbox-cli",
   artifactRoot: __dirname + "/compiled",
+  ...require("./runtime/command-policy"),
+  ...require("./runtime/sandbox-runner"),
 });

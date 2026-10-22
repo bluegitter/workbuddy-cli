@@ -6,4 +6,6 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/plugin-core",
   artifactRoot: __dirname + "/compiled",
+  ...require("./runtime/plugin-manifest"),
+  ...require("./runtime/skill-loader"),
 });
