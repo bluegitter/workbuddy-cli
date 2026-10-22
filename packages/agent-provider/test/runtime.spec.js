@@ -28,6 +28,8 @@ const {
   CommodityCode,
   AccountStatus,
   getPackageName,
+  resolveAgentUri,
+  createAgentFilesystem,
 } = require('../src');
 
 async function main() {
@@ -287,6 +289,13 @@ async function main() {
   assert.deepStrictEqual(settled.map((item) => item.status), ['fulfilled', 'rejected']);
   assert.strictEqual(AccountStatus.valid, 0);
   assert.strictEqual(getPackageName(CommodityCode.proMon), 'plan.codebuddyProPlanMonthly');
+  assert.strictEqual(resolveAgentUri('agent:///workspace/src/index.js'), '/workspace/src/index.js');
+  assert.strictEqual(resolveAgentUri('agent:///plans/demo.md'), '/root/.codebuddy/plans/demo.md');
+  assert.throws(() => resolveAgentUri('agent:///plans/../../etc/passwd'), /path traversal/);
+  const fsCalls = [];
+  const wrappedFs = createAgentFilesystem({ read: async (value) => { fsCalls.push(value); return value; } });
+  assert.strictEqual(await wrappedFs.read('agent:///workspace/a.txt'), '/workspace/a.txt');
+  assert.deepStrictEqual(fsCalls, ['/workspace/a.txt']);
   console.log('agent runtime tests passed');
 }
 
