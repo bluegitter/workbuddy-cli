@@ -232,6 +232,7 @@ const {
   extractPreviewUrlLocalMediaPath,
   createWorkbuddySessionPersistence,
   AutomationDeliveryOutboxWorker,
+  EmbeddingClient,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1218,6 +1219,9 @@ async function main() {
   const authFailure = deliveryWorker.buildPendingAuthFailureUpdate({ createdAt: 0 }, 2_000_000_000, 'auth_not_ready', 'auth_not_ready');
   assert.strictEqual(authFailure.status, 'manual_required');
   deliveryWorker.dispose();
+  const embedding = new EmbeddingClient({ authenticationManager: { currentSessionSubject: { getValue: () => ({ auth: { accessToken: 'token', domain: 'example' }, account: { uid: 'u1' } }) } }, productManager: { getEndpoint: () => 'https://api.example/' }, fetchFn: async (_url, request) => ({ ok: true, async text() { assert.strictEqual(request.headers.Authorization, 'Bearer token'); return JSON.stringify({ model: 'model2', data: [{ index: 0, embedding: [1, 0] }] }); } }) });
+  const embedded = await embedding.embed({ texts: ['hello'] });
+  assert.deepStrictEqual(embedded.embeddings[0].vector, [1, 0]);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
