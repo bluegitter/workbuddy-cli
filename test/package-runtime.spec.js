@@ -117,6 +117,8 @@ const {
   buildLocalDocumentSaveChoices,
   buildLocalDocumentDirtyCloseChoices,
   getLocalDocumentDialogButtonIds,
+  ImaDataCipher,
+  CryptoMode,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -249,6 +251,12 @@ async function main() {
   assert.deepStrictEqual(saveChoices.map((choice) => choice.action), ['saveAs', 'cancel']);
   assert.deepStrictEqual(getLocalDocumentDialogButtonIds({ choices: saveChoices, defaultAction: 'saveAs', cancelAction: 'cancel' }), { defaultId: 0, cancelId: 1 });
   assert.deepStrictEqual(buildLocalDocumentDirtyCloseChoices({ labels: { cancelButton: 'Cancel', saveButton: 'Save', saveAsButton: 'Save As', discardButton: 'Discard' }, canSaveOriginal: true, isDarwin: true }).map((choice) => choice.action), ['cancel', 'save', 'saveAs', 'discard']);
+  const imaCipher = new ImaDataCipher();
+  const encryptedIma = await imaCipher.encryptData('ima-secret');
+  assert.strictEqual(encryptedIma.code, 0); assert.strictEqual(encryptedIma.data.x_ima_cm, CryptoMode.RSA);
+  assert.deepStrictEqual(await imaCipher.decryptData(encryptedIma.data.data), { code: 0, msg: 'ok', data: 'ima-secret' });
+  assert.strictEqual((imaCipher.setCryptoToken({ token: 'ctk', expire: Math.floor(Date.now() / 1000) + 60 })).code, 0);
+  assert.strictEqual((await imaCipher.encryptData('token-secret')).data.x_ima_cm, CryptoMode.AESToken);
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);

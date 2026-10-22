@@ -29,4 +29,5 @@ module.exports = Object.freeze({
   ...require("./runtime/document-prompt"),
   ...require("./runtime/ima-errors"),
   ...require("./runtime/document-save-choices"),
+  ...require("./runtime/ima-cipher"),
 });
