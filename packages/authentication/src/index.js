@@ -10,4 +10,5 @@ module.exports = Object.freeze({
   ...require("./runtime/account-context"),
   ...require("./runtime/auth-session"),
   ...require("./runtime/gateway-secret"),
+  ...require("./runtime/legacy-session-migration"),
 });

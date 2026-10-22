@@ -80,7 +80,16 @@ const {
   readExpertMcpDeclaration,
   SessionStore,
   ToolRoutingTable,
+  buildQuery,
+  resolveTeamsAcceptLanguage,
+  unwrap,
+  withHandoffCanaryHeaders,
 } = require('../packages/workbuddy-server/src');
+const {
+  createLegacyAuthSessionMigrator,
+  getLegacyWorkbuddyIdeVscdbPath,
+  parseLegacyWorkbuddyIdeAuthSession,
+} = require('../packages/authentication/src');
 
 async function main() {
   const messages = [];
@@ -133,6 +142,23 @@ async function main() {
   assert.strictEqual(deriveAccountContext({ enterpriseId: 'e1' }).kind, 'enterprise');
   assert.strictEqual(gatewaySecretEnv().CODEBUDDY_GATEWAY_PASSWORD, getGatewaySecret());
   assert.strictEqual(gatewaySecretHeaders().Authorization, `Bearer ${getGatewaySecret()}`);
+  assert.strictEqual(buildQuery({ q: 'a b', empty: null }), '?q=a%20b');
+  assert.strictEqual(resolveTeamsAcceptLanguage({ resolveIsOverseas: () => true }), 'en-US');
+  assert.strictEqual(unwrap({ code: 0, data: 'ok' }, 'demo'), 'ok');
+  assert.throws(() => unwrap({ code: 7, msg: 'bad', requestId: 'r1' }, 'demo'), (error) => error.code === 7 && error.requestId === 'r1');
+  const wrappedRequests = [];
+  const wrappedHttp = withHandoffCanaryHeaders({ get: (url, config) => { wrappedRequests.push({ url, config }); return 'ok'; } });
+  assert.strictEqual(wrappedHttp.get('/handoff', { headers: { trace: '1' } }), 'ok');
+  assert.deepStrictEqual(wrappedRequests[0].config.headers, { 'x-teams-collab-handoff-canary': 'true', trace: '1' });
+  assert.ok(getLegacyWorkbuddyIdeVscdbPath({ platform: 'darwin', homedir: '/home/test' }).endsWith('WorkBuddy/User/globalStorage/state.vscdb'));
+  assert.deepStrictEqual(parseLegacyWorkbuddyIdeAuthSession('{"auth":{"accessToken":"a"},"account":{"uid":"u"}}').account, { uid: 'u' });
+  fs.writeFileSync(path.join(root, 'legacy.vscdb'), 'fixture');
+  const migrated = await createLegacyAuthSessionMigrator({
+    resolvePath: () => path.join(root, 'legacy.vscdb'),
+    readEncrypted: async () => Buffer.from('encrypted'),
+    decryptString: async () => JSON.stringify({ auth: { accessToken: 'a' }, account: { uid: 'u' } }),
+  }).migrate();
+  assert.strictEqual(migrated.account.uid, 'u');
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
