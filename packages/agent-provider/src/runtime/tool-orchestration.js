@@ -5,7 +5,16 @@ const { executeToolCall } = require('./tool-execution');
 function partitionToolCalls(calls, tools) {
   return calls.reduce((batches, call) => {
     const tool = tools.get(call.name);
-    const concurrent = Boolean(tool?.isConcurrencySafe?.(call.input));
+    let concurrent = false;
+    if (tool?.isConcurrencySafe) {
+      try {
+        const parsed = tool.parseInput ? tool.parseInput(call.input) : call.input;
+        concurrent = Boolean(tool.isConcurrencySafe(parsed));
+      } catch {
+        // A malformed input must not be allowed to enter a parallel batch.
+        concurrent = false;
+      }
+    }
     const previous = batches[batches.length - 1];
     if (concurrent && previous?.concurrent) previous.calls.push(call);
     else batches.push({ concurrent, calls: [call] });
@@ -16,6 +25,7 @@ function partitionToolCalls(calls, tools) {
 async function runTools(calls, context) {
   const results = [];
   for (const batch of partitionToolCalls(calls, context.tools)) {
+    if (context.signal?.aborted) break;
     if (batch.concurrent) {
       results.push(...await mapWithConcurrency(batch.calls, context.maxToolConcurrency || 10, (call) => executeToolCall(call, context)));
     } else {

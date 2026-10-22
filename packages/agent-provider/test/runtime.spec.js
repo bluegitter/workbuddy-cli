@@ -27,6 +27,14 @@ async function main() {
     { id: '2', name: 'read', input: {} },
     { id: '3', name: 'write', input: {} },
   ], tools).map((batch) => batch.calls.length), [2, 1]);
+  const conservative = new ToolRegistry([
+    { name: 'unsafe-read', parseInput: () => { throw new Error('invalid'); }, isConcurrencySafe: () => true, execute: async () => 'ok' },
+    { name: 'read', isConcurrencySafe: () => true, execute: async () => 'ok' },
+  ]);
+  assert.deepStrictEqual(partitionToolCalls([
+    { id: 'unsafe', name: 'unsafe-read', input: {} },
+    { id: 'read-2', name: 'read', input: {} },
+  ], conservative).map((batch) => batch.concurrent), [false, true]);
 
   const session = new AgentSession({ messages: [{ role: 'user', content: 'read' }] });
   let turn = 0;
@@ -74,6 +82,13 @@ async function main() {
   assert.strictEqual(permissionRequest.id, 'approval-1');
   interruptions.resolve('approval-1', { behavior: 'allow', source: 'user' });
   assert.strictEqual((await pending).behavior, 'allow');
+  const abortController = new AbortController();
+  abortController.abort();
+  const cancelled = await require('../src/runtime/tool-execution').executeToolCall(
+    { id: 'cancelled', name: 'read', input: {} },
+    { tools, signal: abortController.signal },
+  );
+  assert.strictEqual(cancelled.metadata.cancelled, true);
 
   const sessions = new SessionManager();
   const parent = sessions.create({ project: { id: 'project' } });

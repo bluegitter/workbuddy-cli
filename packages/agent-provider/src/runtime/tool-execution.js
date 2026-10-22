@@ -3,6 +3,7 @@
 const { HookEvent } = require('./hook-registry');
 
 async function executeToolCall(call, context) {
+  if (context.signal?.aborted) return toolResult(call, true, 'Tool use cancelled', { cancelled: true });
   const tool = context.tools.get(call.name);
   if (!tool) return toolResult(call, true, `Unknown tool: ${call.name}`);
 
@@ -17,6 +18,7 @@ async function executeToolCall(call, context) {
   if (preHook?.payload?.input !== undefined) parsed = preHook.payload.input;
 
   let decision = await context.permissions.canUse(tool, parsed, context);
+  if (context.signal?.aborted) return toolResult(call, true, 'Tool use cancelled', { cancelled: true });
   if (decision.behavior === 'ask' && context.interruptions) {
     decision = await context.interruptions.request({
       id: call.id,
