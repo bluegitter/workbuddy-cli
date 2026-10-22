@@ -246,6 +246,8 @@ const {
   coerceStringArrayMap,
   coercePlainMap,
   extractNonSensitiveFields,
+  readStates,
+  writeStates,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore } = require('../packages/authentication/src');
 const {
@@ -423,6 +425,15 @@ async function main() {
   fs.unlinkSync(keyStore.getPrimaryPath());
   assert.deepStrictEqual(keyStore.getExisting().key, createdKey.key);
   fs.rmSync(keyRoot, { recursive: true, force: true });
+  const stateRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-states-'));
+  const statePaths = resolveStatesFilePaths(path.join(stateRoot, 'storage'), path.join(stateRoot, 'backup'));
+  const stateOptions = { userId: 'user-1', paths: statePaths };
+  assert.strictEqual(writeStates(stateOptions, { enabled: ['github'], headerOverrides: { github: { Authorization: 'Bearer token' } }, envOverrides: { github: { API_KEY: 'secret' } }, userDisabled: ['legacy'] }), true);
+  const persistedState = JSON.parse(fs.readFileSync(statePaths.v3Path, 'utf8'));
+  assert.strictEqual(persistedState.version, 3);
+  assert.notStrictEqual(persistedState.headerOverrides.github.Authorization, 'Bearer token');
+  assert.deepStrictEqual(readStates(stateOptions), { enabled: ['github'], userDisabled: { legacy: true }, headerOverrides: { github: { Authorization: 'Bearer token' } }, envOverrides: { github: { API_KEY: 'secret' } }, headerOverridesBearerStripped: undefined, staleManagedAuthHeadersPurged: undefined, accountIdentityKey: undefined, everConnected: undefined, disabledToolsOverrides: {}, mcpSecurityMigrated: undefined, cSideAutoBoundDefaultDisabledMigrated: undefined });
+  fs.rmSync(stateRoot, { recursive: true, force: true });
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
