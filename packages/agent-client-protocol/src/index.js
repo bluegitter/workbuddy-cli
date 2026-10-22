@@ -5,5 +5,7 @@
  */
 module.exports = Object.freeze({
   packageName: "@workbuddy/agent-client-protocol",
-  artifactRoot: __dirname + "/compiled",
+  sourceRoot: __dirname + "/source",
+  nodeEntry: require.resolve("./source/acp.js"),
+  rendererEntry: require.resolve("./source/acp-renderer.js"),
 });

@@ -1,0 +1,2 @@
+// Recovered bundle module 81403; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";let Gif=class Gif{constructor(eA,el,ec){this.width=ec.width,this.height=ec.height,this.loops=ec.loops,this.usesTransparency=ec.usesTransparency,this.colorScope=ec.colorScope,this.frames=el,this.buffer=eA}};Gif.GlobalColorsPreferred=0,Gif.GlobalColorsOnly=1,Gif.LocalColorsOnly=2;let GifError=class GifError extends Error{constructor(eA){super(eA),eA instanceof Error&&(this.stack="Gif"+eA.stack)}};el.Gif=Gif,el.GifError=GifError};

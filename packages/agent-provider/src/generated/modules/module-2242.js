@@ -1,0 +1,2 @@
+// Recovered bundle module 2242; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{UnsubscriptionError:()=>eu});var eu=function(){function UnsubscriptionErrorImpl(eA){return Error.call(this),this.message=eA?eA.length+" errors occurred during unsubscription:\n"+eA.map(function(eA,el){return el+1+") "+eA.toString()}).join("\n  "):"",this.name="UnsubscriptionError",this.errors=eA,this}return UnsubscriptionErrorImpl.prototype=Object.create(Error.prototype),UnsubscriptionErrorImpl}()};

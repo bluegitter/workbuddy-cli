@@ -1,0 +1,2 @@
+// Recovered bundle module 20500; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{default:()=>eu});let squashTextNodes=eA=>{let el="";for(let ec=0;ec<eA.childNodes.length;ec++){let eu=eA.childNodes[ec];if(void 0===eu)continue;let ed="";"#text"===eu.nodeName?ed=eu.nodeValue:(("ink-text"===eu.nodeName||"ink-virtual-text"===eu.nodeName)&&(ed=squashTextNodes(eu)),ed.length>0&&"function"==typeof eu.internal_transform&&(ed=eu.internal_transform(ed,ec))),el+=ed}return el},eu=squashTextNodes};

@@ -1,0 +1,2 @@
+// Recovered bundle module 4128; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";let eu=ec(16928),ed=ec(36928),ep=ec(17123);eA.exports=(eA,el)=>ep(eA,eA=>ed(eu.resolve(el.cwd,eA)),el=Object.assign({cwd:process.cwd()},el)),eA.exports.sync=(eA,el)=>{for(let ec of(el=Object.assign({cwd:process.cwd()},el),eA))if(ed.sync(eu.resolve(el.cwd,ec)))return ec}};

@@ -1,0 +1,2 @@
+// Recovered bundle module 32324; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";let LineCounter=class LineCounter{constructor(){this.lineStarts=[],this.addNewLine=eA=>this.lineStarts.push(eA),this.linePos=eA=>{let el=0,ec=this.lineStarts.length;for(;el<ec;){let eu=el+ec>>1;this.lineStarts[eu]<eA?el=eu+1:ec=eu}if(this.lineStarts[el]===eA)return{line:el+1,col:1};if(0===el)return{line:0,col:eA};let eu=this.lineStarts[el-1];return{line:el,col:eA-eu+1}}}};el.LineCounter=LineCounter};

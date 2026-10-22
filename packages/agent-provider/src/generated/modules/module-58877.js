@@ -1,0 +1,2 @@
+// Recovered bundle module 58877; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";function isPromise(eA){return("object"==typeof eA&&null!==eA||"function"==typeof eA)&&"function"==typeof eA.then}function isPromiseOrContainsPromise(eA){return!!isPromise(eA)||Array.isArray(eA)&&eA.some(isPromise)}Object.defineProperty(el,"__esModule",{value:!0}),el.isPromise=isPromise,el.isPromiseOrContainsPromise=isPromiseOrContainsPromise};

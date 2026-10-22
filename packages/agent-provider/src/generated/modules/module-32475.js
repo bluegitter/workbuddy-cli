@@ -1,0 +1,2 @@
+// Recovered bundle module 32475; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){eA.exports=class{constructor(eA,el){this.coreRes=eA,this.resOptions=el,this.body=Buffer.alloc(0),this.headers=eA.headers,this.statusCode=eA.statusCode}_addChunk(eA){this.body=Buffer.concat([this.body,eA])}async json(){return 204===this.statusCode?null:JSON.parse(this.body)}async text(){return this.body.toString()}}};

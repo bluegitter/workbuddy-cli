@@ -1,0 +1,2 @@
+// Recovered bundle module 15953; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=el;function configure(){eu.util._configure(),eu.Writer._configure(eu.BufferWriter),eu.Reader._configure(eu.BufferReader)}eu.build="minimal",eu.Writer=ec(13108),eu.BufferWriter=ec(52533),eu.Reader=ec(36344),eu.BufferReader=ec(22777),eu.util=ec(5099),eu.rpc=ec(57080),eu.roots=ec(74738),eu.configure=configure,configure()};

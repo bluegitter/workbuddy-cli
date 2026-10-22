@@ -1,0 +1,2 @@
+// Recovered bundle module 33947; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(39399);function toJS(eA,el,ec){if(Array.isArray(eA))return eA.map((eA,el)=>toJS(eA,String(el),ec));if(eA&&"function"==typeof eA.toJSON){if(!ec||!eu.hasAnchor(eA))return eA.toJSON(el,ec);let ed={aliasCount:0,count:1,res:void 0};ec.anchors.set(eA,ed),ec.onCreate=eA=>{ed.res=eA,delete ec.onCreate};let ep=eA.toJSON(el,ec);return ec.onCreate&&ec.onCreate(ep),ep}return"bigint"!=typeof eA||ec?.keep?eA:Number(eA)}el.toJS=toJS};

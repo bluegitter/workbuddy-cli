@@ -1,0 +1,2 @@
+// Recovered bundle module 28689; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.default=isEmpty;var eu=_interopRequireDefault(ec(8354)),ed=_interopRequireDefault(ec(62533));function _interopRequireDefault(eA){return eA&&eA.__esModule?eA:{default:eA}}var ep={ignore_whitespace:!1};function isEmpty(eA,el){return(0,eu.default)(eA),((el=(0,ed.default)(el,ep)).ignore_whitespace?eA.trim().length:eA.length)===0}eA.exports=el.default,eA.exports.default=el.default};

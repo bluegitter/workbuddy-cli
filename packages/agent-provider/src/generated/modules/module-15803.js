@@ -1,0 +1,2 @@
+// Recovered bundle module 15803; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.attemptifySync=el.attemptifyAsync=void 0;let eu=ec(8444);el.attemptifyAsync=(eA,el=eu.NOOP)=>function(){return eA.apply(void 0,arguments).catch(el)},el.attemptifySync=(eA,el=eu.NOOP)=>function(){try{return eA.apply(void 0,arguments)}catch(eA){return el(eA)}}};

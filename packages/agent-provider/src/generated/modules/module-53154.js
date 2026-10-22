@@ -1,0 +1,2 @@
+// Recovered bundle module 53154; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(3468),ed=ec(54486),ep=ec(6715),eg=ec(95943),eh=ec(21279);eA.exports=function(eA,el){if(!eg(eA))throw new eu("Assertion failed: `obj` must be a Typed Array");if("SEQ-CST"!==el&&"UNORDERED"!==el)throw new eu("Assertion failed: `order` must be ~SEQ-CST~ or ~UNORDERED~");var ec=eh(eA);return{"[[Object]]":eA,"[[CachedBufferByteLength]]":ep(ec)?"DETACHED":ed(ec,el)}}};

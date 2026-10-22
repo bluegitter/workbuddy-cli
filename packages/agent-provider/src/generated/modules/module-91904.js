@@ -1,0 +1,2 @@
+// Recovered bundle module 91904; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";function assertFetchApi(){try{new Headers}catch(eA){throw Error("connect-web requires the fetch API. Are you running on an old version of Node.js? Node.js is not supported in Connect for Web - please stay tuned for Connect for Node.")}}Object.defineProperty(el,"__esModule",{value:!0}),el.assertFetchApi=assertFetchApi};

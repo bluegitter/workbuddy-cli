@@ -1,0 +1,2 @@
+// Recovered bundle module 5179; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";eA.exports={stringReplaceAll:(eA,el,ec)=>{let eu=eA.indexOf(el);if(-1===eu)return eA;let ed=el.length,ep=0,eg="";do eg+=eA.substr(ep,eu-ep)+el+ec,ep=eu+ed,eu=eA.indexOf(el,ep);while(-1!==eu);return eg+eA.substr(ep)},stringEncaseCRLFWithFirstIndex:(eA,el,ec,eu)=>{let ed=0,ep="";do{let eg="\r"===eA[eu-1];ep+=eA.substr(ed,(eg?eu-1:eu)-ed)+el+(eg?"\r\n":"\n")+ec,ed=eu+1,eu=eA.indexOf("\n",ed)}while(-1!==eu);return ep+eA.substr(ed)}}};

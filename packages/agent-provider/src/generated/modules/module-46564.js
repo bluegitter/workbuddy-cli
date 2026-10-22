@@ -1,0 +1,2 @@
+// Recovered bundle module 46564; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.InvalidMimeTypeError=void 0;let eu=ec(26052);let InvalidMimeTypeError=class InvalidMimeTypeError extends eu.CustomError{constructor(eA,el){super(`Invalid mime type "${eA}": ${el}`),this.mimeType=eA}};el.InvalidMimeTypeError=InvalidMimeTypeError};

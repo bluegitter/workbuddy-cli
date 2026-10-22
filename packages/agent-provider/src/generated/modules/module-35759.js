@@ -1,0 +1,2 @@
+// Recovered bundle module 35759; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.Line=void 0;let Line=class Line{constructor(eA,el){this.document=eA,this.range=el}getRange(){return this.range}getTextContent(){return this.document.getText().substring(this.document.offsetAt(this.range.start),this.document.offsetAt(this.range.end))}isAfter(eA){return this.range.start.line>eA.range.start.line}isBefore(eA){return this.range.start.line<eA}};el.Line=Line};

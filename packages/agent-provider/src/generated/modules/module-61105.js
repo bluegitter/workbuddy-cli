@@ -1,0 +1,2 @@
+// Recovered bundle module 61105; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";el.stringifyNumber=function({format:eA,minFractionDigits:el,tag:ec,value:eu}){if("bigint"==typeof eu)return String(eu);let ed="number"==typeof eu?eu:Number(eu);if(!isFinite(ed))return isNaN(ed)?".nan":ed<0?"-.inf":".inf";let ep=JSON.stringify(eu);if(!eA&&el&&(!ec||"tag:yaml.org,2002:float"===ec)&&/^\d/.test(ep)){let eA=ep.indexOf(".");eA<0&&(eA=ep.length,ep+=".");let ec=el-(ep.length-eA-1);for(;ec-- >0;)ep+="0"}return ep}};

@@ -1,0 +1,2 @@
+// Recovered bundle module 96553; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(6343);function FragmentCache(eA){this.caches=eA||{}}FragmentCache.prototype={cache:function(eA){return this.caches[eA]||(this.caches[eA]=new eu)},set:function(eA,el,ec){var eu=this.cache(eA);return eu.set(el,ec),eu},has:function(eA,el){return void 0!==this.get(eA,el)},get:function(eA,el){var ec=this.cache(eA);return"string"==typeof el?ec.get(el):ec}},el=eA.exports=FragmentCache};

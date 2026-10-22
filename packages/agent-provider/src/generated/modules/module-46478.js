@@ -1,0 +1,2 @@
+// Recovered bundle module 46478; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0});let eu=ec(47592),ed=ec(67198);el.default={keyword:"const",$data:!0,error:{message:"should be equal to constant",params:({schemaCode:eA})=>eu._`{allowedValue: ${eA}}`},code(eA){let el=eA.gen.scopeValue("func",{ref:ed,code:eu._`require("ajv/dist/compile/equal")`});eA.fail$data(eu._`!${el}(${eA.data}, ${eA.schemaCode})`)}}};

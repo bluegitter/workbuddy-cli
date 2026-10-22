@@ -1,0 +1,2 @@
+// Recovered bundle module 14953; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";eA.exports=JSON.parse('{"name":"stack-chain","description":"API for combining call site modifiers","version":"1.3.7","author":"Andreas Madsen <amwebdk@gmail.com>","scripts":{"test":"tap ./test/simple"},"repository":{"type":"git","url":"git://github.com/AndreasMadsen/stack-chain.git"},"keywords":["stack","chain","trace","call site","concat","format"],"devDependencies":{"tap":"2.x.x","uglify-js":"2.5.x"},"license":"MIT"}')};

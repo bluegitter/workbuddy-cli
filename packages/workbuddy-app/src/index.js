@@ -5,5 +5,7 @@
  */
 module.exports = Object.freeze({
   packageName: "@workbuddy/workbuddy-app",
-  artifactRoot: __dirname + "/compiled",
+  sourceRoot: __dirname + "/source",
+  mainEntry: require.resolve("./source/electron-main.js"),
+  preloadEntry: require.resolve("./source/preload.js"),
 });

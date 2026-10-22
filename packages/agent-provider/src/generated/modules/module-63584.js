@@ -1,0 +1,2 @@
+// Recovered bundle module 63584; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.diffSentences=diffSentences,el.sentenceDiff=void 0;var eu=el.sentenceDiff=new(function(eA){return eA&&eA.__esModule?eA:{default:eA}}(ec(22912))).default;function diffSentences(eA,el,ec){return eu.diff(eA,el,ec)}eu.tokenize=function(eA){return eA.split(/(\S.+?[.!?])(?=\s+|$)/)}};

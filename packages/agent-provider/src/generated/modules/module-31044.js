@@ -1,0 +1,2 @@
+// Recovered bundle module 31044; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.View=View,el.applyViewDecorator=applyViewDecorator;let eu=ec(90014);function View(eA,el){return(ec,eu,ed)=>{applyViewDecorator(ec,eu,ed,eA,el)}}function applyViewDecorator(eA,el,ec,ed,ep){Reflect.defineMetadata(eu.METADATA_KEY.controllerView,{viewName:ed,metadata:ep},eA.constructor,el)}};

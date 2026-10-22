@@ -1,0 +1,2 @@
+// Recovered bundle module 78615; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){var eu=ec(27596),ed=ec(12719).setLogger;function runUniversalDetector(eA,el){var ec=new eu(el);return ec.reset(),"function"==typeof Buffer&&eA instanceof Buffer?ec.feed(eA.toString("binary")):ec.feed(eA),ec.close(),ec}el.detect=function(eA,el){return runUniversalDetector(eA,el).result},el.detectAll=function(eA,el){return runUniversalDetector(eA,el).results},el.UniversalDetector=eu,el.enableDebug=function(){ed(console.log.bind(console))}};

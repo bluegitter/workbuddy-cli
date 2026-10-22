@@ -1,0 +1,2 @@
+// Recovered bundle module 60768; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(79535),ed=ec(76094);eA.exports=function(eA,el,ec){var ep;if("string"==typeof ec&&el in eA){var eg=[].slice.call(arguments,2);ep=eA[el].apply(eA,eg)}else ep=Array.isArray(ec)?ed.apply(null,arguments):eu.apply(null,arguments);return void 0!==ep?ep:eA}};

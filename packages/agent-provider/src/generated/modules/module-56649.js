@@ -1,0 +1,2 @@
+// Recovered bundle module 56649; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";let eu=ec(32414),ed=ec(35245);let RetryAgent=class RetryAgent extends eu{#et=null;#eA=null;constructor(eA,el={}){super(el),this.#et=eA,this.#eA=el}dispatch(eA,el){let ec=new ed({...eA,retryOptions:this.#eA},{dispatch:this.#et.dispatch.bind(this.#et),handler:el});return this.#et.dispatch(eA,ec)}close(){return this.#et.close()}destroy(){return this.#et.destroy()}};eA.exports=RetryAgent};

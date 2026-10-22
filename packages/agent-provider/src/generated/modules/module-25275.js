@@ -1,0 +1,2 @@
+// Recovered bundle module 25275; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){var el="chasrset";function parseIntList(eA){return eA.split(",").map(function(eA){return parseInt(eA,10)})}eA.exports=function(eA){for(var ec in el in(eA=Object.assign({},eA))&&(eA.charset=eA[el],delete eA[el]),eA)if("face"===ec||"charset"===ec)continue;else"padding"===ec||"spacing"===ec?eA[ec]=parseIntList(eA[ec]):eA[ec]=parseInt(eA[ec],10);return eA}};

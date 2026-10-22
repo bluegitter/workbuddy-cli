@@ -1,0 +1,2 @@
+// Recovered bundle module 68799; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{MarkdownToolCall:()=>MarkdownToolCall});var ed=ec(96540),ep=ec(82101),eg=eA([ep]);ep=(eg.then?(await eg)():eg)[0];let MarkdownToolCall=({value:eA})=>ed.createElement(ep.Markdown,{content:eA});eu()}catch(eA){eu(eA)}})};

@@ -1,0 +1,2 @@
+// Recovered bundle module 98009; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";var el,ec="function"==typeof Map&&Map.prototype?Map:null,eu="function"==typeof Set&&Set.prototype?Set:null;ec||(el=function(eA){return!1});var ed=ec?Map.prototype.has:null,ep=eu?Set.prototype.has:null;el||ed||(el=function(eA){return!1}),eA.exports=el||function(eA){if(!eA||"object"!=typeof eA)return!1;try{if(ed.call(eA),ep)try{ep.call(eA)}catch(eA){return!0}return eA instanceof ec}catch(eA){}return!1}};

@@ -1,0 +1,2 @@
+// Recovered bundle module 39802; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){var eu=ec(67326),ed=ec(91203),ep=ec(22076),eg=ec(18141).GB2312DistributionAnalysis;function GB2312Prober(){eu.apply(this);var eA=this;function init(){eA._mCodingSM=new ed(ep),eA._mDistributionAnalyzer=new eg,eA.reset()}this.getCharsetName=function(){return"GB2312"},init()}GB2312Prober.prototype=new eu,eA.exports=GB2312Prober};

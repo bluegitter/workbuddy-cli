@@ -1,0 +1,2 @@
+// Recovered bundle module 15536; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu;let ed;Object.defineProperty(el,"__esModule",{value:!0}),el.ContainerProvider=void 0;let ep=new(ec(17237)).Deferred;!function(eA){eA.set=function(eA){ed=eA,ep.resolve(eA)},eA.provide=function(){if(!ed)throw Error("Container is not ready yet, the timing is incorrect.");return ed},eA.asyncProvide=function(){return ep.promise}}(eu||(el.ContainerProvider=eu={}))};

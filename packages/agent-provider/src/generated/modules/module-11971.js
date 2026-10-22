@@ -1,0 +1,2 @@
+// Recovered bundle module 11971; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){eA.exports=function(eA,el){if("string"!=typeof eA)throw TypeError("expected path to be a string");if("\\"===eA||"/"===eA)return"/";var ec=eA.length;if(ec<=1)return eA;var eu="";if(ec>4&&"\\"===eA[3]){var ed=eA[2];("?"===ed||"."===ed)&&"\\\\"===eA.slice(0,2)&&(eA=eA.slice(2),eu="//")}var ep=eA.split(/[/\\]+/);return!1!==el&&""===ep[ep.length-1]&&ep.pop(),eu+ep.join("/")}};

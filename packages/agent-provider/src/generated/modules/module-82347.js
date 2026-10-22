@@ -1,0 +1,2 @@
+// Recovered bundle module 82347; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(528),ed=ec(14607),ep=eu("%WeakSet%",!0),eg=ed("WeakSet.prototype.has",!0);if(eg){var eh=ed("WeakMap.prototype.has",!0);eA.exports=function(eA){if(!eA||"object"!=typeof eA)return!1;try{if(eg(eA,eg),eh)try{eh(eA,eh)}catch(eA){return!0}return eA instanceof ep}catch(eA){}return!1}}else eA.exports=function(eA){return!1}};

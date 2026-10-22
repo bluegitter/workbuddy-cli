@@ -1,0 +1,2 @@
+// Recovered bundle module 68945; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.FunctionMessage=void 0;let eu=ec(92367),ed=ec(54305);let FunctionMessage=class FunctionMessage extends eu.AbstractMessage{constructor(eA,el=[],ec={}){super(ed.MessageType.FUNCTION,eA,el,ec),this.content=eA,this.media=el,this.metadata=ec}};el.FunctionMessage=FunctionMessage};

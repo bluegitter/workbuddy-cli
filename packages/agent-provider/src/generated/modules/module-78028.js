@@ -1,0 +1,2 @@
+// Recovered bundle module 78028; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){eA.exports=function(eA){return{name:"Dockerfile",aliases:["docker"],case_insensitive:!0,keywords:"from maintainer expose env arg user onbuild stopsignal",contains:[eA.HASH_COMMENT_MODE,eA.APOS_STRING_MODE,eA.QUOTE_STRING_MODE,eA.NUMBER_MODE,{beginKeywords:"run cmd entrypoint volume add copy workdir label healthcheck shell",starts:{end:/[^\\]$/,subLanguage:"bash"}}],illegal:"</"}}};

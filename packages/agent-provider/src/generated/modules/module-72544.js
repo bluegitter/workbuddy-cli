@@ -1,0 +1,2 @@
+// Recovered bundle module 72544; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{AlwaysOnSampler:()=>ed});var eu=ec(14515),ed=function(){function AlwaysOnSampler(){}return AlwaysOnSampler.prototype.shouldSample=function(){return{decision:eu.SamplingDecision.RECORD_AND_SAMPLED}},AlwaysOnSampler.prototype.toString=function(){return"AlwaysOnSampler"},AlwaysOnSampler}()};

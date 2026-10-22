@@ -1,0 +1,2 @@
+// Recovered bundle module 48360; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){var eu=ec(9760),ed=ec(74784),ep=ec(80547),eg="[object Object]",eh=Object.prototype,ef=Function.prototype.toString,em=eh.hasOwnProperty,eE=ef.call(Object);eA.exports=function(eA){if(!ep(eA)||eu(eA)!=eg)return!1;var el=ed(eA);if(null===el)return!0;var ec=em.call(el,"constructor")&&el.constructor;return"function"==typeof ec&&ec instanceof ec&&ef.call(ec)==eE}};

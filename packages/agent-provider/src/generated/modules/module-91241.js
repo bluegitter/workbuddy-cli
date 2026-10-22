@@ -1,0 +1,2 @@
+// Recovered bundle module 91241; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){eA.exports=function(eA){let el=eA.COMMENT(/\(\*/,/\*\)/),ec={className:"attribute",begin:/^[ ]*[a-zA-Z]+([\s_-]+[a-zA-Z]+)*/},eu={begin:/=/,end:/[.;]/,contains:[el,{className:"meta",begin:/\?.*\?/},{className:"string",variants:[eA.APOS_STRING_MODE,eA.QUOTE_STRING_MODE,{begin:"`",end:"`"}]}]};return{name:"Extended Backus-Naur Form",illegal:/\S/,contains:[el,ec,eu]}}};

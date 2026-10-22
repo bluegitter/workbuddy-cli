@@ -1,0 +1,2 @@
+// Recovered bundle module 54486; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(3468),ed=ec(6715),ep=ec(56227),eg=ec(31189),eh=ec(27300);eA.exports=function(eA,el){var ec=eg(eA);if(!ep(eA)&&!ec)throw new eu("Assertion failed: `arrayBuffer` must be an ArrayBuffer or a SharedArrayBuffer");if("SEQ-CST"!==el&&"UNORDERED"!==el)throw new eu("Assertion failed: `order` must be ~SEQ-CST~ or ~UNORDERED~");if(ed(eA))throw new eu("Assertion failed: `arrayBuffer` must not be detached");return eh(eA)}};

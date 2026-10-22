@@ -1,0 +1,2 @@
+// Recovered bundle module 35091; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";let ec;function RAL(){if(void 0===ec)throw Error("No runtime abstraction layer installed");return ec}Object.defineProperty(el,"__esModule",{value:!0}),function(eA){eA.install=function(eA){if(void 0===eA)throw Error("No runtime abstraction layer provided");ec=eA}}(RAL||(RAL={})),el.default=RAL};

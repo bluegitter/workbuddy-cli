@@ -1,0 +1,2 @@
+// Recovered bundle module 79424; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";eA.exports=ec(70857).homedir||function(){var eA=process.env.HOME,el=process.env.LOGNAME||process.env.USER||process.env.LNAME||process.env.USERNAME;return"win32"===process.platform?process.env.USERPROFILE||process.env.HOMEDRIVE+process.env.HOMEPATH||eA||null:"darwin"===process.platform?eA||(el?"/Users/"+el:null):"linux"===process.platform?eA||(0===process.getuid()?"/root":el?"/home/"+el:null):eA||null}};

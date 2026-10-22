@@ -1,0 +1,2 @@
+// Recovered bundle module 48895; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{SectionBox:()=>SectionBox});var ed=ec(14083),ep=ec(96540),eg=eA([ed]);ed=(eg.then?(await eg)():eg)[0];let SectionBox=({children:eA})=>ep.createElement(ed.Box,{marginBottom:1,flexDirection:"column"},eA);eu()}catch(eA){eu(eA)}})};

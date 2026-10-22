@@ -1,0 +1,2 @@
+// Recovered bundle module 22052; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{DiffWordService:()=>ep.DiffWordService,DiffWordServiceImpl:()=>eg.DiffWordServiceImpl,FileContentDiff:()=>ed.FileContentDiff,WORD_HIGHLIGHT_CONFIG:()=>ep.WORD_HIGHLIGHT_CONFIG});var ed=ec(38094),ep=ec(12190),eg=ec(2682),eh=eA([ed]);ed=(eh.then?(await eh)():eh)[0],eu()}catch(eA){eu(eA)}})};

@@ -1,0 +1,2 @@
+// Recovered bundle module 84221; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.Heredoc=void 0;let Heredoc=class Heredoc{constructor(eA,el,ec,eu,ed){this.startRange=eA,this.name=el,this.nameRange=ec,this.contentRange=eu,this.endRange=ed}getName(){return this.name}getStartRange(){return this.startRange}getNameRange(){return this.nameRange}getContentRange(){return this.contentRange}getDelimiterRange(){return this.endRange}};el.Heredoc=Heredoc};

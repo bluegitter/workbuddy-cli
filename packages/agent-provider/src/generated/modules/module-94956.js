@@ -1,0 +1,2 @@
+// Recovered bundle module 94956; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{pipe:()=>pipe,pipeFromArray:()=>pipeFromArray});var eu=ec(50302);function pipe(){for(var eA=[],el=0;el<arguments.length;el++)eA[el]=arguments[el];return pipeFromArray(eA)}function pipeFromArray(eA){return 0===eA.length?eu.identity:1===eA.length?eA[0]:function(el){return eA.reduce(function(eA,el){return el(eA)},el)}}};

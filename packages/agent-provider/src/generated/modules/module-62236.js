@@ -1,0 +1,2 @@
+// Recovered bundle module 62236; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{default:()=>Static});var eu=ec(96540);function Static(eA){let{items:el,children:ec,style:ed}=eA,[ep,eg]=(0,eu.useState)(0),eh=(0,eu.useMemo)(()=>el.slice(ep),[el,ep]);(0,eu.useLayoutEffect)(()=>{eg(el.length)},[el.length]);let ef=eh.map((eA,el)=>ec(eA,ep+el)),em=(0,eu.useMemo)(()=>({position:"absolute",flexDirection:"column",...ed}),[ed]);return eu.createElement("ink-box",{internal_static:!0,style:em},ef)}};

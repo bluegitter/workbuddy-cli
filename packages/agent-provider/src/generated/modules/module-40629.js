@@ -1,0 +1,2 @@
+// Recovered bundle module 40629; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{BreathingTool:()=>ef});var ed=ec(96540),ep=ec(82101),eg=eA([ep]);ep=(eg.then?(await eg)():eg)[0];let eh=10,ef=ed.memo(({icon:eA="⚒"})=>{let el=(0,ed.useSyncExternalStore)(ep.subscribeTick,ep.getSnapshot),ec=Math.floor(el/eh)%2==0;return ed.createElement(ep.Text,null,ec?eA:" ")});ef.displayName="BreathingTool",eu()}catch(eA){eu(eA)}})};

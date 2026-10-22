@@ -1,0 +1,2 @@
+// Recovered bundle module 50078; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";let el=/([()\][%!^"`<>&|;, *?])/g;function escapeCommand(eA){return eA.replace(el,"^$1")}function escapeArgument(eA,ec){return eA=(eA=(eA=`${eA}`).replace(/(?=(\\+?)?)\1"/g,'$1$1\\"')).replace(/(?=(\\+?)?)\1$/,"$1$1"),eA=(eA=`"${eA}"`).replace(el,"^$1"),ec&&(eA=eA.replace(el,"^$1")),eA}eA.exports.command=escapeCommand,eA.exports.argument=escapeArgument};

@@ -1,0 +1,2 @@
+// Recovered bundle module 51545; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{formatToken:()=>formatToken});let formatToken=eA=>{if(0===eA)return"0";let el=1e3;if(eA<1e3)return eA.toString();let ec=["","k","M","G","T"],eu=Math.min(Math.floor(Math.log(eA)/Math.log(el)),ec.length-1);return`${parseFloat((eA/Math.pow(el,eu)).toFixed(1))}${ec[eu]}`}};

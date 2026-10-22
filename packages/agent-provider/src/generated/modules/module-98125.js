@@ -1,0 +1,2 @@
+// Recovered bundle module 98125; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.createProcess=createProcess;let maybeReturnProcess=()=>{if("u">typeof process)return process;try{return ec(932)}catch(eA){return}};function createProcess(){let eA=maybeReturnProcess()||{};return eA.cwd||(eA.cwd=()=>"/"),eA.emitWarning||(eA.emitWarning=(eA,el)=>{console.warn(`${el}${el?": ":""}${eA}`)}),eA.env||(eA.env={}),eA}el.default=createProcess()};

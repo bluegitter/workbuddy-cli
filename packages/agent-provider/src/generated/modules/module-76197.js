@@ -1,0 +1,2 @@
+// Recovered bundle module 76197; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.getClassMetadataProperties=getClassMetadataProperties;let eu=ec(49196),ed=ec(33864),ep=ec(74659);function getClassMetadataProperties(eA){let el=(0,eu.getReflectMetadata)(eA,ed.TAGGED_PROP),ec=new Map;if(void 0!==el)for(let eu of Reflect.ownKeys(el)){let ed=el[eu];ec.set(eu,(0,ep.getPropertyMetadataFromLegacyMetadata)(eA,eu,ed))}return ec}};

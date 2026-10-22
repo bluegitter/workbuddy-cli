@@ -1,0 +1,2 @@
+// Recovered bundle module 64228; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{isWorktreeExitMenuShowing:()=>isWorktreeExitMenuShowing,registerExitEventHandler:()=>registerExitEventHandler,setExitMenuShowing:()=>setExitMenuShowing,triggerWorktreeExitMenu:()=>triggerWorktreeExitMenu});let eu=null,ed=!1,registerExitEventHandler=eA=>{eu=eA},setExitMenuShowing=eA=>{ed=eA},isWorktreeExitMenuShowing=()=>ed,triggerWorktreeExitMenu=eA=>{eu&&eu(eA)}};

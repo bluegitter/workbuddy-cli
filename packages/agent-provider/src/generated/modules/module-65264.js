@@ -1,0 +1,2 @@
+// Recovered bundle module 65264; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(528)("%BigInt%",!0),ed=ec(61155),ep=ec(3468),eg=eu&&eu(0);eA.exports=function(eA,el){if("bigint"!=typeof eA||"bigint"!=typeof el)throw new ep("Assertion failed: `n` and `d` arguments must be BigInts");if(el===eg)throw new ed("Division by zero");return eA===eg?eg:eA%el}};

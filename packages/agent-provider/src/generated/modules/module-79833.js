@@ -1,0 +1,2 @@
+// Recovered bundle module 79833; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.validateTrailer=validateTrailer;let eu=ec(26460),ed=ec(7652),ep=ec(38603),eg=ec(32621);function validateTrailer(eA,el){let ec=(0,eg.findTrailerError)(eA);if(ec)throw el.forEach((eA,el)=>{ec.metadata.append(el,eA)}),ec;if(!el.has(ep.headerGrpcStatus)&&!eA.has(ep.headerGrpcStatus))throw new ed.ConnectError("protocol error: missing status",eu.Code.Internal)}};

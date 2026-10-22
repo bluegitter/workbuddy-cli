@@ -1,0 +1,2 @@
+// Recovered bundle module 6715; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(3468),ed=ec(27300),ep=ec(14834)(),eg=ec(14607),eh=ec(56227),ef=ec(31189),em=eg("SharedArrayBuffer.prototype.byteLength",!0);eA.exports=function(eA){var el=ef(eA);if(!eh(eA)&&!el)throw new eu("Assertion failed: `arrayBuffer` must be an Object with an [[ArrayBufferData]] internal slot");if(0===(el?em:ed)(eA))try{new global[ep[0]](eA)}catch(eA){return!!eA&&"TypeError"===eA.name}return!1}};

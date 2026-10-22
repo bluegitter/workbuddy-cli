@@ -1,0 +1,2 @@
+// Recovered bundle module 11750; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){!function(ec){el&&"object"==typeof el&&1?eA.exports=ec():"function"==typeof define&&define.amd?define([],ec):"u">typeof window?window.isWindows=ec():"u">typeof global?global.isWindows=ec():"u">typeof self?self.isWindows=ec():this.isWindows=ec()}(function(){return function(){return process&&("win32"===process.platform||/^(msys|cygwin)$/.test(process.env.OSTYPE))}})};

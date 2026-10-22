@@ -1,0 +1,2 @@
+// Recovered bundle module 51393; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(81249);eA.exports={nextElementSibling:{get:function(){if(this.parentNode){for(var eA=this.nextSibling;null!==eA;eA=eA.nextSibling)if(eA.nodeType===eu.ELEMENT_NODE)return eA}return null}},previousElementSibling:{get:function(){if(this.parentNode){for(var eA=this.previousSibling;null!==eA;eA=eA.previousSibling)if(eA.nodeType===eu.ELEMENT_NODE)return eA}return null}}}};

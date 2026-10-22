@@ -1,0 +1,2 @@
+// Recovered bundle module 47090; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){var JsonWebTokenError=function(eA,el){Error.call(this,eA),Error.captureStackTrace&&Error.captureStackTrace(this,this.constructor),this.name="JsonWebTokenError",this.message=eA,el&&(this.inner=el)};JsonWebTokenError.prototype=Object.create(Error.prototype),JsonWebTokenError.prototype.constructor=JsonWebTokenError,eA.exports=JsonWebTokenError};

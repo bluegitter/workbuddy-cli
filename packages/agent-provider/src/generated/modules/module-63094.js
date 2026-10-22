@@ -1,0 +1,2 @@
+// Recovered bundle module 63094; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";var ec;Object.defineProperty(el,"__esModule",{value:!0}),el.ClassElementMetadataKind=void 0,function(eA){eA[eA.multipleInjection=0]="multipleInjection",eA[eA.singleInjection=1]="singleInjection",eA[eA.unmanaged=2]="unmanaged"}(ec||(el.ClassElementMetadataKind=ec={}))};

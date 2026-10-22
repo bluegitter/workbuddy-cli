@@ -1,0 +1,2 @@
+// Recovered bundle module 23567; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0});let eu=ec(53813);let SyncProvider=class SyncProvider{constructor(eA,el){this._root=eA,this._settings=el,this._reader=new eu.default(this._root,this._settings)}read(){return this._reader.read()}};el.default=SyncProvider};

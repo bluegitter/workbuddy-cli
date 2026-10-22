@@ -1,0 +1,2 @@
+// Recovered bundle module 50968; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";var el=Object.prototype.toString;eA.exports=function(eA){var ec=el.call(eA),eu="[object Arguments]"===ec;return eu||(eu="[object Array]"!==ec&&null!==eA&&"object"==typeof eA&&"number"==typeof eA.length&&eA.length>=0&&"[object Function]"===el.call(eA.callee)),eu}};

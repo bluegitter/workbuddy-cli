@@ -1,0 +1,2 @@
+// Recovered bundle module 39827; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";var el=Object.prototype.toString;eA.exports=function(eA){if("string"==typeof eA.displayName&&eA.constructor.name)return eA.displayName;if("string"==typeof eA.name&&eA.name)return eA.name;if("object"==typeof eA&&eA.constructor&&"string"==typeof eA.constructor.name)return eA.constructor.name;var ec=eA.toString(),eu=el.call(eA).slice(8,-1);return(ec="Function"===eu?ec.substring(ec.indexOf("(")+1,ec.indexOf(")")):eu)||"anonymous"}};

@@ -1,0 +1,2 @@
+// Recovered bundle module 58662; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.Copy=void 0;let eu=ec(66283);let Copy=class Copy extends eu.JSONInstruction{constructor(eA,el,ec,eu,ed,ep){super(eA,el,ec,eu,ed,ep)}stopSearchingForFlags(eA){return -1===eA.indexOf("--")}getFromFlag(){let eA=super.getFlags();return 1===eA.length&&"from"===eA[0].getName()?eA[0]:null}getHeredocs(){return super.getHeredocs()}};el.Copy=Copy};

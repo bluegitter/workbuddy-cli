@@ -1,0 +1,2 @@
+// Recovered bundle module 31369; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";function createContextValues(){return{get(eA){return eA.id in this?this[eA.id]:eA.defaultValue},set(eA,el){return this[eA.id]=el,this},delete(eA){return delete this[eA.id],this}}}function createContextKey(eA,el){return{id:Symbol(null==el?void 0:el.description),defaultValue:eA}}Object.defineProperty(el,"__esModule",{value:!0}),el.createContextValues=createContextValues,el.createContextKey=createContextKey};

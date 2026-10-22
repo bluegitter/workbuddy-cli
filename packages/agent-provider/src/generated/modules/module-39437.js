@@ -1,0 +1,2 @@
+// Recovered bundle module 39437; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{DEFAULT_DEDUP_WINDOW_SIZE:()=>eg,DEFAULT_HEARTBEAT_INTERVAL_MS:()=>ed,DEFAULT_MAX_RECONNECT_DELAY_MS:()=>ep,ENV_KEY_WECOM_BOT_ID:()=>ef,ENV_KEY_WECOM_BOT_SECRET:()=>em,ENV_KEY_WECOM_BOT_WS_URL:()=>eE,STREAM_TIMEOUT_MS:()=>eh,WECOM_BOT_WS_URL:()=>eu});let eu="wss://openws.work.weixin.qq.com",ed=3e4,ep=6e4,eg=1e3,eh=36e4,ef="CODEBUDDY_WECOM_BOT_ID",em="CODEBUDDY_WECOM_BOT_SECRET",eE="CODEBUDDY_WECOM_BOT_WS_URL"};

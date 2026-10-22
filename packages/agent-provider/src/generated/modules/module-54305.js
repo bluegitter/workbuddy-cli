@@ -1,0 +1,2 @@
+// Recovered bundle module 54305; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";var ec,eu;Object.defineProperty(el,"__esModule",{value:!0}),el.Message=el.MessageType=void 0,function(eA){eA.USER="user",eA.ASSISTANT="assistant",eA.SYSTEM="system",eA.FUNCTION="function",eA.TOOL="tool"}(ec||(el.MessageType=ec={})),function(eA){eA.isMessage=function(eA){return eA&&void 0!==eA.messageType}}(eu||(el.Message=eu={}))};

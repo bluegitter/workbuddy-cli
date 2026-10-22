@@ -1,0 +1,2 @@
+// Recovered bundle module 89864; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.default=isUppercase;var eu=_interopRequireDefault(ec(8354));function _interopRequireDefault(eA){return eA&&eA.__esModule?eA:{default:eA}}function isUppercase(eA){return(0,eu.default)(eA),eA===eA.toUpperCase()}eA.exports=el.default,eA.exports.default=el.default};

@@ -1,0 +1,2 @@
+// Recovered bundle module 80221; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{SDK_INFO:()=>eg});var eu,ed="1.30.1",ep=ec(42152),eg=((eu={})[ep.SEMRESATTRS_TELEMETRY_SDK_NAME]="opentelemetry",eu[ep.SEMRESATTRS_PROCESS_RUNTIME_NAME]="node",eu[ep.SEMRESATTRS_TELEMETRY_SDK_LANGUAGE]=ep.TELEMETRYSDKLANGUAGEVALUES_NODEJS,eu[ep.SEMRESATTRS_TELEMETRY_SDK_VERSION]=ed,eu)};

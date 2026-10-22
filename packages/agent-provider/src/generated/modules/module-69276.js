@@ -1,0 +1,2 @@
+// Recovered bundle module 69276; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";function isBinaryContent(eA){if(void 0===eA)return!1;let el=Math.min(eA.length,8192);for(let ec=0;ec<el;ec++)if(0===eA.charCodeAt(ec))return!0;return!1}Object.defineProperty(el,"__esModule",{value:!0}),el.shouldSkipForBinary=el.isBinaryContent=el.DEFAULT_MAX_DIFF_BYTES=void 0,el.DEFAULT_MAX_DIFF_BYTES=1048576,el.isBinaryContent=isBinaryContent,el.shouldSkipForBinary=function(eA,el){return isBinaryContent(eA)||isBinaryContent(el)}};

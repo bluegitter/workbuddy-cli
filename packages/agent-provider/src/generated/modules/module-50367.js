@@ -1,0 +1,2 @@
+// Recovered bundle module 50367; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.Res=Res,el.applyResponseDecorator=applyResponseDecorator;let eu=ec(90014);function Res(){return(eA,el,ec)=>{applyResponseDecorator(eA,el,ec)}}function applyResponseDecorator(eA,el,ec){el&&Reflect.defineMetadata(eu.METADATA_KEY.controllerResponse,{parameterIndex:ec},eA.constructor,el)}};

@@ -1,0 +1,2 @@
+// Recovered bundle module 18950; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(6248);eA.exports=function(eA,el,ec){if("object"!=typeof eA&&"function"!=typeof eA)throw TypeError("expected an object or function.");if("string"!=typeof el)throw TypeError("expected `prop` to be a string.");return eu(ec)&&("set"in ec||"get"in ec)?Object.defineProperty(eA,el,ec):Object.defineProperty(eA,el,{configurable:!0,enumerable:!1,writable:!0,value:ec})}};

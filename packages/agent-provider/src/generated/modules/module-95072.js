@@ -1,0 +1,2 @@
+// Recovered bundle module 95072; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){let ec=new Uint8Array(512),eu=new Uint8Array(256);!function(){let eA=1;for(let el=0;el<255;el++)ec[el]=eA,eu[eA]=el,256&(eA<<=1)&&(eA^=285);for(let eA=255;eA<512;eA++)ec[eA]=ec[eA-255]}(),el.log=function(eA){if(eA<1)throw Error("log("+eA+")");return eu[eA]},el.exp=function(eA){return ec[eA]},el.mul=function(eA,el){return 0===eA||0===el?0:ec[eu[eA]+eu[el]]}};

@@ -1,0 +1,2 @@
+// Recovered bundle module 89179; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";eA.exports=JSON.parse('{"$id":"timings.json#","$schema":"http://json-schema.org/draft-06/schema#","required":["send","wait","receive"],"properties":{"dns":{"type":"number","min":-1},"connect":{"type":"number","min":-1},"blocked":{"type":"number","min":-1},"send":{"type":"number","min":-1},"wait":{"type":"number","min":-1},"receive":{"type":"number","min":-1},"ssl":{"type":"number","min":-1},"comment":{"type":"string"}}}')};

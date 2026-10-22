@@ -1,0 +1,2 @@
+// Recovered bundle module 25976; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.createGrpcWebTransport=el.createConnectTransport=void 0;var eu=ec(7074);Object.defineProperty(el,"createConnectTransport",{enumerable:!0,get:function(){return eu.createConnectTransport}});var ed=ec(51046);Object.defineProperty(el,"createGrpcWebTransport",{enumerable:!0,get:function(){return ed.createGrpcWebTransport}})};

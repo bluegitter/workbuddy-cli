@@ -1,0 +1,2 @@
+// Recovered bundle module 24237; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";function buildAgentTrigger(eA){if(!eA)return{};let el={};return eA.agentName&&(el.agent_type=eA.agentName),eA.storeId&&(el.agent_id=eA.storeId),el}function resolveHookSessionId(eA){if(eA)return eA.meta?.parentSessionId??eA.id}ec.r(el),ec.d(el,{buildAgentTrigger:()=>buildAgentTrigger,resolveHookSessionId:()=>resolveHookSessionId})};

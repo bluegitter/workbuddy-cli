@@ -1,0 +1,2 @@
+// Recovered bundle module 19543; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(14607),ed=eu("Date.prototype.getDay"),tryDateObject=function(eA){try{return ed(eA),!0}catch(eA){return!1}},ep=eu("Object.prototype.toString"),eg="[object Date]",eh=ec(51913)();eA.exports=function(eA){return"object"==typeof eA&&null!==eA&&(eh?tryDateObject(eA):ep(eA)===eg)}};

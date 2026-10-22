@@ -1,0 +1,2 @@
+// Recovered bundle module 6381; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.propertyEventDecorator=propertyEventDecorator;var eu=ec(40812);function propertyEventDecorator(eA,el){return function(){return function(ec,ed){var ep=new eu.Metadata(eA,ed);if(Reflect.hasOwnMetadata(eA,ec.constructor))throw Error(el);Reflect.defineMetadata(eA,ep,ec.constructor)}}}};

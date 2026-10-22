@@ -1,0 +1,2 @@
+// Recovered bundle module 36624; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";let{Colorizer:eu}=ec(19391),{Padder:ed}=ec(6819),{configs:ep,MESSAGE:eg}=ec(54966);let CliFormat=class CliFormat{constructor(eA={}){eA.levels||(eA.levels=ep.cli.levels),this.colorizer=new eu(eA),this.padder=new ed(eA),this.options=eA}transform(eA,el){return this.colorizer.transform(this.padder.transform(eA,el),el),eA[eg]=`${eA.level}:${eA.message}`,eA}};eA.exports=eA=>new CliFormat(eA),eA.exports.Format=CliFormat};

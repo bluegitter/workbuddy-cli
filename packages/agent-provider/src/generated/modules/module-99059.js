@@ -1,0 +1,2 @@
+// Recovered bundle module 99059; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){(function(){eA.exports=function(){function XMLNodeList(eA){this.nodes=eA}return Object.defineProperty(XMLNodeList.prototype,"length",{get:function(){return this.nodes.length||0}}),XMLNodeList.prototype.clone=function(){return this.nodes=null},XMLNodeList.prototype.item=function(eA){return this.nodes[eA]||null},XMLNodeList}()}).call(this)};

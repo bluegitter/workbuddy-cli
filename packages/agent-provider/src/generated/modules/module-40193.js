@@ -1,0 +1,2 @@
+// Recovered bundle module 40193; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.splitWhen=el.flatten=void 0,el.flatten=function(eA){return eA.reduce((eA,el)=>[].concat(eA,el),[])},el.splitWhen=function(eA,el){let ec=[[]],eu=0;for(let ed of eA)el(ed)?ec[++eu]=[]:ec[eu].push(ed);return ec}};

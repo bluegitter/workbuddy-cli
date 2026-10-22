@@ -1,0 +1,2 @@
+// Recovered bundle module 44781; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";let eu=ec(39023),ed=ec(57119),ep=ec(19548),eg=eA.exports=function(eA){ed.call(this);let el=[],ec=this;this._filter=new ep(eA,{read:this.read.bind(this),write:function(eA){el.push(eA)},complete:function(){ec.emit("complete",Buffer.concat(el))}}),this._filter.start()};eu.inherits(eg,ed)};

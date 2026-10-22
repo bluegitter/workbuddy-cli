@@ -1,0 +1,2 @@
+// Recovered bundle module 48233; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";function hasPipeDataListeners(eA){for(var el=eA.listeners("data"),ec=0;ec<el.length;ec++)if("ondata"===el[ec].name)return!0;return!1}eA.exports=function unpipe(eA){if(!eA)throw TypeError("argument stream is required");if("function"==typeof eA.unpipe)return void eA.unpipe();if(hasPipeDataListeners(eA))for(var el,ec=eA.listeners("close"),eu=0;eu<ec.length;eu++)("cleanup"===(el=ec[eu]).name||"onclose"===el.name)&&el.call(eA)}};

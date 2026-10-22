@@ -1,0 +1,2 @@
+// Recovered bundle module 35702; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";eA.exports=clone;var el=Object.getPrototypeOf||function(eA){return eA.__proto__};function clone(eA){if(null===eA||"object"!=typeof eA)return eA;if(eA instanceof Object)var ec={__proto__:el(eA)};else var ec=Object.create(null);return Object.getOwnPropertyNames(eA).forEach(function(el){Object.defineProperty(ec,el,Object.getOwnPropertyDescriptor(eA,el))}),ec}};

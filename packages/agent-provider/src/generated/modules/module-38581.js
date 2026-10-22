@@ -1,0 +1,2 @@
+// Recovered bundle module 38581; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";let eu=ec(91543),ed=ec(9727),ep=ec(95312);let ErrorReportingPreprocessorMixin=class ErrorReportingPreprocessorMixin extends eu{constructor(eA,el){super(eA,el),this.posTracker=ep.install(eA,ed),this.lastErrOffset=-1}_reportError(eA){this.lastErrOffset!==this.posTracker.offset&&(this.lastErrOffset=this.posTracker.offset,super._reportError(eA))}};eA.exports=ErrorReportingPreprocessorMixin};

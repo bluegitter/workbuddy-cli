@@ -1,0 +1,2 @@
+// Recovered bundle module 32937; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.default=isJWT;var eu=_interopRequireDefault(ec(8354)),ed=_interopRequireDefault(ec(25997));function _interopRequireDefault(eA){return eA&&eA.__esModule?eA:{default:eA}}function isJWT(eA){(0,eu.default)(eA);var el=eA.split(".");return 3===el.length&&el.reduce(function(eA,el){return eA&&(0,ed.default)(el,{urlSafe:!0})},!0)}eA.exports=el.default,eA.exports.default=el.default};

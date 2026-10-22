@@ -1,0 +1,2 @@
+// Recovered bundle module 51919; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{SendMessageToolCall:()=>SendMessageToolCall});var ed=ec(96540),ep=ec(82101),eg=ec(49034),eh=eA([eg,ep]);[eg,ep]=eh.then?(await eh)():eh;let SendMessageToolCall=({value:eA})=>{let{theme:el}=(0,eg.useTheme)(),{resultMessage:ec}=eA;return ed.createElement(ep.Text,{color:el.colors.secondary},ec)};eu()}catch(eA){eu(eA)}})};

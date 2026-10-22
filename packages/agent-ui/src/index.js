@@ -5,5 +5,6 @@
  */
 module.exports = Object.freeze({
   packageName: "@workbuddy/agent-ui",
-  artifactRoot: __dirname + "/compiled",
+  sourceRoot: __dirname + "/source",
+  rendererEntry: require.resolve("./source/renderer-entry.js"),
 });

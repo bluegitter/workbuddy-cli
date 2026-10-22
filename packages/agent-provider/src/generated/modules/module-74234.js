@@ -1,0 +1,2 @@
+// Recovered bundle module 74234; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{appRoutes:()=>eh});var ed=ec(90566),ep=ec(7422),eg=eA([ep,ed]);[ep,ed]=eg.then?(await eg)():eg;let eh=[{path:"/login",component:ep.LoginView,exact:!0},{path:"/chat",component:ed.ChatView,exact:!1}];eu()}catch(eA){eu(eA)}})};

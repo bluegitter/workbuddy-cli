@@ -1,0 +1,2 @@
+// Recovered bundle module 54924; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.getTargetId=getTargetId;let eu=ec(49196),ed="@inversifyjs/core/targetId";function getTargetId(){let eA=(0,eu.getReflectMetadata)(Object,ed)??0;return eA===Number.MAX_SAFE_INTEGER?(0,eu.updateReflectMetadata)(Object,ed,eA,()=>Number.MIN_SAFE_INTEGER):(0,eu.updateReflectMetadata)(Object,ed,eA,eA=>eA+1),eA}};

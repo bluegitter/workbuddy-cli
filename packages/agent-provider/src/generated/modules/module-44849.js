@@ -1,0 +1,2 @@
+// Recovered bundle module 44849; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{MemoryPanel:()=>MemoryPanel});var ed=ec(96540),ep=ec(98632),eg=eA([ep]);ep=(eg.then?(await eg)():eg)[0];let MemoryPanel=()=>ed.createElement(ep.MemorySavingMenu,{commandMode:!0});eu()}catch(eA){eu(eA)}})};

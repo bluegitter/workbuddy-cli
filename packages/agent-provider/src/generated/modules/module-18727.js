@@ -1,0 +1,2 @@
+// Recovered bundle module 18727; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.onLogEmitter=el.LoggerService=el.TraceIdProvider=el.Logger=el.LOGGER_LEVEL=el.LOGGER_CONFIG=void 0;let eu=ec(17237);el.LOGGER_CONFIG="cell.logger",el.LOGGER_LEVEL=`${el.LOGGER_CONFIG}.level`,el.Logger=Symbol("Logger"),el.TraceIdProvider=Symbol("TraceIdProvider"),el.LoggerService=Symbol("LoggerService"),el.onLogEmitter=new eu.Emitter};

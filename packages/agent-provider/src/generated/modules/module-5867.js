@@ -1,0 +1,2 @@
+// Recovered bundle module 5867; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";let eu=ec(1798),ed=ec(72644),ep={fromFile:async function(eA){let el=await eu.fromFile(eA);try{return await ed.fromTokenizer(el)}finally{await el.close()}}};Object.assign(ep,ed),Object.defineProperty(ep,"extensions",{get:()=>ed.extensions}),Object.defineProperty(ep,"mimeTypes",{get:()=>ed.mimeTypes}),eA.exports=ep};

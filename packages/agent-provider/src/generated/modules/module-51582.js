@@ -1,0 +1,2 @@
+// Recovered bundle module 51582; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";function getSuperClasses(eA){let el=[],ec=eA;for(;Object.getPrototypeOf(ec);)el.push(ec=Object.getPrototypeOf(ec));return el}function getPropertyNames(eA){let el=[];do el.push(...Object.getOwnPropertyNames(eA)),eA=Object.getPrototypeOf(eA);while(eA);return Array.from(new Set(el))}Object.defineProperty(el,"__esModule",{value:!0}),el.getSuperClasses=getSuperClasses,el.getPropertyNames=getPropertyNames};

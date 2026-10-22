@@ -1,0 +1,2 @@
+// Recovered bundle module 39943; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";el.emptyScalarPosition=function(eA,el,ec){if(el){null===ec&&(ec=el.length);for(let eu=ec-1;eu>=0;--eu){let ec=el[eu];switch(ec.type){case"space":case"comment":case"newline":eA-=ec.source.length;continue}for(ec=el[++eu];ec?.type==="space";)eA+=ec.source.length,ec=el[++eu];break}}return eA}};

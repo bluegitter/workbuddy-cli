@@ -1,0 +1,2 @@
+// Recovered bundle module 49083; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";let eu=ec(87111).fromPromise,ed=ec(51012),ep=ec(16928),eg=ec(4135),eh=ec(2151).pathExists;function outputFileSync(eA,...el){let ec=ep.dirname(eA);ed.existsSync(ec)||eg.mkdirsSync(ec),ed.writeFileSync(eA,...el)}eA.exports={outputFile:eu(async function(eA,el,ec="utf-8"){let eu=ep.dirname(eA);return await eh(eu)||await eg.mkdirs(eu),ed.writeFile(eA,el,ec)}),outputFileSync}};

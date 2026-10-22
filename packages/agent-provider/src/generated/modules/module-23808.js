@@ -1,0 +1,2 @@
+// Recovered bundle module 23808; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";eA.exports=function asPromise(eA,el){for(var ec=Array(arguments.length-1),eu=0,ed=2,ep=!0;ed<arguments.length;)ec[eu++]=arguments[ed++];return new Promise(function(ed,eg){ec[eu]=function(eA){if(ep)if(ep=!1,eA)eg(eA);else{for(var el=Array(arguments.length-1),ec=0;ec<el.length;)el[ec++]=arguments[ec];ed.apply(null,el)}};try{eA.apply(el||null,ec)}catch(eA){ep&&(ep=!1,eg(eA))}})}};

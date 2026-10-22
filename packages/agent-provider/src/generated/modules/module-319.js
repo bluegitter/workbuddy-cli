@@ -1,0 +1,2 @@
+// Recovered bundle module 319; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.ContainerFactory=void 0;let eu=ec(2426);let ContainerFactory=class ContainerFactory{static create(...eA){let el=new eu.Container({skipBaseClassChecks:!0});return el.load(...eA),el}};el.ContainerFactory=ContainerFactory};

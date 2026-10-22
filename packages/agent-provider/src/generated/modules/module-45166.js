@@ -1,0 +1,2 @@
+// Recovered bundle module 45166; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{NetworkUtils:()=>NetworkUtils});var eu=ec(34589),ed=ec.n(eu),ep=ec(57075);let NetworkUtils=class NetworkUtils{static async downloadFileStream(eA){let el=await fetch(eA);if(!el.ok)throw Error(`Failed to download file: ${el.status} ${el.statusText}`);ed()(el.body);let ec=el.body;return ep.Readable.fromWeb(ec)}}};

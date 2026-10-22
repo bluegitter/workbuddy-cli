@@ -1,0 +1,2 @@
+// Recovered bundle module 7352; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";eA.exports=function(eA,el,ec,eu,ed){return eA.config=el,ec&&(eA.code=ec),eA.request=eu,eA.response=ed,eA.isAxiosError=!0,eA.toJSON=function(){return{message:this.message,name:this.name,description:this.description,number:this.number,fileName:this.fileName,lineNumber:this.lineNumber,columnNumber:this.columnNumber,stack:this.stack,config:this.config,code:this.code,status:this.response&&this.response.status?this.response.status:null}},eA}};

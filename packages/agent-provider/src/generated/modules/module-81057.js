@@ -1,0 +1,2 @@
+// Recovered bundle module 81057; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.IS_SUPPORT_READDIR_WITH_FILE_TYPES=void 0;let ec=process.versions.node.split(".");if(void 0===ec[0]||void 0===ec[1])throw Error(`Unexpected behavior. The 'process.versions.node' variable has invalid value: ${process.versions.node}`);let eu=Number.parseInt(ec[0],10),ed=Number.parseInt(ec[1],10),ep=10,eg=eu>10,eh=10===eu&&ed>=ep;el.IS_SUPPORT_READDIR_WITH_FILE_TYPES=eg||eh};

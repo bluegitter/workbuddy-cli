@@ -1,0 +1,2 @@
+// Recovered bundle module 65719; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";let stringifyComment=eA=>eA.replace(/^(?!$)(?: $)?/gm,"#");function indentComment(eA,el){return/^\n+$/.test(eA)?eA.substring(1):el?eA.replace(/^(?! *$)/gm,el):eA}let lineComment=(eA,el,ec)=>eA.endsWith("\n")?indentComment(ec,el):ec.includes("\n")?"\n"+indentComment(ec,el):(eA.endsWith(" ")?"":" ")+ec;el.indentComment=indentComment,el.lineComment=lineComment,el.stringifyComment=stringifyComment};

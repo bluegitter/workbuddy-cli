@@ -1,0 +1,2 @@
+// Recovered bundle module 70978; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.default=isULID;var eu=_interopRequireDefault(ec(8354));function _interopRequireDefault(eA){return eA&&eA.__esModule?eA:{default:eA}}function isULID(eA){return(0,eu.default)(eA),/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i.test(eA)}eA.exports=el.default,eA.exports.default=el.default};

@@ -1,0 +1,2 @@
+// Recovered bundle module 2283; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.LegacyQueryableStringImpl=void 0;let LegacyQueryableStringImpl=class LegacyQueryableStringImpl{#e4;constructor(eA){this.#e4=eA}startsWith(eA){return this.#e4.startsWith(eA)}endsWith(eA){return this.#e4.endsWith(eA)}contains(eA){return this.#e4.includes(eA)}equals(eA){return this.#e4===eA}value(){return this.#e4}};el.LegacyQueryableStringImpl=LegacyQueryableStringImpl};

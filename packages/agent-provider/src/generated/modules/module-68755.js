@@ -1,0 +1,2 @@
+// Recovered bundle module 68755; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";function isRegExp(eA){return"[object RegExp]"===Object.prototype.toString.call(eA)}function checkHost(eA,el){for(var ec=0;ec<el.length;ec++){var eu=el[ec];if(eA===eu||isRegExp(eu)&&eu.test(eA))return!0}return!1}Object.defineProperty(el,"__esModule",{value:!0}),el.default=checkHost,eA.exports=el.default,eA.exports.default=el.default};

@@ -1,0 +1,2 @@
+// Recovered bundle module 8182; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{highlightCode:()=>highlightCode});var eu=ec(90886);let highlightCode=(eA,el)=>{if(!eA)return"";el=el&&(0,eu.supportsLanguage)(el)?el:"markdown";let ec=eA.replace(/\t/g,"    ");try{let eA=(0,eu.highlight)(ec,{language:el});return eA=(eA=eA.replace(/\u001b\[3m/g,"")).replace(/\u001b\[23m/g,"")}catch(eA){return console.error("[highlight] highlightCode failed for language:",el,"error:",eA),ec}}};

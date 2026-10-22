@@ -1,0 +1,2 @@
+// Recovered bundle module 36280; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";function awaitify(eA,el){if(el||(el=eA.length),!el)throw Error("arity is undefined");return function(...ec){return"function"==typeof ec[el-1]?eA.apply(this,ec):new Promise((eu,ed)=>{ec[el-1]=(eA,...el)=>{if(eA)return ed(eA);eu(el.length>1?el:el[0])},eA.apply(this,ec)})}}Object.defineProperty(el,"__esModule",{value:!0}),el.default=awaitify,eA.exports=el.default};

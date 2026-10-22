@@ -1,0 +1,6 @@
+// Recovered bundle module 51656; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";let YAMLError=class YAMLError extends Error{constructor(eA,el,ec,eu){super(),this.name=eA,this.code=ec,this.message=eu,this.pos=el}};let YAMLParseError=class YAMLParseError extends YAMLError{constructor(eA,el,ec){super("YAMLParseError",eA,el,ec)}};let YAMLWarning=class YAMLWarning extends YAMLError{constructor(eA,el,ec){super("YAMLWarning",eA,el,ec)}};let prettifyError=(eA,el)=>ec=>{if(-1===ec.pos[0])return;ec.linePos=ec.pos.map(eA=>el.linePos(eA));let{line:eu,col:ed}=ec.linePos[0];ec.message+=` at line ${eu}, column ${ed}`;let ep=ed-1,eg=eA.substring(el.lineStarts[eu-1],el.lineStarts[eu]).replace(/[\n\r]+$/,"");if(ep>=60&&eg.length>80){let eA=Math.min(ep-39,eg.length-79);eg="…"+eg.substring(eA),ep-=eA-1}if(eg.length>80&&(eg=eg.substring(0,79)+"…"),eu>1&&/^ *$/.test(eg.substring(0,ep))){let ec=eA.substring(el.lineStarts[eu-2],el.lineStarts[eu-1]);ec.length>80&&(ec=ec.substring(0,79)+"…\n"),eg=ec+eg}if(/[^ ]/.test(eg)){let eA=1,el=ec.linePos[1];el&&el.line===eu&&el.col>ed&&(eA=Math.max(1,Math.min(el.col-ed,80-ep)));let eh=" ".repeat(ep)+"^".repeat(eA);ec.message+=`:
+
+${eg}
+${eh}
+`}};el.YAMLError=YAMLError,el.YAMLParseError=YAMLParseError,el.YAMLWarning=YAMLWarning,el.prettifyError=prettifyError};

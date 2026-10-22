@@ -1,0 +1,2 @@
+// Recovered bundle module 50250; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(3468),ed=ec(14607),ep=ed("%ArrayBuffer.prototype.resizable%",!0),eg=ed("%SharedArrayBuffer.prototype.growable%",!0),eh=ec(56227),ef=ec(31189);eA.exports=function(eA){var el=eh(eA),ec=ef(eA);if(!el&&!ec)throw new eu("Assertion failed: `arrayBuffer` must be an ArrayBuffer or SharedArrayBuffer");return el&&ep?!ep(eA):!ec||!eg||!eg(eA)}};

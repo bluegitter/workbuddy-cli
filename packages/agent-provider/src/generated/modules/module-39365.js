@@ -1,0 +1,2 @@
+// Recovered bundle module 39365; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA){"use strict";function setProtoOf(eA,el){return eA.__proto__=el,eA}function mixinProperties(eA,el){for(var ec in el)Object.prototype.hasOwnProperty.call(eA,ec)||(eA[ec]=el[ec]);return eA}eA.exports=Object.setPrototypeOf||(({__proto__:[]})instanceof Array?setProtoOf:mixinProperties)};

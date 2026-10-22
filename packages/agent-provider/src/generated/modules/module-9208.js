@@ -1,0 +1,2 @@
+// Recovered bundle module 9208; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{CodeHighlight:()=>CodeHighlight});var ed=ec(96540),ep=ec(8182),eg=ec(82101),eh=eA([eg]);function CodeHighlight({code:eA,language:el}){let ec=(0,ed.useMemo)(()=>(0,ep.highlightCode)(eA,el),[eA,el]);return ed.createElement(eg.Text,null,ec)}eg=(eh.then?(await eh)():eh)[0],eu()}catch(eA){eu(eA)}})};

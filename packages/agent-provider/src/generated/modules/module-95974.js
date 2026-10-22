@@ -1,0 +1,2 @@
+// Recovered bundle module 95974; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.convertExpressMiddleware=convertExpressMiddleware,el.linkNext=linkNext;let eu=ec(36746);function convertExpressMiddleware(eA){return{handle:(el,ec)=>new Promise((ed,ep)=>eA(el.request,el.response,eu.Context.bind(eA=>{eA?ep(eA):ec().then(ed).catch(ep)}))),priority:0}}function linkNext(eA){return{handle:()=>eA(),priority:0}}};

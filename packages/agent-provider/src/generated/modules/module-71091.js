@@ -1,0 +1,2 @@
+// Recovered bundle module 71091; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{default:()=>__rspack_default_export});var eu=ec(47715),ed=ec(78522);let ep={},__rspack_default_export=(eA,el,ec)=>{let eg=eA+String(el)+String(ec),eh=ep[eg];if(eh)return eh;let ef=eA;if("wrap"===ec&&(ef=(0,eu.default)(eA,el,{trim:!1,hard:!0})),ec.startsWith("truncate")){let eu="end";"truncate-middle"===ec&&(eu="middle"),"truncate-start"===ec&&(eu="start"),ef=(0,ed.default)(eA,el,{position:eu})}return ep[eg]=ef,ef}};

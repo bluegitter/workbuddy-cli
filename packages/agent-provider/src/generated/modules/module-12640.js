@@ -1,0 +1,2 @@
+// Recovered bundle module 12640; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=this&&this.__importDefault||function(eA){return eA&&eA.__esModule?eA:{default:eA}};Object.defineProperty(el,"__esModule",{value:!0});let ed=eu(ec(23447));el.default=function(eA,el){let result=(eA,ec)=>el((0,ed.default)(eA),ec)>>>0;return result.signed=(eA,ec)=>el((0,ed.default)(eA),ec),result.unsigned=result,result.model=eA,result}};

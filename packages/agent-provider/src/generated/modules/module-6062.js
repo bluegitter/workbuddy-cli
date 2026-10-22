@@ -1,0 +1,2 @@
+// Recovered bundle module 6062; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";var eu=ec(43106);eA.exports={gzip:function(eA,el){return new Promise(function(ec,ed){eu.gzip(eA,el,function(eA,el){eA?ed(Error(eA)):ec(el)})})},ungzip:function(eA,el){return new Promise(function(ec,ed){eu.gunzip(eA,el,function(eA,el){eA?ed(Error(eA)):ec(el)})})}}};

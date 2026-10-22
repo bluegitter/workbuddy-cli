@@ -1,0 +1,2 @@
+// Recovered bundle module 70851; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.contentTypeMatcher=contentTypeMatcher;let ec=1024;function contentTypeMatcher(...eA){let el=new Map,eu=eA.reduce((eA,el)=>eA.concat("supported"in el?el.supported:el),[]);function match(eA){if(null===eA||0==eA.length)return!1;let ed=el.get(eA);if(void 0!==ed)return ed;let ep=eu.some(el=>el.test(eA));return el.size<ec&&el.set(eA,ep),ep}return match.supported=eu,match}};

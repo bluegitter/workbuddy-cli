@@ -1,0 +1,2 @@
+// Recovered bundle module 87265; dependencies use the original __webpack_require__ contract.
+module.exports = function(eA,el,ec){"use strict";let eu=ec(87111).fromPromise,ed=ec(40581);ed.outputJson=eu(ec(15363)),ed.outputJsonSync=ec(87379),ed.outputJSON=ed.outputJson,ed.outputJSONSync=ed.outputJsonSync,ed.writeJSON=ed.writeJson,ed.writeJSONSync=ed.writeJsonSync,ed.readJSON=ed.readJson,ed.readJSONSync=ed.readJsonSync,eA.exports=ed};
