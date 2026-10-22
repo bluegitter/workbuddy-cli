@@ -175,6 +175,25 @@ class LocalAgentProvider {
   async toggleMcpServer(serverName, enabled) { return this.sharedAcpClient.sendBroadcastRequest('toggleMcpServer', { serverName, enabled }); }
   async reconnectMcpServer(serverName, forceHttpCallback) { return this.sharedAcpClient.sendBroadcastRequest('reconnectMcpServer', { serverName, forceHttpCallback }); }
   async deleteMcpServer(serverName) { return this.sharedAcpClient.sendBroadcastRequest('deleteMcpServer', { serverName }); }
+  async toggleToolStatus(serverName, toolName) { return this.sharedAcpClient.sendBroadcastRequest('toggleToolStatus', { serverName, toolName }); }
+  async openMcpConfig() { return this.sharedAcpClient.sendBroadcastRequest('openMcpConfig', {}); }
+  async getMcpConfigContent() { return this.sharedAcpClient.sendBroadcastRequest('getMcpConfigContent', {}); }
+  async saveMcpConfigContent(content) { return this.sharedAcpClient.sendBroadcastRequest('saveMcpConfigContent', { content }); }
+  async clipboardReadText() { return (await this.sharedAcpClient.sendBroadcastRequest('clipboardReadText', {}))?.text || ''; }
+  async getConnectorConfigs() { try { return ((await this.sharedAcpClient.sendBroadcastRequest('getConnectorConfigs', {}))?.configs || []).map((config) => ({ ...config, icon: config.icon || config.iconUrl || '' })); } catch { return []; } }
+  async getConnectorStates() { try { return (await this.sharedAcpClient.sendBroadcastRequest('getConnectorStates', {}))?.states || {}; } catch { return {}; } }
+  async connectorAction(method, configId, extra = {}) {
+    try { const result = await this.sharedAcpClient.sendBroadcastRequest(method, { configId, ...extra }); return { success: result?.success ?? false, error: result?.error }; }
+    catch (error) { return { success: false, error: error instanceof Error ? error.message : String(error) }; }
+  }
+  connectConnector(configId) { return this.connectorAction('connectConnector', configId); }
+  updateConnectorHeaders(configId, headers) { return this.connectorAction('updateConnectorHeaders', configId, { headers }); }
+  updateConnectorEnv(configId, env) { return this.connectorAction('updateConnectorEnv', configId, { env }); }
+  disconnectConnector(configId) { return this.connectorAction('disconnectConnector', configId); }
+  unbindConnector(configId) { return this.connectorAction('unbindConnector', configId); }
+  resetConnector(configId) { return this.connectorAction('resetConnector', configId); }
+  async hasConnectorOAuthToken(configId) { try { return (await this.sharedAcpClient.sendBroadcastRequest('hasConnectorOAuthToken', { configId }))?.hasToken ?? false; } catch { return false; } }
+  async refreshConnectors(force) { return this.sharedAcpClient.sendBroadcastRequest('refreshConnectors', { force }); }
   async pickFile(params) {
     try { const data = await this.backend('backend:pick-file', params, 30000); return { files: data?.filePaths || [], canceled: data?.canceled ?? false, error: data?.error }; }
     catch (error) { return { files: [], canceled: true, error: error.message }; }
