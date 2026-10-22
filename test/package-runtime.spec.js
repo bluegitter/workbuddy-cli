@@ -223,6 +223,7 @@ const {
   escapeSqliteLikePattern,
   parseJsonArray,
   configureWorkbuddySqliteConnection,
+  createBackendRegistry,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1184,6 +1185,9 @@ async function main() {
   assert.deepStrictEqual(pragmas, ['journal_mode = WAL', 'busy_timeout = 10000', 'wal_autocheckpoint = 1000']);
   const fileLogger = new BufferedFileLogger({ logDir: path.join(root, 'logs'), filePrefix: 'test', flushIntervalMs: 100000 });
   fileLogger.info('hello'); await fileLogger.flush(); assert(fs.readFileSync(fileLogger.getLogFilePath(), 'utf8').includes('hello')); fileLogger.dispose();
+  const registry = createBackendRegistry({ backends: [{ id: 'local', name: 'Local', capabilities: { supportsStreaming: true }, create: (params) => ({ params }) }], defaultBackendId: 'local' });
+  assert.deepStrictEqual(registry.list(), [{ id: 'local', name: 'Local', capabilities: { supportsStreaming: true }, isDefault: true }]);
+  assert.deepStrictEqual(registry.create({ sessionId: 's1' }), { params: { sessionId: 's1' } });
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }

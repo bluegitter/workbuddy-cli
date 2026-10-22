@@ -34,4 +34,5 @@ module.exports = Object.freeze({
   ...require("./runtime/api-types"),
   ...require("./runtime/lru-cache"),
   ...require("./runtime/concurrency"),
+  ...require("./runtime/backend-contracts"),
 });

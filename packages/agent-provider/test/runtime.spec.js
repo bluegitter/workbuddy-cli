@@ -25,6 +25,9 @@ const {
   runAgentLoop,
   LRUCache,
   runWithConcurrencySettled,
+  CommodityCode,
+  AccountStatus,
+  getPackageName,
 } = require('../src');
 
 async function main() {
@@ -282,6 +285,8 @@ async function main() {
   assert.strictEqual(lru.has('b'), false); assert.deepStrictEqual(lru.keys(), ['a', 'c']);
   const settled = await runWithConcurrencySettled([async () => 'ok', async () => { throw new Error('bad'); }], 1);
   assert.deepStrictEqual(settled.map((item) => item.status), ['fulfilled', 'rejected']);
+  assert.strictEqual(AccountStatus.valid, 0);
+  assert.strictEqual(getPackageName(CommodityCode.proMon), 'plan.codebuddyProPlanMonthly');
   console.log('agent runtime tests passed');
 }
 
