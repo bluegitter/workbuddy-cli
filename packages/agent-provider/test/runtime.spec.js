@@ -9,6 +9,7 @@ const {
   CloudAgentConnection,
   AgentClient,
   AcpJsonRpcClient,
+  CloudHttpClient,
   HookEvent,
   HookRegistry,
   InterruptionController,
@@ -97,6 +98,15 @@ async function main() {
   channelListeners.get('message')({ jsonrpc: '2.0', method: 'session/update', params: { sessionId: 's-acp', update: { sessionUpdate: 'agent_message_chunk' } } });
   assert.strictEqual(update.sessionId, 's-acp');
   acp.destroy();
+  const cloudFetch = async (_url, init) => {
+    if (init.method === 'GET') return { ok: true, status: 200, headers: new Headers({ 'mcp-session-id': 'cloud-1' }), body: new ReadableStream({ start(controller) { controller.close(); } }) };
+    const requestBody = JSON.parse(init.body);
+    return { ok: true, status: 200, headers: new Headers({ 'content-type': 'application/json' }), json: async () => ({ jsonrpc: '2.0', id: requestBody.id, result: requestBody.method === 'initialize' ? { agentCapabilities: { loadSession: true } } : { sessionId: 'cloud-s1' } }) };
+  };
+  const cloudClient = new CloudHttpClient({ endpoint: 'https://cloud.test/mcp', fetch: cloudFetch });
+  assert.strictEqual((await cloudClient.connect()).agentCapabilities.loadSession, true);
+  assert.strictEqual((await cloudClient.createSession('/workspace')).sessionId, 'cloud-s1');
+  await cloudClient.disconnect();
   let turn = 0;
   await runAgentLoop(session, {
     tools,
