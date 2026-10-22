@@ -329,6 +329,11 @@ const {
   isOAuthCallbackUrl,
   extractConfigIdFromCallbackUrl,
   parseOAuthCallbackUrl,
+  buildStdioTransport,
+  buildHttpTransportPair,
+  connectStepWithTimeout,
+  connectWithFallback,
+  createScopedFetch,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1461,6 +1466,20 @@ async function main() {
   assert.deepStrictEqual(parseOAuthCallbackUrl('http://127.0.0.1/oauth/callback?error=access_denied&state=state-1&error_description=Nope', oauthStates), { success: false, configId: 'connector:docs', error: 'access_denied: Nope' });
   assert.strictEqual(oauthStates.has('state-1'), false);
   assert.deepStrictEqual(parseOAuthCallbackUrl('workbuddy://workbuddy/mcp/connector%3Adocs/oauth/callback?code=abc&state=s'), { success: true, state: 's', code: 'abc', configId: 'connector:docs' });
+  class FakeStdio { constructor(options) { this.options = options; } }
+  const stdio = buildStdioTransport({ StdioClientTransport: FakeStdio, command: 'node', args: ['server.js'], cwd: '/tmp', env: { TEST: '1' } });
+  assert.strictEqual(stdio.options.command, 'node');
+  class FakeHttp { constructor(url, options) { this.url = url; this.options = options; this.closed = false; } async close() { this.closed = true; } }
+  const pair = buildHttpTransportPair({ url: 'https://mcp.example', headers: { Authorization: 'Bearer x' }, StreamableHTTPClientTransport: FakeHttp, SSEClientTransport: FakeHttp, order: 'sse-first' });
+  assert.deepStrictEqual(pair.map((item) => item.name), ['sse', 'streamableHttp']);
+  const stepClient = { connect: async () => 'connected' };
+  await connectStepWithTimeout({ client: stepClient, transport: { close: async () => {} }, handshakeTimeoutMs: 100, requestTimeoutMs: 100, stepName: 'fake' });
+  let fallbackAttempts = 0;
+  const fallbackTransport = await connectWithFallback({ configId: 'custom-mcp:demo', client: { connect: async () => { fallbackAttempts += 1; if (fallbackAttempts === 1) throw new Error('socket hang up'); } }, meta: { url: 'https://mcp.example', headers: {}, order: 'stream-first' }, timeout: 2000, constructors: { StreamableHTTPClientTransport: FakeHttp, SSEClientTransport: FakeHttp }, logger: { info() {}, warn() {}, error() {} } });
+  assert.strictEqual(fallbackTransport instanceof FakeHttp, true);
+  assert.strictEqual(fallbackAttempts, 2);
+  const scopedFetch = createScopedFetch({ fetchFn: async (_input, init) => ({ headers: init.headers }), requestHeaders: { Base: 'yes' }, resolveHeaders: () => ({ hasScopedHeaders: true, headers: { Scoped: 'yes' } }), configId: 'demo' });
+  assert.deepStrictEqual((await scopedFetch('https://mcp')).headers, { Scoped: 'yes' });
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
