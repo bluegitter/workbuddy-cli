@@ -92,6 +92,9 @@ const {
   getProxyEnvFromProcess,
   ProjectResourceManager,
   updateSkillFrontmatterDisable,
+  createEdgeSyncTurnTraceContext,
+  EdgeSyncTurnTraceStore,
+  EdgeSyncNetworkRecovery,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -188,6 +191,13 @@ async function main() {
   assert.strictEqual(projectEnv.CODEBUDDY_SESSION_SKILL_DIRS, path.join(root, 'skills'));
   assert.strictEqual(projectManager.getMcpServersForSession('session-project').connector.headers.Authorization, 'Bearer token-1');
   assert.strictEqual(projectManager.getMcpServersForSession('session-project').connector.headers['x-project-id'], 'project-1');
+  const traceContext = createEdgeSyncTurnTraceContext({ traceId: 'bad-trace', spanId: '1234567890abcdef' }, 'session-edge');
+  assert.strictEqual(traceContext.traceId.length, 32);
+  const traceStore = new EdgeSyncTurnTraceStore(); traceStore.bindMessages('session-edge', ['message-1'], traceContext);
+  assert.strictEqual(traceStore.resolve('session-edge', ['message-1']).turnToken, traceContext.turnToken);
+  let reconnects = 0;
+  const recovery = new EdgeSyncNetworkRecovery({ canRecover: () => true, reconnect: async () => { reconnects += 1; }, isConnected: () => reconnects > 0, logger: { info() {}, warn() {} }, sleep: async () => {} });
+  await recovery.recover('resume'); assert.strictEqual(reconnects, 1);
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);

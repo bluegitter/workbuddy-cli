@@ -22,4 +22,6 @@ module.exports = Object.freeze({
   ...require("./runtime/channel-branding"),
   ...require("./runtime/proxy-env"),
   ...require("./runtime/project-resources"),
+  ...require("./runtime/edge-sync-trace"),
+  ...require("./runtime/edge-sync-recovery"),
 });
