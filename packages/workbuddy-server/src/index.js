@@ -120,4 +120,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-ui-adapter"),
   ...require("./runtime/expert-history-cache"),
   ...require("./runtime/expert-history-storage"),
+  ...require("./runtime/expert-resource-loader"),
 });

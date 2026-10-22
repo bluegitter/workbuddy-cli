@@ -284,6 +284,7 @@ const {
   SHARED_HISTORY_KEY,
   ExpertHistoryCache,
   ExpertHistoryStorage,
+  ExpertCenterResourceLoader,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1316,6 +1317,29 @@ async function main() {
   assert.deepStrictEqual((await historyStorage.load()).sessions[SHARED_HISTORY_KEY][0].id, 'demo');
   assert.strictEqual(historyStorage.isValidData({}), false);
   await historyStorage.dispose();
+  const resourceCalls = [];
+  let promptAttempts = 0;
+  const resourceLoader = new ExpertCenterResourceLoader({
+    baseUrl: 'https://experts.example/',
+    manifestPath: '/expert.json',
+    download: { timeout: 1000, maxRetries: 1, retryDelay: 0, batchConcurrency: 2 },
+    fetchFn: async (url) => {
+      resourceCalls.push(url);
+      if (url.endsWith('/expert.json')) return { ok: true, status: 200, json: async () => ({ version: '1', experts: [{ id: 'base' }], categories: [] }) };
+      if (url.endsWith('/internalExpert.json')) return { ok: true, status: 200, json: async () => ({ version: '2', experts: [{ id: 'internal' }], categories: [] }) };
+      if (url.endsWith('/externalExpert.json')) return { ok: false, status: 404, json: async () => ({}) };
+      if (url.endsWith('/retry.md') && promptAttempts++ === 0) throw new Error('temporary');
+      return { ok: true, status: 200, text: async () => `prompt:${url}` };
+    },
+  });
+  const loadedManifest = await resourceLoader.fetchManifest();
+  assert.deepStrictEqual(loadedManifest.experts.map((item) => item.id), ['base', 'internal']);
+  assert.strictEqual(await resourceLoader.fetchPromptWithRetry('/retry.md'), 'prompt:https://experts.example/retry.md');
+  const batchProgress = [];
+  const promptResults = await resourceLoader.fetchPromptsBatch([{ expertId: 'a', locale: 'zh', path: '/a.md' }, { expertId: 'b', locale: 'en', path: '/b.md' }], (...args) => batchProgress.push(args));
+  assert.strictEqual(promptResults.get('a_zh').content.includes('/a.md'), true);
+  assert.deepStrictEqual(batchProgress.at(-1), [2, 2, 0]);
+  assert.ok(resourceCalls.includes('https://experts.example/internalExpert.json'));
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
