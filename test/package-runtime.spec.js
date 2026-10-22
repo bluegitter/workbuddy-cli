@@ -278,6 +278,8 @@ const {
   ConnectorMetricReporter,
   toHeaderRecord,
   withExtraHeaders,
+  IOA_OAUTH_NAME_PREFIX,
+  IoaServerSideAuth,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1256,6 +1258,28 @@ async function main() {
   });
   assert.strictEqual(headerResult, 'done');
   assert.deepStrictEqual(transport._requestInit, { headers: { Existing: 'yes' } });
+  const ioaCalls = [];
+  const ioa = new IoaServerSideAuth({
+    getEnterpriseId: () => 'enterprise-1',
+    isIOAEnterprise: (id) => id === 'enterprise-1',
+    callApi: async (method, requestPath) => {
+      ioaCalls.push([method, requestPath]);
+      if (requestPath.endsWith('/accesstoken')) return { code: 0, data: { access_token: 'ioa-token' } };
+      return { code: 0 };
+    },
+  });
+  const ioaConfig = { url: 'https://docs.mcp.woa.com/server', headers: { 'X-Existing': '1' } };
+  const ioaRule = ioa.resolveHostRule(ioaConfig);
+  assert.ok(ioaRule.oauthName.startsWith(IOA_OAUTH_NAME_PREFIX));
+  assert.strictEqual(ioa.resolveOauthNameByUrl(ioaConfig.url), ioaRule.oauthName);
+  assert.strictEqual(ioa.resolveHostRule({ url: 'https://example.com/mcp' }), undefined);
+  const ioaToken = await ioa.resolveToken(ioaConfig, { interactive: false });
+  assert.strictEqual(ioaToken.success, true);
+  assert.strictEqual(ioaToken.accessToken, 'ioa-token');
+  const decoratedIoa = ioa.decorateConfig(ioaConfig, ioaRule, ioaToken.accessToken);
+  assert.strictEqual(decoratedIoa.headers.Authorization, 'Bearer ioa-token');
+  assert.strictEqual(decoratedIoa._workbuddyManagedAuth, 'server-side');
+  assert.strictEqual(ioaCalls[0][0], 'GET');
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);

@@ -116,4 +116,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-managed-npx-resolver"),
   ...require("./runtime/connector-mcp-metric"),
   ...require("./runtime/connector-mcp-transport"),
+  ...require("./runtime/ioa-server-side-auth"),
 });
