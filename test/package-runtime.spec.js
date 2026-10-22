@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { createDecoder, encode, ndJsonStream, RequestError, RpcConnection, AGENT_METHODS, ClientSideConnection, PROTOCOL_VERSION, createSSEDecoder, parseSSELine } = require('../packages/agent-client-protocol/src');
+const { createDecoder, encode, ndJsonStream, RequestError, RpcConnection, AGENT_METHODS, ClientSideConnection, PROTOCOL_VERSION, createSSEDecoder, parseSSELine, createStreamableHttpTransport } = require('../packages/agent-client-protocol/src');
 const { ProtocolConnection } = require('../packages/agent-client-protocol/src');
 const { parseFrontmatter } = require('../packages/plugin-core/src');
 const {
@@ -280,6 +280,19 @@ async function main() {
   sse.push('id: 2\ndata: next'); sse.flush();
   assert.deepStrictEqual(sseEvents, [{ type: 'message', data: '{"id":1}' }, { type: 'message', data: 'next', id: '2' }]);
   const parsedSse = {}; assert.strictEqual(parseSSELine(': heartbeat', parsedSse).isComment, true);
+  const httpCalls = [];
+  const httpFetch = async (url, init) => {
+    httpCalls.push({ url, init });
+    if (init.method === 'GET') return { ok: true, status: 200, headers: new Headers({ 'mcp-session-id': 'mcp-1' }), body: new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode('data: {"event":"ready"}\n\n')); controller.close(); } }) };
+    if (init.method === 'POST') return { ok: true, status: 200, headers: new Headers({ 'content-type': 'application/json' }), json: async () => ({ ok: true }) };
+    return { ok: true, status: 204, headers: new Headers() };
+  };
+  const httpTransport = createStreamableHttpTransport({ endpoint: 'https://agent.test/mcp/', authToken: 'token', fetch: httpFetch });
+  await httpTransport.connect();
+  assert.deepStrictEqual(await httpTransport.nextMessage(), { event: 'ready' });
+  assert.deepStrictEqual(await httpTransport.send({ jsonrpc: '2.0', id: 1 }), { ok: true });
+  await httpTransport.close();
+  assert.deepStrictEqual(httpCalls.map((call) => call.init.method), ['GET', 'POST', 'DELETE']);
   const facadeWrites = [];
   const facade = new ClientSideConnection(() => ({ sessionUpdate() {} }), { readable: new ReadableStream({ start(controller) { setTimeout(() => controller.close(), 20); } }), writable: { getWriter: () => ({ write: async (message) => { facadeWrites.push(message); setTimeout(() => facade.connection.handleResponse({ id: message.id, result: { sessionId: 's1' } }), 0); }, releaseLock() {} }) } });
   assert.deepStrictEqual(await facade.newSession({ cwd: '/tmp' }), { sessionId: 's1' });
