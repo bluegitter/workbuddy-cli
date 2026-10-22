@@ -209,6 +209,11 @@ const {
   createAuditAcpAdapter,
   buildMcpEntry,
   isTransientDisconnectMessage,
+  buildRecallText,
+  RecallCacheStore,
+  Bm25Index,
+  RecallIndex,
+  RateLimiter,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1150,6 +1155,14 @@ async function main() {
   assert.strictEqual(auditEntries[0].timestamp, 123);
   assert.strictEqual(buildMcpEntry('tc-2', { toolName: 'mcp__docs__search', rawInput: {} }, 'failed', 'denied', 's-audit', 124).messageParams.serverName, 'docs');
   assert.strictEqual(isTransientDisconnectMessage('ACP transport is not connected'), true);
+  assert(buildRecallText('skill', 'cloudstudio-deploy', 'deploy').includes('CloudStudio 部署'));
+  assert.strictEqual(RecallCacheStore.hashText('demo').length, 40);
+  const bm25 = new Bm25Index(); bm25.build([{ id: 'a', text: 'cloud deployment' }, { id: 'b', text: 'local notes' }]);
+  assert.strictEqual(bm25.score('cloud').has('a'), true);
+  const recallIndex = new RecallIndex(); recallIndex.rebuild([{ id: 'a', text: 'cloud deployment', vector: [1, 0], status: 'disabled' }]);
+  assert.strictEqual(recallIndex.search([1, 0], 'cloud', 1)[0].id, 'a');
+  const limiter = new RateLimiter({ minIntervalMs: 0 });
+  assert.strictEqual(await limiter.schedule(async () => 'ok'), 'ok');
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
