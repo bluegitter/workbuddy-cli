@@ -13,6 +13,12 @@ const { PathPolicy } = require('../packages/enterprise-policy/src');
 const { AgentViewModel } = require('../packages/agent-ui/src');
 const { WindowState, resolveAppConfig } = require('../packages/workbuddy-app/src');
 const { assertRecord, cloneSerializable } = require('../packages/workbuddy-core/src');
+const {
+  ArtifactIndex,
+  AutomationScheduler,
+  McpRegistry,
+  SessionStore,
+} = require('../packages/workbuddy-server/src');
 
 async function main() {
   const messages = [];
@@ -50,6 +56,36 @@ async function main() {
   assert.strictEqual(resolveAppConfig(root, { WORKBUDDY_CONFIG_DIR: '/tmp/config' }).config, '/tmp/config');
   assert.strictEqual(cloneSerializable({ a: 1 }).a, 1);
   assert.strictEqual(assertRecord({ ok: true }).ok, true);
+
+  const serverEvents = [];
+  const sessions = new SessionStore({ clock: (() => { let now = 100; return () => ++now; })() });
+  sessions.on('task.updated', (task) => serverEvents.push(task.status));
+  sessions.createSession({ id: 'session-1', projectId: 'project-1' });
+  sessions.createTask({ id: 'task-1', sessionId: 'session-1' });
+  sessions.updateTask('task-1', { status: 'completed', result: { ok: true } });
+  assert.deepStrictEqual(serverEvents, ['completed']);
+  assert.throws(() => sessions.updateTask('task-1', { status: 'pending' }), /terminal/);
+
+  const scheduler = new AutomationScheduler({ createTask: (input) => ({ id: 'automation-task', ...input }) });
+  scheduler.register({ id: 'daily-report', run: async ({ input, task }) => ({ input, taskId: task.id }) });
+  const automation = await scheduler.trigger('daily-report', { date: 'today' });
+  assert.deepStrictEqual(automation.result, { input: { date: 'today' }, taskId: 'automation-task' });
+  scheduler.close();
+
+  const mcp = new McpRegistry();
+  mcp.register({
+    name: 'demo',
+    listTools: async () => [{ name: 'echo', inputSchema: {} }],
+    callTool: async (name, args) => ({ name, args }),
+  });
+  assert.deepStrictEqual(await mcp.listTools(), [{ name: 'echo', inputSchema: {}, server: 'demo' }]);
+  assert.deepStrictEqual(await mcp.call('demo', 'echo', { value: 1 }), { name: 'echo', args: { value: 1 } });
+
+  const artifacts = new ArtifactIndex();
+  artifacts.put({ id: 'artifact-1', sessionId: 'session-1', path: '/tmp/report.md', kind: 'text' });
+  assert.strictEqual(artifacts.list('session-1').length, 1);
+  assert.strictEqual(artifacts.remove('artifact-1'), true);
+  assert.strictEqual(artifacts.get('artifact-1'), undefined);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }

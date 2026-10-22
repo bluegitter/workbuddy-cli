@@ -21,7 +21,7 @@ cover the same behavior. `scripts/check-packages.js` validates source syntax;
 | `authentication` | Atomic credential store | Auth/session compiled entries |
 | `telemetry` | Bounded event buffer | Logger/trace compiled entries |
 | `enterprise-policy` | Workspace path policy | File protection compiled entries |
-| `workbuddy-server` | Local HTTP route container | Daemon/MCP compiled entries |
+| `workbuddy-server` | Local HTTP routes, sessions/tasks, automation, MCP registry and artifact index | Daemon/MCP compiled entries |
 | `workbuddy-core` | Invariants and serialization | Common/contracts compiled entries |
 | `agent-ui` | Session view model | Renderer bundle |
 | `workbuddy-app` | App config and window state | Electron/Preload entries |
