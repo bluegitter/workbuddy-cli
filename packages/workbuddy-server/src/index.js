@@ -130,4 +130,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-mcp-transport-factory"),
   ...require("./runtime/connector-client-state"),
   ...require("./runtime/connector-oauth-provider"),
+  ...require("./runtime/connector-health-scheduler"),
 });

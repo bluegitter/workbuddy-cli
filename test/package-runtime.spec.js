@@ -340,6 +340,7 @@ const {
   createToolEntry,
   classifyPreflightState,
   createConnectorOAuthProvider,
+  ConnectorHealthScheduler,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1522,6 +1523,20 @@ async function main() {
   await provider.redirectToAuthorization(new URL('https://auth.example/start'));
   provider.invalidateCredentials('tokens'); assert.strictEqual(provider.tokens(), undefined);
   provider.invalidateCredentials('all'); assert.strictEqual(oauthStoreCalls.includes('deleteAll'), true);
+  const healthEntry = { status: 'connected', client: { ping: async () => { throw new Error('temporary'); } }, consecutivePingFailures: 0 };
+  let healthReconnects = 0;
+  const health = new ConnectorHealthScheduler({ clients: new Map([['docs', healthEntry]]), intervalMs: 1, jitterMs: 0, pingTimeoutMs: 5, failureThreshold: 2, reconnect: async () => { healthReconnects += 1; healthEntry.status = 'connected'; return true; } });
+  health.startHealthCheck('docs');
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.strictEqual(healthReconnects, 1);
+  health.stopHealthCheck('docs');
+  const reconnecting = new Map([['docs', Promise.resolve(true)]]);
+  healthEntry.status = 'connected';
+  assert.deepStrictEqual(await health.waitForReconnect('docs', reconnecting, 20), { ok: true });
+  healthEntry.status = 'error';
+  assert.deepStrictEqual(await health.waitForReconnect('docs', new Map(), 20), { ok: false, reason: 'no-inflight' });
+  healthEntry.status = 'connected';
+  health.startBackoffProbe('docs', 0); health.stopBackoffProbe('docs');
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
