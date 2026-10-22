@@ -35,6 +35,15 @@ const {
   formatTeammateContent,
   hasUnsettledTeamRuntime,
   parseTeammateMessage,
+  adaptShareUrl,
+  buildMessageTimeWindows,
+  collectShareArtifacts,
+  isShareTaskFileTooLargeError,
+  partitionOverseasUnsupportedArtifacts,
+  readArtifactBlobs,
+  readCwdArtifacts,
+  replaceLocalPathsInMessages,
+  resolveArtifactFilePath,
 } = require('../packages/agent-ui/src');
 const {
   QueueSnapshotStore,
@@ -201,6 +210,27 @@ async function main() {
   assert.strictEqual(resolveOneidAppType(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'enterprise-doc');
   assert.ok(resolveModeTools('ask').includes('AskUserQuestion'));
   assert.strictEqual(resolveResponseLocaleIsZh('en-US', 'zh-CN'), false);
+  assert.strictEqual(adaptShareUrl('https://share.test/?platform=cn', () => 'overseas'), 'https://share.test/?platform=overseas');
+  assert.strictEqual(resolveArtifactFilePath('agent://files/a.txt'), 'a.txt');
+  assert.strictEqual(resolveArtifactFilePath('file:///tmp/a%20b.txt'), '/tmp/a b.txt');
+  assert.strictEqual(isShareTaskFileTooLargeError({ error: { msg: { code: 10001 } } }), true);
+  assert.deepStrictEqual(buildMessageTimeWindows([
+    { requestId: 'b', createTime: 20 }, { requestId: 'a', createTime: 30 }, { requestId: 'b', createTime: 10 },
+  ]), [{ requestId: 'b', startedAt: 10, nextStartedAt: 30 }, { requestId: 'a', startedAt: 30, nextStartedAt: undefined }]);
+  const shareMap = new Map([['/tmp/report.txt', { url: 'https://cdn/report.txt' }]]);
+  const shareMessages = [{ content: { path: '/other/report.txt' }, unchanged: 'report.txt' }];
+  assert.deepStrictEqual(replaceLocalPathsInMessages(shareMessages, shareMap), [{ content: { path: 'https://cdn/report.txt' }, unchanged: 'report.txt' }]);
+  assert.deepStrictEqual(partitionOverseasUnsupportedArtifacts([{ name: 'a.pdf' }, { name: 'b.png' }], (item) => item.name), {
+    kept: [{ name: 'b.png' }], dropped: [{ name: 'a.pdf' }],
+  });
+  const cwd = path.join(root, 'cwd'); fs.mkdirSync(path.join(cwd, 'site'), { recursive: true });
+  const dirs = new Map([[cwd, { success: true, entries: [{ name: 'a.txt', path: path.join(cwd, 'a.txt'), isFile: true }, { name: 'site', path: path.join(cwd, 'site'), isDirectory: true }] }], [path.join(cwd, 'site'), { success: true, entries: [{ name: 'index.html', isFile: true }] }]]);
+  const cwdArtifacts = await readCwdArtifacts(cwd, async (dir) => dirs.get(dir));
+  assert.deepStrictEqual(cwdArtifacts.map((item) => item.name), ['a.txt', 'site.html']);
+  const blobs = await readArtifactBlobs('task-1', [{ path: '/tmp/a.txt', name: 'a.txt' }], async () => ({ content: 'blob' }));
+  assert.strictEqual(blobs[0].blob, 'blob');
+  const collected = await collectShareArtifacts({ getSessionArtifacts: async () => [{ uri: 'file:///tmp/a.txt', title: 'a.txt', _meta: { requestId: 'r1' } }, { type: 'task', uri: 'file:///tmp/skip' }] }, 'session-1', async () => ({ content: 'data' }));
+  assert.strictEqual(collected.fileArtifacts[0].requestId, 'r1');
   assert.strictEqual(buildQuery({ q: 'a b', empty: null }), '?q=a%20b');
   assert.strictEqual(resolveTeamsAcceptLanguage({ resolveIsOverseas: () => true }), 'en-US');
   assert.strictEqual(unwrap({ code: 0, data: 'ok' }, 'demo'), 'ok');

@@ -10,4 +10,5 @@ module.exports = Object.freeze({
   ...require("./runtime/agent-view-model"),
   ...require("./runtime/todo-projection"),
   ...require("./runtime/team-runtime"),
+  ...require("./runtime/share-artifacts"),
 });
