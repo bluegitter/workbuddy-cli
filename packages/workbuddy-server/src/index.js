@@ -118,4 +118,6 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-mcp-transport"),
   ...require("./runtime/ioa-server-side-auth"),
   ...require("./runtime/connector-ui-adapter"),
+  ...require("./runtime/expert-history-cache"),
+  ...require("./runtime/expert-history-storage"),
 });

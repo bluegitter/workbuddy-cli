@@ -281,6 +281,9 @@ const {
   IOA_OAUTH_NAME_PREFIX,
   IoaServerSideAuth,
   ConnectorUiAdapter,
+  SHARED_HISTORY_KEY,
+  ExpertHistoryCache,
+  ExpertHistoryStorage,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1300,6 +1303,19 @@ async function main() {
   await adapter.cancelConnect('docs');
   assert.strictEqual(adapter.pendingOAuth.size, 0);
   assert.strictEqual(typeof oauthListener, 'function');
+  const historyCache = new ExpertHistoryCache();
+  historyCache.initFromData({ version: 1, sessions: { [SHARED_HISTORY_KEY]: [{ id: 'old', name: 'Old', summonedAt: 1 }] }, lastUpdated: 1 });
+  historyCache.addExpert('session-1', { id: 'new', name: 'New' }, 2);
+  assert.deepStrictEqual(historyCache.getRecentExperts('session-1').map((item) => item.id), ['new', 'old']);
+  assert.strictEqual(historyCache.removeExpert('session-1', 'new'), true);
+  assert.strictEqual(historyCache.clearHistory('session-1'), true);
+  const historyPath = path.join(root, 'expert-history.json');
+  const historyStorage = new ExpertHistoryStorage(historyPath, { writeDebounceMs: 1 });
+  const historyData = { version: 1, sessions: { [SHARED_HISTORY_KEY]: [{ id: 'demo' }] }, lastUpdated: Date.now() };
+  historyStorage.saveAsync(historyData); await historyStorage.flush();
+  assert.deepStrictEqual((await historyStorage.load()).sessions[SHARED_HISTORY_KEY][0].id, 'demo');
+  assert.strictEqual(historyStorage.isValidData({}), false);
+  await historyStorage.dispose();
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
