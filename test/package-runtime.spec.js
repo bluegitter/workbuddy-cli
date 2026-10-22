@@ -65,6 +65,7 @@ const {
   createRuntimeHttp,
   createHttpError,
   tryParseEnvelope,
+  SidecarSessionManager,
 } = require('../packages/runtime/src');
 const {
   ArtifactIndex,
@@ -335,6 +336,15 @@ async function main() {
   const httpError = createHttpError('get', '/x', { status: 401, statusText: 'Unauthorized' }, '{"code":401,"msg":"Nope"}');
   assert.strictEqual(httpError.code, 401);
   assert.strictEqual(httpError.message, 'Nope');
+  const sidecars = new SidecarSessionManager({ command: process.execPath, args: ['-e', "process.stdout.write('sidecar');"] });
+  let sidecarOutput = '';
+  sidecars.on('data', (_id, chunk) => { sidecarOutput += chunk.toString(); });
+  const started = sidecars.start('session-1');
+  await new Promise((resolve) => sidecars.once('exit', resolve));
+  assert.strictEqual(started.id, 'session-1');
+  assert.strictEqual(sidecarOutput, 'sidecar');
+  assert.strictEqual(sidecars.capture('session-1'), undefined);
+  assert.strictEqual(sidecars.list().length, 0);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
