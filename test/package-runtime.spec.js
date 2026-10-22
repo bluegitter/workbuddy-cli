@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { createDecoder, encode, ndJsonStream } = require('../packages/agent-client-protocol/src');
+const { createDecoder, encode, ndJsonStream, RequestError, RpcConnection } = require('../packages/agent-client-protocol/src');
 const { ProtocolConnection } = require('../packages/agent-client-protocol/src');
 const { parseFrontmatter } = require('../packages/plugin-core/src');
 const {
@@ -227,6 +227,13 @@ async function main() {
   assert.deepStrictEqual(decoded, [1, 2]);
   await stream.writable.getWriter().write({ method: 'ping' });
   assert.strictEqual(written[0], '{"method":"ping"}\n');
+  const rpcIncoming = new ReadableStream({ start(controller) { controller.enqueue({ jsonrpc: '2.0', id: 1, method: 'echo', params: { value: 2 } }); setTimeout(() => controller.close(), 5); } });
+  const rpcWrites = [];
+  const rpc = new RpcConnection(async (method, params) => { if (method === 'echo') return params.value; throw RequestError.methodNotFound(method); }, async () => {}, { readable: rpcIncoming, writable: { getWriter: () => ({ write: async (message) => rpcWrites.push(message), releaseLock() {} }) } });
+  await rpc.closed;
+  assert.deepStrictEqual(rpcWrites[0], { jsonrpc: '2.0', id: 1, result: 2 });
+  const rpcOutbound = new RpcConnection(async () => ({}), async () => {}, { readable: new ReadableStream({ start(controller) { controller.close(); } }), writable: { getWriter: () => ({ write: async (message) => { setTimeout(() => rpcOutbound.handleResponse({ jsonrpc: '2.0', id: message.id, result: 'ok' }), 0); }, releaseLock() {} }) } });
+  assert.strictEqual(await rpcOutbound.sendRequest('ping', {}), 'ok');
   assert.deepStrictEqual(parseFrontmatter('---\nname: reports\nuser-invocable: false\n---\nDo it'), {
     attributes: { name: 'reports', 'user-invocable': 'false' }, body: 'Do it',
   });

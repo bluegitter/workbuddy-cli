@@ -11,4 +11,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connection"),
   ...require("./runtime/ndjson"),
   ...require("./runtime/stream"),
+  ...require("./runtime/rpc-connection"),
 });
