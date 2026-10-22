@@ -60,6 +60,7 @@ module.exports = Object.freeze({
   ...require("./runtime/storage-utils"),
   ...require("./runtime/backend-factory"),
   ...require("./runtime/cloud-agent-utils"),
+  ...require("./runtime/media-lifecycle-utils"),
   ...require("./runtime/codebuddy-backend-utils"),
   ...require("./runtime/traceparent"),
   ...require("./runtime/service-handlers"),

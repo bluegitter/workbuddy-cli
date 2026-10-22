@@ -227,6 +227,9 @@ const {
   normalizeCloudAgentListItem,
   encodePath,
   safeParseBigIntJSON,
+  extractMediaPathsFromCommand,
+  extractImageToolLocalPaths,
+  extractPreviewUrlLocalMediaPath,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1194,6 +1197,9 @@ async function main() {
   assert.strictEqual(encodePath('a/b'), 'a%2Fb');
   assert.deepStrictEqual(safeParseBigIntJSON('{"value":12345678901234567}'), { value: '12345678901234567' });
   assert.deepStrictEqual(normalizeCloudAgentListItem({ id: 'a', manifest: { name: 'demo' }, currentVersion: { version: '1' } }).currentVersion.manifest, { name: 'demo' });
+  assert.deepStrictEqual(extractMediaPathsFromCommand('python render.py /tmp/out.png', '/tmp'), ['/tmp/out.png']);
+  assert.deepStrictEqual(extractImageToolLocalPaths({ type: 'image_gen_tool_result', images: [{ localPath: '/tmp/a.png' }] }), ['/tmp/a.png']);
+  assert.strictEqual(extractPreviewUrlLocalMediaPath('file:///tmp/a.png'), '/tmp/a.png');
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
