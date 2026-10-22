@@ -65,6 +65,12 @@ const {
   retry,
 } = require('../packages/workbuddy-core/src');
 const {
+  calculateContextUsage,
+  compactMessages,
+  selectCompactionCandidates,
+  shouldTriggerCompaction,
+} = require('../packages/context/src');
+const {
   CLI_STATIC_MANAGED_ENV,
   buildCliProcessEnv,
   configureWorkbuddyRuntimeContext,
@@ -210,6 +216,13 @@ async function main() {
   assert.strictEqual(resolveOneidAppType(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'enterprise-doc');
   assert.ok(resolveModeTools('ask').includes('AskUserQuestion'));
   assert.strictEqual(resolveResponseLocaleIsZh('en-US', 'zh-CN'), false);
+  const contextMessages = [{ role: 'user', content: 'a'.repeat(100) }, { role: 'assistant', content: 'b'.repeat(100) }, { role: 'user', content: 'c'.repeat(100) }];
+  assert.ok(calculateContextUsage(contextMessages, 100).usedTokens > 0);
+  assert.strictEqual(shouldTriggerCompaction({ messages: contextMessages, contextWindow: 100, reserveTokens: 0, threshold: 0.1 }), true);
+  assert.deepStrictEqual(selectCompactionCandidates(contextMessages, { keepRecent: 1 }).length, 2);
+  const compacted = await compactMessages(contextMessages, (items) => `summary:${items.length}`, { keepRecent: 1 });
+  assert.strictEqual(compacted.compacted, true);
+  assert.strictEqual(compacted.messages[0].type, 'summary');
   assert.strictEqual(adaptShareUrl('https://share.test/?platform=cn', () => 'overseas'), 'https://share.test/?platform=overseas');
   assert.strictEqual(resolveArtifactFilePath('agent://files/a.txt'), 'a.txt');
   assert.strictEqual(resolveArtifactFilePath('file:///tmp/a%20b.txt'), '/tmp/a b.txt');

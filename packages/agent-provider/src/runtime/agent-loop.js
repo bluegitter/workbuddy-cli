@@ -12,6 +12,9 @@ async function runAgentLoop(session, runtime) {
     for (let turn = 0; turn < (runtime.maxTurns || 100); turn += 1) {
       if (session.abortController.signal.aborted) break;
       session.turn = turn + 1;
+      if (typeof runtime.compactContext === 'function') {
+        await runtime.compactContext(session, runtime);
+      }
       const response = normalizeModelResponse(await runtime.model.complete(buildAgentContext(session, runtime.context)));
       session.append(response.message);
       const calls = response.toolCalls;
