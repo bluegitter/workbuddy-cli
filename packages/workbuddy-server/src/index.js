@@ -101,4 +101,5 @@ module.exports = Object.freeze({
   ...require("./runtime/automation-error"),
   ...require("./runtime/automation-run-coordinator"),
   ...require("./runtime/connector-locale"),
+  ...require("./runtime/connector-server-side-oauth-refresher"),
 });

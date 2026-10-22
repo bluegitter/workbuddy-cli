@@ -238,6 +238,8 @@ const {
   parseLocalizedMapKey,
   resolveLocalizedMapText,
   resolveConnectorDisplayText,
+  ConnectorServerSideOauthRefresher,
+  FALLBACK_REFRESH_INTERVAL_MS,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -372,6 +374,24 @@ async function main() {
   assert.strictEqual(resolveLocalizedMapText({ enterprise: { en: ' Enterprise ', zh: '企业' } }, true, ['enterprise']), 'Enterprise');
   assert.deepStrictEqual(resolveConnectorDisplayText({ name: 'Fallback', name_en: 'English', name_map: { pro: { en: 'Pro', zh: '专业版' } }, description: 'Description' }, { isEnglish: true, candidateKeys: ['pro'] }), { name: 'Pro', description: 'Description' });
   fs.rmSync(localeConfigDir, { recursive: true, force: true });
+  const oauthApplied = [];
+  const oauth = new ConnectorServerSideOauthRefresher(
+    async () => ({ token: 'api' }),
+    {
+      updateHeaders: async (_id, headers) => { oauthApplied.push(headers); return { success: true }; },
+      onTokenApplied: async () => {},
+    },
+    undefined,
+    { callOauthApi: async () => ({ code: 0, data: { access_token: 'access', expires_in: 900 } }) },
+  );
+  assert.strictEqual(oauth.computeNextDelay(undefined), FALLBACK_REFRESH_INTERVAL_MS);
+  assert.strictEqual(oauth.computeNextDelay(600), 300000);
+  assert.deepStrictEqual(await oauth.tryFetchToken('github'), { ok: true, token: 'access', expiresIn: 900 });
+  oauth.schedule('cfg-1', 'github', { initialAccessToken: 'initial', initialExpiresIn: 3600 });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepStrictEqual(oauthApplied, [{ Authorization: 'Bearer initial' }]);
+  assert.strictEqual(oauth.isScheduled('cfg-1'), true);
+  oauth.stopAll();
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
