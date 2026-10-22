@@ -8,7 +8,7 @@
     "email": "workbuddy@tencent.com"
   },
   "homepage": "https://www.codebuddy.ai",
-  "main": "main/index.js",
+  "main": "wb-patch-entry.js",
   "dependencies": {
     "@opentelemetry/api": "^1.8.0",
     "@opentelemetry/core": "^1.25.0",
