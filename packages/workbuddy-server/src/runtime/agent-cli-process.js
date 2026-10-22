@@ -6,6 +6,13 @@ const path = require('path');
 const net = require('net');
 
 const AGENT_CLI_LOCAL_ACP_ENDPOINT_UNAVAILABLE_CODE = 'AGENT_UNAVAILABLE';
+/** Classify process exits so launch failures can be reported separately from agent errors. */
+function classifyCliExit(exitCode) {
+  const code = Number(exitCode) >>> 0;
+  if (exitCode === 127 || exitCode === 126 || code === 9009 || code === 1073807364) return 'startup-failed';
+  if (code >= 3221225472 && code <= 3489660927) return 'startup-failed';
+  return 'ran-with-error';
+}
 function writeAgentCliSystemPromptFile(sessionId, systemPrompt) {
   if (!systemPrompt) return null;
   const tmpDir = path.join(os.tmpdir(), 'workbuddy-prompts');
@@ -44,4 +51,4 @@ async function waitForAgentCliLocalAcpEndpoint(acpEndpoint, options = {}) {
   throw createAgentCliLocalAcpEndpointUnavailableError(acpEndpoint, timeoutMs, attempts, elapsedMs, options.logPrefix);
 }
 
-module.exports = Object.freeze({ AGENT_CLI_LOCAL_ACP_ENDPOINT_UNAVAILABLE_CODE, writeAgentCliSystemPromptFile, cleanupAgentCliSystemPromptFile, waitForAgentCliLocalAcpEndpoint, createAgentCliLocalAcpEndpointUnavailableError });
+module.exports = Object.freeze({ AGENT_CLI_LOCAL_ACP_ENDPOINT_UNAVAILABLE_CODE, classifyCliExit, writeAgentCliSystemPromptFile, cleanupAgentCliSystemPromptFile, waitForAgentCliLocalAcpEndpoint, createAgentCliLocalAcpEndpointUnavailableError });

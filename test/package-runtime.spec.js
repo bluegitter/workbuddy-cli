@@ -233,6 +233,7 @@ const {
   createWorkbuddySessionPersistence,
   AutomationDeliveryOutboxWorker,
   EmbeddingClient,
+  classifyCliExit,
   isEnglishConnectorLocale,
   parseLocalizedMapKey,
   resolveLocalizedMapText,
@@ -358,6 +359,9 @@ const {
 } = require('../packages/authentication/src');
 
 async function main() {
+  assert.strictEqual(classifyCliExit(127), 'startup-failed');
+  assert.strictEqual(classifyCliExit(9009), 'startup-failed');
+  assert.strictEqual(classifyCliExit(1), 'ran-with-error');
   const localeConfigDir = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-locale-'));
   fs.mkdirSync(path.join(localeConfigDir, 'app'), { recursive: true });
   fs.writeFileSync(path.join(localeConfigDir, 'app', 'app-config.json'), JSON.stringify({ locale: 'zh-CN' }));
