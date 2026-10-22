@@ -39,4 +39,7 @@ module.exports = Object.freeze({
   ...require("./runtime/tencent-docs"),
   ...require("./runtime/agent-cli-runtime"),
   ...require("./runtime/connector-mapping"),
+  ...require("./runtime/deeplink-parser"),
+  ...require("./runtime/deeplink-guard"),
+  ...require("./runtime/deeplink-mock-repo"),
 });

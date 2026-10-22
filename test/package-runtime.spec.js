@@ -194,6 +194,9 @@ const {
   mapProjectConnector,
   mapUserConnector,
   unwrapData,
+  parseDeeplink,
+  isDomainObjectDeeplink,
+  MockDeeplinkRepo,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -339,6 +342,18 @@ async function main() {
   assert.deepStrictEqual(openQueue.markReady(), [{ url: 'workbuddy://home' }]); assert.strictEqual(openQueue.isReady(), true);
   const fileQueue = createPendingFileQueue(); fileQueue.enqueue('/tmp/a'); fileQueue.enqueue('/tmp/a'); fileQueue.enqueue('/tmp/b');
   assert.deepStrictEqual(fileQueue.consume(), ['/tmp/a', '/tmp/b']);
+  const taskLink = parseDeeplink('workbuddy://task?action=start&prompt=hello&skills=a,b,a&connectorIds=x&permissionMode=unsafe&welcomeMode=unknown');
+  assert.strictEqual(taskLink.ok, true);
+  assert.deepStrictEqual(taskLink.value.skills, ['a', 'b']);
+  assert.strictEqual(taskLink.value.permissionMode, 'default');
+  assert.ok(taskLink.warnings.length >= 2);
+  assert.strictEqual(isDomainObjectDeeplink('workbuddy://task?action=start&prompt=hello'), true);
+  assert.strictEqual(isDomainObjectDeeplink('https://task?action=start&prompt=hello'), false);
+  assert.strictEqual(parseDeeplink('workbuddy://task?action=stop&prompt=hello').reason, 'invalid-action');
+  assert.strictEqual(parseDeeplink('workbuddy://task?action=start').reason, 'missing-required');
+  const mockRepo = new MockDeeplinkRepo();
+  assert.strictEqual((await mockRepo.resolveTaskPayload('mock-text')).value.prompt, '帮我写一个快速排序');
+  assert.strictEqual((await mockRepo.resolveTaskPayload('mock-expired')).reason, 'expired');
   assert.strictEqual(isAllowedGuestWebviewRedirect('https://docs.qq.com/oauth/callback'), true);
   assert.strictEqual(getGuestInPlaceNavigationReason('https://docs.qq.com/doc/1?a=1', 'https://docs.qq.com/doc/1?a=2'), 'same-document');
   assert.ok(validateBootstrapInfo({ pendingLocalStorageMigration: { sourceSessionPath: '/tmp/session', preparedAt: 1, entries: { a: 'b' } } }).pendingLocalStorageMigration);
