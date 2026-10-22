@@ -35,7 +35,10 @@ class PoiConsentRegistry {
   }
 
   cancel(name, result = 'denied') { return this.answer(name, result); }
-  clear() { for (const name of this.pending.keys()) this.answer(name, 'denied'); }
+  cancelAll() { for (const name of this.pending.keys()) this.answer(name, 'denied'); }
+  clear() { this.cancelAll(); }
+  get pendingCount() { return this.pending.size; }
+  hasPending(name) { return this.pending.has(name); }
 }
 
 module.exports = { POI_CONSENT_DEFAULT_TIMEOUT_MS, PoiConsentRegistry };

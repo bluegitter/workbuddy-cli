@@ -272,7 +272,13 @@ const {
   ExpertCacheManager,
   McpRegistry,
   mergeExpertManifests,
+  POI_CONSENT_DEFAULT_TIMEOUT_MS,
   PoiConsentRegistry,
+  CONSENT_FILE_NAME,
+  PoiConsentStore,
+  POI_HEADER_NAME,
+  buildPoiHeader,
+  SessionPoiCache,
   readExpertMcpDeclaration,
   SessionStore,
   ToolRoutingTable,
@@ -879,6 +885,45 @@ async function main() {
   assert.strictEqual(poi.answer('wrong-session', 'request-poi', { ok: true }), false);
   assert.strictEqual(poi.answer('session-poi', 'request-poi', { ok: true }), true);
   assert.deepStrictEqual(await poiPending, { ok: true });
+  assert.strictEqual(POI_CONSENT_DEFAULT_TIMEOUT_MS, 60000);
+  const consentRegistry = new PoiConsentRegistry();
+  const restoredFirstConsent = consentRegistry.waitWithFirst('mcp-demo', 1000);
+  const restoredSecondConsent = consentRegistry.waitWithFirst('mcp-demo', 1000);
+  assert.strictEqual(restoredFirstConsent.isFirst, true);
+  assert.strictEqual(restoredSecondConsent.isFirst, false);
+  assert.strictEqual(consentRegistry.pendingCount, 1);
+  assert.strictEqual(consentRegistry.hasPending('mcp-demo'), true);
+  assert.strictEqual(consentRegistry.answer('mcp-demo', 'granted'), true);
+  assert.strictEqual(await restoredFirstConsent.promise, 'granted');
+  assert.strictEqual(await restoredSecondConsent.promise, 'granted');
+  const deniedConsent = new PoiConsentRegistry().wait('mcp-timeout', 1);
+  assert.strictEqual(await deniedConsent, 'denied');
+  const cancelledRegistry = new PoiConsentRegistry();
+  const cancelled = cancelledRegistry.wait('mcp-cancel', 1000);
+  cancelledRegistry.cancelAll('shutdown');
+  assert.strictEqual(await cancelled, 'denied');
+  const consentRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-poi-consent-'));
+  const consentStore = new PoiConsentStore(consentRoot);
+  assert.strictEqual(CONSENT_FILE_NAME, 'poi-mcp-consent.json');
+  assert.strictEqual(consentStore.get('mcp-demo'), undefined);
+  consentStore.set('mcp-demo', 'denied');
+  assert.strictEqual(fs.existsSync(path.join(consentRoot, CONSENT_FILE_NAME)), false);
+  consentStore.set('mcp-demo', 'granted');
+  assert.strictEqual(consentStore.get('mcp-demo'), 'granted');
+  const reloadedStore = new PoiConsentStore(consentRoot);
+  assert.strictEqual(reloadedStore.get('mcp-demo'), 'granted');
+  fs.writeFileSync(path.join(consentRoot, CONSENT_FILE_NAME), '{broken');
+  assert.strictEqual(new PoiConsentStore(consentRoot).get('mcp-demo'), undefined);
+  const header = buildPoiHeader({ city: 'Nanjing' });
+  assert.strictEqual(Object.keys(header)[0], POI_HEADER_NAME);
+  assert.deepStrictEqual(JSON.parse(Buffer.from(header[POI_HEADER_NAME], 'base64').toString('utf8')), { city: 'Nanjing' });
+  const sessionPoi = new SessionPoiCache();
+  sessionPoi.set('session-1', { city: 'Nanjing' });
+  assert.deepStrictEqual(sessionPoi.get('session-1'), { city: 'Nanjing' });
+  assert.strictEqual(sessionPoi.size, 1);
+  assert.strictEqual(sessionPoi.delete('session-1'), true);
+  sessionPoi.clear();
+  fs.rmSync(consentRoot, { recursive: true, force: true });
   const editorTracker = new TencentDocsAgentEditorTracker(); editorTracker.recordOpenedFile('s1', '/tmp/a.doc'); editorTracker.recordOpenedFile('s1', '/tmp/a.doc');
   assert.deepStrictEqual(editorTracker.takeAndClear('s1'), ['/tmp/a.doc']);
   assert.strictEqual(createIsSessionStillProcessing({ getSession: () => ({ status: 'working', isProcessing: false }) })('s1'), true);
