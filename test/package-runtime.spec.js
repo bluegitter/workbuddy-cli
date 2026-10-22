@@ -206,6 +206,9 @@ const {
   createWorkbuddySidecarManager,
   parseToolUsage,
   createToolUsageBridge,
+  createAuditAcpAdapter,
+  buildMcpEntry,
+  isTransientDisconnectMessage,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1139,6 +1142,14 @@ async function main() {
   assert.strictEqual(poiRegistry.answer('session-1', 'request-1', 'picked'), true);
   assert.strictEqual(await answer, 'picked');
   assert.strictEqual(poiRegistry.pendingCount, 0);
+  const auditEntries = [];
+  const audit = createAuditAcpAdapter({ store: { append: async (entry) => auditEntries.push(entry) }, now: () => 123 });
+  await audit.consume({ sessionId: 's-audit', update: { sessionUpdate: 'tool_call', toolCallId: 'tc-1', rawInput: { url: 'https://example.com' }, _meta: { 'codebuddy.ai/toolName': 'WebFetch' } } });
+  await audit.consume({ sessionId: 's-audit', update: { sessionUpdate: 'tool_call_update', toolCallId: 'tc-1', status: 'completed' } });
+  assert.strictEqual(auditEntries[0].messageKey, 'securityCenter.audit.network.success');
+  assert.strictEqual(auditEntries[0].timestamp, 123);
+  assert.strictEqual(buildMcpEntry('tc-2', { toolName: 'mcp__docs__search', rawInput: {} }, 'failed', 'denied', 's-audit', 124).messageParams.serverName, 'docs');
+  assert.strictEqual(isTransientDisconnectMessage('ACP transport is not connected'), true);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
