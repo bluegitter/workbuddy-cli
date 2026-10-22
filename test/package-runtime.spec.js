@@ -25,6 +25,13 @@ const {
   resolveOneidAppType,
   resolveModeTools,
   resolveResponseLocaleIsZh,
+  getLogoutMarkerPath,
+  AuthErrorCode,
+  TimeoutError,
+  Edition,
+  ProductEnviroment,
+  isPersonalAccount,
+  ProductEnvService,
 } = require('../packages/authentication/src');
 const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger, formatLocalIsoTimestamp, formatLine, buildLifecycleLine, buildStartupPerfFields } = require('../packages/telemetry/src');
 const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValueList } = require('../packages/telemetry/src');
@@ -283,6 +290,14 @@ async function main() {
     [{ plugins: [{ source: './a', name: 'A2' }, { source: './b', name: 'B' }] }],
   ).plugins, [{ source: './a', name: 'A2' }, { source: './b', name: 'B' }]);
   const credentials = new CredentialStore(path.join(root, 'credentials.json'));
+  assert.strictEqual(getLogoutMarkerPath('/tmp/auth.json'), '/tmp/auth.json.logged-out');
+  assert.strictEqual(new TimeoutError('slow').code, AuthErrorCode.Timeout);
+  assert.strictEqual(isPersonalAccount({ type: Edition.Personal }), true);
+  assert.strictEqual(isPersonalAccount({ type: 'enterprise' }), false);
+  const productEnv = new ProductEnvService({ productManager: { waitConfiguration: async () => ({ authentication: { attributes: { internalDomain: '*.corp.test', externalDomain: 'example.test' } } }), sync: async () => {} }, sessionProvider: async () => ({ auth: { domain: 'dev.corp.test' } }) });
+  assert.strictEqual(await productEnv.getCurrent(), ProductEnviroment.Internal);
+  assert.strictEqual(productEnv.matchDomain('*.corp.test', 'dev.corp.test'), true);
+  assert.strictEqual(productEnv.matchDomain('*.corp.test', 'corp.test'), false);
   credentials.set('workbuddy', { token: 'test' });
   assert.strictEqual(credentials.get('workbuddy').token, 'test');
   assert.strictEqual(fs.statSync(path.join(root, 'credentials.json')).mode & 0o777, 0o600);
