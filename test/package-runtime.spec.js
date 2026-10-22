@@ -253,6 +253,9 @@ const {
   generateLegacyKey,
   getSourceMaxMtime,
   ConnectorTokenRefresher,
+  JsonFileCache,
+  TtlMemoCache,
+  safeReadJsonFile,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -507,6 +510,28 @@ async function main() {
   assert.strictEqual(refreshedTokens[0].access_token, 'new-refresh');
   assert.deepStrictEqual(savedClients, [{ client_id: 'client' }]);
   tokenRefresher.dispose();
+  const cacheRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-cache-'));
+  const cacheFile = path.join(cacheRoot, 'mcp.json');
+  fs.writeFileSync(cacheFile, JSON.stringify({ version: 1, servers: ['a'] }));
+  let reads = 0;
+  const jsonCache = new JsonFileCache((filePath) => { reads += 1; return safeReadJsonFile(filePath, { missing: true }); });
+  assert.deepStrictEqual(jsonCache.get(cacheFile), { version: 1, servers: ['a'] });
+  assert.deepStrictEqual(jsonCache.get(cacheFile), { version: 1, servers: ['a'] });
+  assert.strictEqual(reads, 1);
+  fs.writeFileSync(cacheFile, JSON.stringify({ version: 2, servers: ['b'] }));
+  jsonCache.invalidate(cacheFile);
+  assert.deepStrictEqual(jsonCache.get(cacheFile), { version: 2, servers: ['b'] });
+  assert.strictEqual(reads, 2);
+  fs.unlinkSync(cacheFile);
+  assert.deepStrictEqual(jsonCache.get(cacheFile), { missing: true });
+  let computes = 0;
+  const ttlCache = new TtlMemoCache(() => ({ value: ++computes }), 10);
+  assert.deepStrictEqual(ttlCache.get(), { value: 1 });
+  assert.deepStrictEqual(ttlCache.get(), { value: 1 });
+  assert.strictEqual(computes, 1);
+  ttlCache.invalidate();
+  assert.deepStrictEqual(ttlCache.get(), { value: 2 });
+  fs.rmSync(cacheRoot, { recursive: true, force: true });
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
