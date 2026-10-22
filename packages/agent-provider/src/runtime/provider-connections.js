@@ -32,7 +32,8 @@ class AgentConnection {
   answerQuestion(toolCallId, answers) { return this.client.answerQuestion?.(toolCallId, answers); }
   cancelQuestion(toolCallId, reason) { return this.client.cancelQuestion?.(toolCallId, reason); }
   toolCallback(sessionId, toolCallId, toolName, action) { return this.client.toolCallback?.(sessionId, toolCallId, toolName, action); }
-  forwardClientEvents() { for (const event of ['connecting', 'connected', 'disconnected', 'error', 'stateChange', 'permissionRequest', 'permissionResolved', 'permissionRejected', 'permissionTimeout', 'questionRequest', 'questionAnswered', 'questionCancelled', 'questionTimeout', 'sessionUpdate', 'artifactCreated', 'artifactUpdated', 'artifactDeleted', 'checkpointCreated', 'checkpointUpdated', 'command', 'extNotification']) this.client?.on?.(event, (value) => this.emit(event, value)); }
+  forwardClientEvents() { for (const event of ['connecting', 'connected', 'disconnected', 'error', 'stateChange', 'permissionRequest', 'permissionResolved', 'permissionRejected', 'permissionTimeout', 'questionRequest', 'questionAnswered', 'questionCancelled', 'questionTimeout', 'sessionUpdate', 'artifactCreated', 'artifactUpdated', 'artifactDeleted', 'checkpointCreated', 'checkpointUpdated', 'command', 'extNotification']) this.client?.on?.(event, (value) => { if (this.shouldForwardClientEvent(event, value)) this.emit(event, value); }); }
+  shouldForwardClientEvent() { return true; }
   attachSessionScope(target, sessionId = this.activeSessionId) { if (target && sessionId) target.__sessionId = sessionId; return target; }
   isOwnSessionNotification(notification) { return !notification?.sessionId || notification.sessionId === this.activeSessionId; }
 }
@@ -146,7 +147,13 @@ class CloudAgentConnection extends AgentConnection {
     const client = config.client || (config.endpoint ? new CloudHttpClient(config) : undefined);
     super(agentId, { ...config, client, transport: 'cloud', cwd: config.cwd || '/workspace' });
     this._isStreaming = false;
+    this.client?.on?.('extNotification', ({ method, params } = {}) => {
+      if (method === '_codebuddy.ai/artifact') this.emit(params.event === 'created' ? 'artifactCreated' : params.event === 'updated' ? 'artifactUpdated' : 'artifactDeleted', this.attachSessionScope({ ...params.artifact }, params.sessionId));
+      else if (method === '_codebuddy.ai/checkpoint') this.emit(params.event === 'created' ? 'checkpointCreated' : 'checkpointUpdated', this.attachSessionScope({ ...params.checkpoint }, params.sessionId));
+      else if (method === '_codebuddy.ai/command') this.emit('command', this.attachSessionScope({ action: params.action, params: params.params }, params.sessionId));
+    });
   }
+  shouldForwardClientEvent(event, value) { return event !== 'sessionUpdate' || (!this._isStreaming && this.isOwnSessionNotification(value)); }
   async createSession(params = {}) { const response = await this.client.createSession(params.cwd || this.cwd, params); this.activeSessionId = response.sessionId; return response; }
   async loadSession(params = {}) { if (!params.sessionId) throw new Error('sessionId is required for loadSession'); this.activeSessionId = params.sessionId; return this.client.loadSession(params.sessionId, params.cwd || this.cwd, params); }
   async prompt(sessionId, params = {}) {
