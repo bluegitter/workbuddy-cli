@@ -19,4 +19,5 @@ module.exports = Object.freeze({
   ...require("./runtime/product-env"),
   ...require("./runtime/default-authentication-storage"),
   ...require("./runtime/file-authentication-storage"),
+  ...require("./runtime/custom-token-authentication"),
 });

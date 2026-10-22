@@ -34,6 +34,9 @@ const {
   ProductEnvService,
   DefaultAuthenticationStorage,
   FileAuthenticationStorage,
+  CustomTokenAuthenticationStorage,
+  CustomTokenAuthenticationProvider,
+  AuthenticationType,
 } = require('../packages/authentication/src');
 const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger, formatLocalIsoTimestamp, formatLine, buildLifecycleLine, buildStartupPerfFields } = require('../packages/telemetry/src');
 const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValueList } = require('../packages/telemetry/src');
@@ -317,6 +320,13 @@ async function main() {
   assert.strictEqual(await fileStorage.clean({ logoutToken: 'stale-token' }), false);
   assert.strictEqual(await fileStorage.clean({ logoutToken }), true);
   await fileStorage.dispose();
+  const token = `header.${Buffer.from(JSON.stringify({ sub: 'custom-user', nickname: 'Custom', iss: 'https://sso.example/sso-ent-1' })).toString('base64url')}.signature`;
+  const customProduct = { authentication: { type: AuthenticationType.CUSTOM_TOKEN, attributes: { token } } };
+  const customStorage = new CustomTokenAuthenticationStorage({ productManager: { configuration: { getValue: () => customProduct }, waitConfiguration: async () => customProduct }, env: {} });
+  assert.strictEqual(await customStorage.priority(), 9);
+  const customSession = await customStorage.restore();
+  assert.deepStrictEqual({ uid: customSession.account.uid, enterpriseId: customSession.account.enterpriseId }, { uid: 'custom-user', enterpriseId: 'ent-1' });
+  assert.strictEqual(await new CustomTokenAuthenticationProvider({ productManager: { waitConfiguration: async () => customProduct }, storage: customStorage }).support(), true);
   credentials.set('workbuddy', { token: 'test' });
   assert.strictEqual(credentials.get('workbuddy').token, 'test');
   assert.strictEqual(fs.statSync(path.join(root, 'credentials.json')).mode & 0o777, 0o600);
