@@ -5,6 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { createDecoder, encode } = require('../packages/agent-client-protocol/src');
+const { ProtocolConnection } = require('../packages/agent-client-protocol/src');
 const { parseFrontmatter } = require('../packages/plugin-core/src');
 const {
   mergeMarketplaceManifests,
@@ -70,6 +71,16 @@ async function main() {
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
   decode(`${encode({ id: 1, value: 'a' }).slice(8)}${encode({ id: 2 })}`);
   assert.deepStrictEqual(messages.map((message) => message.id), [1, 2]);
+  const sent = [];
+  let onMessage;
+  const connection = new ProtocolConnection({ write: (line) => sent.push(JSON.parse(line)), onMessage: (listener) => { onMessage = listener; } }, { requestTimeoutMs: 1000 });
+  const pendingResponse = connection.request('session/new', { cwd: '/tmp' });
+  assert.strictEqual(sent[0].method, 'session/new');
+  onMessage({ jsonrpc: '2.0', id: sent[0].id, result: { sessionId: 's1' } });
+  assert.deepStrictEqual(await pendingResponse, { sessionId: 's1' });
+  await assert.rejects(() => connection.request('slow', {}, { timeoutMs: 1 }), /timed out/);
+  connection.close();
+  await assert.rejects(() => connection.request('after-close'), /closed/);
   assert.deepStrictEqual(parseFrontmatter('---\nname: reports\nuser-invocable: false\n---\nDo it'), {
     attributes: { name: 'reports', 'user-invocable': 'false' }, body: 'Do it',
   });
