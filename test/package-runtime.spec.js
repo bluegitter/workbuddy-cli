@@ -231,6 +231,7 @@ const {
   extractImageToolLocalPaths,
   extractPreviewUrlLocalMediaPath,
   createWorkbuddySessionPersistence,
+  AutomationDeliveryOutboxWorker,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1210,6 +1211,13 @@ async function main() {
   });
   assert.deepStrictEqual(persistence.recordStore, { kind: 'record', user: 'user-1' });
   assert.strictEqual(persistence.usageCacheService.store.kind, 'usage-store');
+  const deliveryUpdates = [];
+  const deliveryWorker = new AutomationDeliveryOutboxWorker({ now: () => 1000, getCurrentUserId: () => 'u1', senders: { wechatmp: { send: async () => ({ success: false, retryable: true, reason: 'network', error: 'temporary' }) } }, storage: { markAutomationDeliveryFailed: async (_id, _worker, update) => { deliveryUpdates.push(update); return true; } } });
+  const failure = deliveryWorker.buildFailureUpdate({ createdAt: 0, attemptCount: 0, maxAttempts: 3 }, { retryable: true, reason: 'network', error: 'temporary' }, 1000);
+  assert.strictEqual(failure.status, 'retry_waiting');
+  const authFailure = deliveryWorker.buildPendingAuthFailureUpdate({ createdAt: 0 }, 2_000_000_000, 'auth_not_ready', 'auth_not_ready');
+  assert.strictEqual(authFailure.status, 'manual_required');
+  deliveryWorker.dispose();
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
