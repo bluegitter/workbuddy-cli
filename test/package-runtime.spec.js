@@ -167,6 +167,14 @@ const {
   createWorkbuddyAppServerPlatformFromEnv,
   fetchChannelCredentials,
   buildDeviceOnlinePayload,
+  createInitialTaskState,
+  reduceTaskStatus,
+  deriveTaskStatus,
+  extractPreviewUrlLocalPath,
+  parseEdsdkCall,
+  formatLogDetailsSuffix,
+  tryParseAcpUsageUpdate,
+  ALL_MEDIA_EXTS,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1002,6 +1010,14 @@ async function main() {
   assert.strictEqual(channelCredentials.apisixPublishUrl, 'https://staging.workbuddy.cn/ws');
   assert.deepStrictEqual(channelCalls[0][1].scopes, ['convmsg:c1']);
   assert.strictEqual(buildDeviceOnlinePayload(channelCtx).type, 'device.online');
+  let task = createInitialTaskState('task-1', 1);
+  task = reduceTaskStatus(task, { type: 'turn_started', timestamp: 2 });
+  assert.strictEqual(deriveTaskStatus(task), 'planning');
+  assert.strictEqual(extractPreviewUrlLocalPath('file:///tmp/a%20b.txt'), '/tmp/a b.txt');
+  assert.deepStrictEqual(parseEdsdkCall("python3 edsdk.py call open_file path='/tmp/a'"), { tool: 'open_file', args: { path: '/tmp/a' } });
+  assert.strictEqual(formatLogDetailsSuffix({ count: 1 }), ' {"count":1}');
+  assert.deepStrictEqual(tryParseAcpUsageUpdate({ sessionUpdate: 'usage_update', used: 2, size: 10 }), { sessionUpdate: 'usage_update', used: 2, size: 10 });
+  assert.strictEqual(ALL_MEDIA_EXTS.has('png'), true);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
