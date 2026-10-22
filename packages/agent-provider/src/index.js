@@ -22,4 +22,5 @@ module.exports = Object.freeze({
   ...require("./runtime/tool-execution"),
   ...require("./runtime/tool-orchestration"),
   ...require("./runtime/tool-registry"),
+  ...require("./runtime/client-session"),
 });

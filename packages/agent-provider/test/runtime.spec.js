@@ -3,6 +3,7 @@
 const assert = require('assert');
 const {
   AgentSession,
+  ActiveSession,
   HookEvent,
   HookRegistry,
   InterruptionController,
@@ -37,6 +38,25 @@ async function main() {
   ], conservative).map((batch) => batch.concurrent), [false, true]);
 
   const session = new AgentSession({ messages: [{ role: 'user', content: 'read' }] });
+  const connectionListeners = new Map();
+  const connection = {
+    isInitialized: true, state: 'ready', transport: 'local', capabilities: { prompt: true },
+    on(event, listener) { if (!connectionListeners.has(event)) connectionListeners.set(event, new Set()); connectionListeners.get(event).add(listener); },
+    off(event, listener) { connectionListeners.get(event)?.delete(listener); },
+    prompt: async () => ({ stopReason: 'end_turn' }),
+    setSessionMode: async () => {},
+    setSessionModel: async () => {},
+    disconnect() {},
+  };
+  const activeSession = new ActiveSession('s1', 'a1', connection, { getFilesystem: async () => ({ read: async (file) => file }) });
+  activeSession.setModes([{ id: 'code' }], 'code');
+  await activeSession.setMode('code');
+  assert.strictEqual((await activeSession.prompts.send({ prompt: 'hello' })).stopReason, 'end_turn');
+  assert.strictEqual(await activeSession.files.read('/tmp/a'), '/tmp/a');
+  let connected = 0; activeSession.once('connected', () => { connected += 1; });
+  for (const listener of connectionListeners.get('connected') || []) listener();
+  assert.strictEqual(connected, 1);
+  activeSession.disconnect();
   let turn = 0;
   await runAgentLoop(session, {
     tools,
