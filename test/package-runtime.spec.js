@@ -100,6 +100,9 @@ const {
   compactMessages,
   selectCompactionCandidates,
   shouldTriggerCompaction,
+  ContextVariableManager,
+  ContextVariableNames,
+  ContextVariablePriority,
 } = require('../packages/context/src');
 const {
   CLI_STATIC_MANAGED_ENV,
@@ -598,6 +601,16 @@ async function main() {
   await assert.rejects(cancelledPromise, /Cancelled/);
   let attempts = 0;
   assert.strictEqual(await retry(async () => { attempts += 1; if (attempts < 2) throw new Error('retry'); return 'ok'; }, 1, 3), 'ok');
+  const contextManager = new ContextVariableManager({ resolvers: [
+    { name: 'user', priority: async () => ContextVariablePriority.Fallback, resolve: async () => ({ name: 'user', value: 'fallback' }) },
+  ], collectionResolvers: [
+    { name: 'user', priority: async () => ContextVariablePriority.High, resolve: async () => ({ name: 'user', value: 'high' }) },
+    { name: 'broken', priority: async () => { throw new Error('priority'); }, resolve: async () => ({ name: 'broken', value: 'bad' }) },
+  ] });
+  assert.strictEqual((await contextManager.getContextVariable({ name: 'user' })).value, 'high');
+  assert.deepStrictEqual(await contextManager.getContextVariablesMap([{ name: 'user' }]), { user: 'high' });
+  assert.strictEqual(ContextVariableNames.UserInputPrompt, 'userInputPrompt');
+  assert.strictEqual(ContextVariablePriority.Normal, 5);
   const deferred = new DeferredPromise();
   deferred.complete('done');
   assert.strictEqual(await deferred.promise, 'done');
