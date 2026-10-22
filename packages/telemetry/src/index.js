@@ -12,4 +12,7 @@ module.exports = Object.freeze({
   ...require("./runtime/startup-perf-exporters"),
   ...require("./runtime/perf-logger"),
   ...require("./runtime/lifecycle-log"),
+  ...require("./runtime/date-range-utils"),
+  ...require("./runtime/deterministic-id-generator"),
+  ...require("./runtime/otel-env"),
 });

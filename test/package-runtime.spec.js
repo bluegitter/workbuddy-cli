@@ -27,6 +27,7 @@ const {
   resolveResponseLocaleIsZh,
 } = require('../packages/authentication/src');
 const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger, formatLocalIsoTimestamp, formatLine, buildLifecycleLine, buildStartupPerfFields } = require('../packages/telemetry/src');
+const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValueList } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const {
   AgentViewModel,
@@ -555,6 +556,20 @@ async function main() {
   perfLogger.flush();
   assert.strictEqual(perfLogger.getSummary().totalMarks, 2);
   assert.ok(fs.existsSync(perfLogger.getLogFilePath()));
+  const today = DateRangeUtils.today();
+  assert.strictEqual(DateRangeUtils.validate(today), true);
+  assert.strictEqual(DateRangeUtils.toFilename({ start: '2026-01-01', end: '2026-01-02' }), '2026-01-01+2026-01-02');
+  const ids = new DeterministicIdGenerator();
+  ids.setNextTraceId('trace-fixed');
+  assert.strictEqual(ids.generateTraceId(), 'trace-fixed');
+  assert.strictEqual(ids.generateTraceId().length, 32);
+  assert.deepStrictEqual(parseKeyValueList('a=1,b=hello%20world,invalid'), { a: '1', b: 'hello world' });
+  const otel = readOtelTraceEnv({ CODEBUDDY_CODE_ENABLE_TELEMETRY: 'true', OTEL_EXPORTER_OTLP_ENDPOINT: 'https://otel.test/', OTEL_EXPORTER_OTLP_HEADERS: 'authorization=Bearer%20x', OTEL_TRACES_EXPORTER: 'bad', OTEL_LOG_TOOL_CONTENT: '1' });
+  assert.strictEqual(otel.enabledByEnv, true);
+  assert.strictEqual(otel.endpoint, 'https://otel.test/v1/traces');
+  assert.strictEqual(otel.headers.authorization, 'Bearer x');
+  assert.strictEqual(otel.logToolContent, true);
+  assert.strictEqual(otel.warnings.length, 1);
   const view = new AgentViewModel('s1');
   view.apply({ type: 'assistant', content: 'hello' });
   view.apply({ type: 'tool_start', toolUseId: 't1', name: 'read' });
