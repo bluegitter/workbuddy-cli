@@ -1,0 +1,1 @@
+../../../../extracted-app/main/sidecar-entry.js

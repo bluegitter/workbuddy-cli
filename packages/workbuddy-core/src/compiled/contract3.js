@@ -1,0 +1,1 @@
+../../../../extracted-app/main/contract3.js

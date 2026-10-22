@@ -1,0 +1,1 @@
+../../../../extracted-app/renderer/assets/agent-chat-pane-CHOJZygW.js

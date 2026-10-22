@@ -39,6 +39,8 @@ workbuddy-cli/
 
 `extracted-app/` 是 `app.asar` 与当前平台外置资源合并后的代码目录，`metadata/` 保存版本、文件清单和校验信息。
 
+从编译产物中恢复出的原始 monorepo 边界位于 `packages/`。由于发布包不包含 TypeScript 源码，各包的 `src/compiled/` 使用相对链接指向 `extracted-app/` 中的同一份文件，不复制或修改运行时产物。模块职责和映射见 [docs/模块拆分说明.md](docs/模块拆分说明.md)，可用 `npm run verify:structure` 检查包清单和链接完整性。
+
 ## 3. 版本信息
 
 - 产品版本：`5.3.8`

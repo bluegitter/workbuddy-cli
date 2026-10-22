@@ -1,0 +1,1 @@
+../../../../extracted-app/main/legacy-auth-session-migrator.js

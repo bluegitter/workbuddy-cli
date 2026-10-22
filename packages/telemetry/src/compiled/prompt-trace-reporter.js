@@ -1,0 +1,1 @@
+../../../../extracted-app/main/prompt-trace-reporter.js

@@ -1,0 +1,1 @@
+../../../../extracted-app/main/logger2.js

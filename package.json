@@ -1,0 +1,10 @@
+{
+  "name": "workbuddy-cli-architecture",
+  "private": true,
+  "version": "5.3.8",
+  "description": "WorkBuddy 5.3.8 compiled client, arranged by the recovered monorepo boundaries.",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "verify:structure": "sh scripts/verify-structure.sh"
+  }
+}

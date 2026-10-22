@@ -13,5 +13,9 @@ export WORKBUDDY_USER_DATA_DIR="${WORKBUDDY_USER_DATA_DIR:-$ROOT/wb-data/userdat
 export WORKBUDDY_CONFIG_DIR="${WORKBUDDY_CONFIG_DIR:-$ROOT/wb-data/config}"
 # 更新检查指向无效端口，防止拉取官方增量包覆盖 stub/软链/x64 依赖
 export WORKBUDDY_UPDATE_URL="${WORKBUDDY_UPDATE_URL:-http://127.0.0.1:9}"
-
+# daemon 的 SidecarManager 用 appPath 拼 cli/bin/codebuddy 找 CLI。
+# 主进程 index.js:9705 createElectronPlatform 在非打包布局下 appRootPath = process.cwd()，
+# 且会在 10999 行用这个值覆盖 daemon 的 WORKBUDDY_APP_PATH（run.sh 里 export 的也会被覆盖掉），
+# 所以唯一可靠的修法是从 extracted-app 目录里启动 Electron。
+cd "$ROOT/extracted-app"
 exec "$ELECTRON" "$ROOT/extracted-app" "$@"
