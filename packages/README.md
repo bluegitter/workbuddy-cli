@@ -20,8 +20,8 @@ cover the same behavior. `scripts/check-packages.js` validates source syntax;
 | `sandbox-cli` | Command/path policy and runner | Sandbox binary/config |
 | `authentication` | Credential store, auth session/headers, account context and gateway secret | Auth/session compiled entries |
 | `telemetry` | Bounded event buffer, log sampling and structured logger | Logger/trace compiled entries |
-| `enterprise-policy` | Workspace path policy | File protection compiled entries |
+| `enterprise-policy` | Workspace path policy and destructive-operation sentinel audit | File protection compiled entries |
 | `workbuddy-server` | HTTP, sessions/tasks, automation, MCP, Connector and Expert manifest boundaries | Daemon/MCP compiled entries |
 | `workbuddy-core` | Invariants and serialization | Common/contracts compiled entries |
-| `agent-ui` | Session view model | Renderer bundle |
+| `agent-ui` | Session, Todo and Agent Team runtime view models | Renderer bundle |
 | `workbuddy-app` | App config and window state | Electron/Preload entries |

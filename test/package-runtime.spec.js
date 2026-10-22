@@ -16,8 +16,15 @@ const {
   getGatewaySecret,
 } = require('../packages/authentication/src');
 const { EventBuffer, LogSampler, StructuredLogger } = require('../packages/telemetry/src');
-const { PathPolicy } = require('../packages/enterprise-policy/src');
-const { AgentViewModel } = require('../packages/agent-ui/src');
+const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
+const {
+  AgentViewModel,
+  TodoProjection,
+  createEmptyTeamRuntimeSnapshot,
+  formatTeammateContent,
+  hasUnsettledTeamRuntime,
+  parseTeammateMessage,
+} = require('../packages/agent-ui/src');
 const { WindowState, resolveAppConfig } = require('../packages/workbuddy-app/src');
 const { assertRecord, cloneSerializable } = require('../packages/workbuddy-core/src');
 const {
@@ -87,6 +94,11 @@ async function main() {
   assert.strictEqual(policy.check('rm -rf workspace', 'workspace/a.txt').allowed, false);
   assert.strictEqual(new PathPolicy({ roots: [root] }).allows(path.join(root, 'a')), true);
   assert.strictEqual(new PathPolicy({ roots: [root] }).allows('/tmp/outside'), false);
+  const fsProtection = new FsProtectionPolicy({ configDir: path.join(root, 'config') });
+  assert.strictEqual(fsProtection.inspect(path.join(root, 'config', 'workbuddy.db')).decision, 'WARN');
+  assert.strictEqual(fsProtection.inspect(path.join(root, 'config', 'skills', 'old')).decision, 'ALLOW');
+  assert.strictEqual(fsProtection.inspect(path.join(root, 'config'), { recursive: true }).decision, 'WARN');
+  assert.strictEqual(fsProtection.inspect('/tmp/outside').decision, 'IGNORE');
 
   const events = [];
   const buffer = new EventBuffer({ sink: async (batch) => events.push(...batch) });
@@ -108,6 +120,20 @@ async function main() {
   view.apply({ type: 'tool_start', toolUseId: 't1', name: 'read' });
   view.apply({ type: 'tool_result', toolUseId: 't1', content: 'ok' });
   assert.strictEqual(view.snapshot().pendingTools.length, 0);
+  const todos = new TodoProjection('s1', () => 123);
+  todos.report([{ id: '1', content: 'Draft', status: 'in_progress' }]);
+  assert.strictEqual(todos.snapshot().derivedPlanStatus, 'ready');
+  todos.setTalking(true);
+  assert.strictEqual(todos.snapshot().derivedPlanStatus, 'building');
+  todos.report([{ id: '1', content: 'Draft', status: 'completed' }]);
+  assert.strictEqual(todos.snapshot().derivedPlanStatus, 'finished');
+  assert.deepStrictEqual(todos.snapshot().taskDataList, []);
+  const team = createEmptyTeamRuntimeSnapshot('s1', () => 123);
+  team.isInTeam = true;
+  team.memberHistories.researcher = [];
+  assert.strictEqual(hasUnsettledTeamRuntime(team), true);
+  assert.deepStrictEqual(parseTeammateMessage('<teammate-message teammate_id="researcher" summary="Done">ok</teammate-message>'), { teammateId: 'researcher', summary: 'Done', content: 'ok' });
+  assert.strictEqual(formatTeammateContent('{"type":"shutdown_response","approve":true}'), 'Shutdown accepted');
   assert.strictEqual(new WindowState().show().visible, true);
   assert.strictEqual(resolveAppConfig(root, { WORKBUDDY_CONFIG_DIR: '/tmp/config' }).config, '/tmp/config');
   assert.strictEqual(cloneSerializable({ a: 1 }).a, 1);

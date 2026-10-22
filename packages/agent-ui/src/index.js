@@ -8,4 +8,6 @@ module.exports = Object.freeze({
   sourceRoot: __dirname + "/source",
   rendererEntry: require.resolve("./source/renderer-entry.js"),
   ...require("./runtime/agent-view-model"),
+  ...require("./runtime/todo-projection"),
+  ...require("./runtime/team-runtime"),
 });
