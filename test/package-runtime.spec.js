@@ -95,6 +95,9 @@ const {
   createEdgeSyncTurnTraceContext,
   EdgeSyncTurnTraceStore,
   EdgeSyncNetworkRecovery,
+  PoiQuestionRegistry,
+  TencentDocsAgentEditorTracker,
+  createIsSessionStillProcessing,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -198,6 +201,14 @@ async function main() {
   let reconnects = 0;
   const recovery = new EdgeSyncNetworkRecovery({ canRecover: () => true, reconnect: async () => { reconnects += 1; }, isConnected: () => reconnects > 0, logger: { info() {}, warn() {} }, sleep: async () => {} });
   await recovery.recover('resume'); assert.strictEqual(reconnects, 1);
+  const poi = new PoiQuestionRegistry(1000);
+  const poiPending = poi.ask('session-poi', 'request-poi', {});
+  assert.strictEqual(poi.answer('wrong-session', 'request-poi', { ok: true }), false);
+  assert.strictEqual(poi.answer('session-poi', 'request-poi', { ok: true }), true);
+  assert.deepStrictEqual(await poiPending, { ok: true });
+  const editorTracker = new TencentDocsAgentEditorTracker(); editorTracker.recordOpenedFile('s1', '/tmp/a.doc'); editorTracker.recordOpenedFile('s1', '/tmp/a.doc');
+  assert.deepStrictEqual(editorTracker.takeAndClear('s1'), ['/tmp/a.doc']);
+  assert.strictEqual(createIsSessionStillProcessing({ getSession: () => ({ status: 'working', isProcessing: false }) })('s1'), true);
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);

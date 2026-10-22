@@ -24,4 +24,5 @@ module.exports = Object.freeze({
   ...require("./runtime/project-resources"),
   ...require("./runtime/edge-sync-trace"),
   ...require("./runtime/edge-sync-recovery"),
+  ...require("./runtime/interaction-registries"),
 });
