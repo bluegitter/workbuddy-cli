@@ -15,4 +15,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-config"),
   ...require("./runtime/version-compatibility"),
   ...require("./runtime/poi-consent-registry"),
+  ...require("./runtime/tool-routing"),
 });

@@ -77,6 +77,7 @@ const {
   PoiConsentRegistry,
   readExpertMcpDeclaration,
   SessionStore,
+  ToolRoutingTable,
 } = require('../packages/workbuddy-server/src');
 
 async function main() {
@@ -285,6 +286,18 @@ async function main() {
   assert.strictEqual(await firstConsent.promise, 'approved');
   assert.strictEqual(await secondConsent.promise, 'approved');
   assert.strictEqual(await consent.wait('mcp:timeout', 1), 'denied');
+  const clients = new Map([
+    ['custom-mcp:docs', { status: 'connected', tools: [{ name: 'search', description: 'custom' }] }],
+    ['connector:docs', { status: 'connected', tools: [{ name: 'search', description: 'official' }, { name: 'write' }] }],
+    ['netdrive', { status: 'connected', tools: [{ name: 'files' }] }],
+  ]);
+  const routing = new ToolRoutingTable({ clients, disabledTools: new Map([['connector:docs', ['write']]]) });
+  routing.upsert('docs_search', 'custom-mcp:docs');
+  routing.upsert('docs_search', 'connector:docs');
+  assert.strictEqual(routing.resolve('docs_search'), 'connector:docs');
+  assert.deepStrictEqual(routing.listTools().map((tool) => tool.name), ['search']);
+  assert.deepStrictEqual(routing.listTools({ projectId: 'p1' }).map((tool) => tool.name), ['search', 'files']);
+  assert.strictEqual(routing.toolServerMap().search, 'docs');
 
   const ring = new RingBuffer(5);
   ring.write(Buffer.from('abc'));
