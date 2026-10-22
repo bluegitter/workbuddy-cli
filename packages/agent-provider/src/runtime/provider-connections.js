@@ -1,5 +1,7 @@
 'use strict';
 
+const { AcpJsonRpcClient } = require('./acp-json-rpc-client');
+
 class AgentConnection {
   constructor(agentId, { transport, cwd = '/workspace', client, logger = console } = {}) {
     this.agentId = agentId; this.activeSessionId = agentId; this.transport = transport || 'local'; this.cwd = cwd; this.client = client; this.logger = logger;
@@ -34,7 +36,34 @@ class AgentConnection {
   isOwnSessionNotification(notification) { return !notification?.sessionId || notification.sessionId === this.activeSessionId; }
 }
 
-class LocalAgentConnection extends AgentConnection { constructor(agentId, config = {}) { super(agentId, { ...config, transport: 'local', cwd: config.cwd || agentId }); } }
+class LocalAgentConnection extends AgentConnection {
+  constructor(agentId, config = {}) {
+    const client = config.client || (config.channel ? new AcpJsonRpcClient(config.channel, config.acpConfig) : undefined);
+    super(agentId, { ...config, client, transport: 'local', cwd: config.cwd || agentId });
+  }
+  async connect(clientCapabilities) {
+    if (this.client?.initialize && !this.client.connect) {
+      return super.connect({ protocolVersion: 1, clientCapabilities });
+    }
+    return super.connect(clientCapabilities);
+  }
+  async createSession(params = {}) {
+    if (this.client?.newSession && !this.client.createSession) {
+      const response = await this.client.newSession({ ...params, cwd: params.cwd || this.cwd });
+      this.activeSessionId = response.sessionId;
+      return response;
+    }
+    return super.createSession(params);
+  }
+  async loadSession(params = {}) {
+    if (this.client?.loadSession && this.client.loadSession.length <= 1) {
+      if (!params.sessionId) throw new Error('sessionId is required for loadSession');
+      this.activeSessionId = params.sessionId;
+      return this.client.loadSession({ ...params, cwd: params.cwd || this.cwd });
+    }
+    return super.loadSession(params);
+  }
+}
 class CloudAgentConnection extends AgentConnection { constructor(agentId, config = {}) { super(agentId, { ...config, transport: 'cloud', cwd: config.cwd || '/workspace' }); } }
 
 module.exports = { AgentConnection, CloudAgentConnection, LocalAgentConnection };

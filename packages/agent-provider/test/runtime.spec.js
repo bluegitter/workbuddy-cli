@@ -11,6 +11,7 @@ const {
   AcpJsonRpcClient,
   CloudHttpClient,
   CloudAgentProvider,
+  LocalAgentProvider,
   HookEvent,
   HookRegistry,
   InterruptionController,
@@ -113,6 +114,38 @@ async function main() {
   assert.strictEqual((await cloudProvider.get('agent-1')).type, 'cloud');
   assert.strictEqual(await cloudProvider.create({ options: { prompt: 'hello' } }), 'agent-2');
   assert.strictEqual(await cloudProvider.delete('agent-1'), true);
+  const localStorage = new Map();
+  const backendSessions = [{ sessionId: 'local-s1', cwd: '/tmp/project', status: 'active', name: 'Demo', createdAt: '2026-01-01T00:00:00Z' }];
+  const localChannel = {
+    sendNotification: () => true,
+    on: () => {},
+    emit: () => true,
+    callMethod: async (_session, request) => {
+      const type = request.params.type;
+      if (type === 'backend:list-sessions-request') return { data: { sessions: backendSessions } };
+      if (type === 'backend:get-session-request') return { data: { session: backendSessions[0] } };
+      if (type === 'backend:delete-session-request') return { data: { success: true } };
+      if (type === 'backend:rename-session-request' || type === 'backend:move-session-request') return { data: { success: true } };
+      throw new Error(`unexpected backend request: ${type}`);
+    },
+  };
+  let localConnects = 0;
+  const localProvider = new LocalAgentProvider({
+    channel: localChannel,
+    storage: { getItem: (key) => localStorage.get(key) || null, setItem: (key, value) => localStorage.set(key, value) },
+    sharedAcpClient: { onExtNotification: () => {}, sendBroadcastRequest: async () => ({ models: [] }) },
+    connectionFactory: (cwd) => ({ isInitialized: false, once: () => {}, connect: async () => { localConnects += 1; }, }),
+  });
+  assert.strictEqual((await localProvider.create({ cwd: '/tmp/project' })), '/tmp/project');
+  assert.strictEqual((await localProvider.get('local-s1')).cwd, '/tmp/project');
+  assert.strictEqual((await localProvider.list({ userId: 'u1' })).agents.length, 1);
+  await localProvider.archive('local-s1');
+  assert.strictEqual((await localProvider.list({ userId: 'u1' })).agents.length, 0);
+  assert.strictEqual((await localProvider.list({ userId: 'u1', filters: [{ field: 'status', value: 'archived' }] })).agents[0].status, 'archived');
+  await localProvider.connect('/tmp/project');
+  assert.strictEqual(localConnects, 1);
+  await localProvider.rename('local-s1', 'Renamed');
+  await localProvider.move('local-s1');
   let turn = 0;
   await runAgentLoop(session, {
     tools,
