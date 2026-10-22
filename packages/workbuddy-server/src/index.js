@@ -38,6 +38,7 @@ module.exports = Object.freeze({
   ...require("./runtime/media-types"),
   ...require("./runtime/terminal-proxy"),
   ...require("./runtime/app-server-runtime"),
+  ...require("./runtime/edge-sync-channel"),
   ...require("./runtime/interaction-registries"),
   ...require("./runtime/document-paths"),
   ...require("./runtime/document-prompt"),

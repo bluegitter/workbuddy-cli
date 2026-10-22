@@ -165,6 +165,8 @@ const {
   extractToken,
   assertWorkbuddyAppServerStdioMode,
   createWorkbuddyAppServerPlatformFromEnv,
+  fetchChannelCredentials,
+  buildDeviceOnlinePayload,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -994,6 +996,12 @@ async function main() {
   assert.strictEqual(extractToken('/pty/session_1?token=x'), 'x');
   assert.throws(() => assertWorkbuddyAppServerStdioMode([]), /Missing --stdio/);
   assert.strictEqual(createWorkbuddyAppServerPlatformFromEnv({ processEnv: { WORKBUDDY_IS_PACKAGED: 'true' }, runtime: { configDir: '/tmp/config' } }).isPackaged, true);
+  const channelCalls = [];
+  const channelCtx = { deps: { getDeviceId: () => 'd1', getAccount: () => ({ uid: 'u1' }), http: { post: async (...args) => { channelCalls.push(args); return { code: 0, data: { apisixPublishUrl: 'https://staging-copilot.tencent.com/ws' } }; } } } };
+  const channelCredentials = await fetchChannelCredentials(channelCtx, (raw) => raw.data, ['convmsg:c1']);
+  assert.strictEqual(channelCredentials.apisixPublishUrl, 'https://staging.workbuddy.cn/ws');
+  assert.deepStrictEqual(channelCalls[0][1].scopes, ['convmsg:c1']);
+  assert.strictEqual(buildDeviceOnlinePayload(channelCtx).type, 'device.online');
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
