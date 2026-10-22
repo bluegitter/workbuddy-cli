@@ -30,4 +30,5 @@ module.exports = Object.freeze({
   ...require("./runtime/ima-errors"),
   ...require("./runtime/document-save-choices"),
   ...require("./runtime/ima-cipher"),
+  ...require("./runtime/ima-backend-client"),
 });

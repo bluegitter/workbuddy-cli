@@ -119,6 +119,8 @@ const {
   getLocalDocumentDialogButtonIds,
   ImaDataCipher,
   CryptoMode,
+  ImaBackendClient,
+  getDefaultPathPrefix,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -257,6 +259,11 @@ async function main() {
   assert.deepStrictEqual(await imaCipher.decryptData(encryptedIma.data.data), { code: 0, msg: 'ok', data: 'ima-secret' });
   assert.strictEqual((imaCipher.setCryptoToken({ token: 'ctk', expire: Math.floor(Date.now() / 1000) + 60 })).code, 0);
   assert.strictEqual((await imaCipher.encryptData('token-secret')).data.x_ima_cm, CryptoMode.AESToken);
+  assert.strictEqual(getDefaultPathPrefix('Docs'), '/console/agent-gateway/ima-docs');
+  const imaRequests = [];
+  const imaClient = new ImaBackendClient({ productManager: { getEndpoint: () => 'https://api.example/' }, authenticationManager: { buildAuthHeaders: () => ({ Authorization: 'Bearer test' }) }, fetchFn: async (url, init) => { imaRequests.push({ url, init }); return { ok: true, status: 200, headers: new Headers(), text: async () => JSON.stringify({ code: 0, data: { ok: true } }) }; } });
+  assert.deepStrictEqual(await imaClient.post('/openapi/test', { value: 1 }), { ok: true });
+  assert.strictEqual(imaRequests[0].url, 'https://api.example/console/agent-gateway/ima/openapi/test');
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
