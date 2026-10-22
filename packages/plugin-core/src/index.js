@@ -8,4 +8,5 @@ module.exports = Object.freeze({
   artifactRoot: __dirname + "/compiled",
   ...require("./runtime/plugin-manifest"),
   ...require("./runtime/skill-loader"),
+  ...require("./runtime/safe-discovery"),
 });

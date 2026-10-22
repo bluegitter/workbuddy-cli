@@ -6,6 +6,11 @@ const os = require('os');
 const path = require('path');
 const { createDecoder, encode } = require('../packages/agent-client-protocol/src');
 const { parseFrontmatter } = require('../packages/plugin-core/src');
+const {
+  mergeMarketplaceManifests,
+  scanSkillFiles,
+  validatePluginManifest,
+} = require('../packages/plugin-core/src');
 const { CommandPolicy } = require('../packages/sandbox-cli/src');
 const {
   AuthSession,
@@ -68,6 +73,16 @@ async function main() {
   });
 
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-runtime-'));
+  fs.mkdirSync(path.join(root, 'skills', 'nested'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'skills', 'SKILL.md'), '---\nname: root\n---\nRoot');
+  fs.writeFileSync(path.join(root, 'skills', 'nested', 'SKILL.md'), '---\nname: nested\n---\nNested');
+  assert.strictEqual(scanSkillFiles(path.join(root, 'skills')).length, 2);
+  assert.strictEqual(validatePluginManifest({ name: 'demo', version: '1.0.0' }).valid, true);
+  assert.strictEqual(validatePluginManifest({ version: 1 }).valid, false);
+  assert.deepStrictEqual(mergeMarketplaceManifests(
+    { plugins: [{ source: './a', name: 'A' }] },
+    [{ plugins: [{ source: './a', name: 'A2' }, { source: './b', name: 'B' }] }],
+  ).plugins, [{ source: './a', name: 'A2' }, { source: './b', name: 'B' }]);
   const credentials = new CredentialStore(path.join(root, 'credentials.json'));
   credentials.set('workbuddy', { token: 'test' });
   assert.strictEqual(credentials.get('workbuddy').token, 'test');
