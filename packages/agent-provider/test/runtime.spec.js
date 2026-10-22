@@ -4,6 +4,7 @@ const assert = require('assert');
 const {
   AgentSession,
   ActiveSession,
+  ClientSessionManager,
   HookEvent,
   HookRegistry,
   InterruptionController,
@@ -57,6 +58,15 @@ async function main() {
   for (const listener of connectionListeners.get('connected') || []) listener();
   assert.strictEqual(connected, 1);
   activeSession.disconnect();
+  const provider = {
+    create: async () => 'agent-1',
+    connect: async () => ({ ...connection, createSession: async () => ({ sessionId: 'session-1', modes: { availableModes: [{ id: 'code' }], currentModeId: 'code' }, models: { availableModels: [{ modelId: 'model-1' }] } }), sessionConnectionInfo: { type: 'local' } }),
+    registerSession: (sessionId, agentId) => assert.deepStrictEqual([sessionId, agentId], ['session-1', 'agent-1']),
+    list: async () => ({ agents: [{ id: 'agent-1', name: 'Demo', status: 'idle', type: 'local', cwd: '/tmp' }], pagination: { total: 1 } }),
+  };
+  const clientSessions = new ClientSessionManager({ provider });
+  assert.strictEqual((await clientSessions.listSessions()).agents[0].id, 'agent-1');
+  assert.strictEqual((await clientSessions.createSession({ cwd: '/tmp' })).id, 'session-1');
   let turn = 0;
   await runAgentLoop(session, {
     tools,
