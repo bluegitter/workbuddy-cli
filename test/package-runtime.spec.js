@@ -249,7 +249,7 @@ const {
   readStates,
   writeStates,
 } = require('../packages/workbuddy-server/src');
-const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore } = require('../packages/authentication/src');
+const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector } = require('../packages/authentication/src');
 const {
   ArtifactIndex,
   AutomationScheduler,
@@ -456,6 +456,11 @@ async function main() {
   assert.strictEqual(oauthStore.deleteAll('connector:github', 'https://mcp.test', { Authorization: 'x' }), true);
   assert.strictEqual(new ConnectorOAuthStore('default', { homeDir: storeRoot }).write({}), false);
   fs.rmSync(storeRoot, { recursive: true, force: true });
+  assert.strictEqual(buildQueryString({ page: 1, empty: undefined }), '?page=1');
+  const apiResult = await callConnectorOauthApi('POST', '/oauth/start', { productManager: { getEndpoint: () => 'https://api.test/' }, authenticationManager: { buildAuthHeaders: () => ({ Authorization: 'Bearer token' }) }, fetch: async (url, init) => { assert.strictEqual(url, 'https://api.test/oauth/start?code=x'); assert.strictEqual(init.headers.Authorization, 'Bearer token'); return { ok: true, status: 200, headers: new Headers({ 'x-request-id': 'req-1' }), text: async () => JSON.stringify({ code: 0, data: { ok: true } }) }; } }, { code: 'x' });
+  assert.strictEqual(apiResult.data.ok, true);
+  assert.strictEqual(apiResult._debug.requestId, 'req-1');
+  assert.deepStrictEqual(mapOauthUserConnector({ connect_status: 1, display_name: 'GitHub', oauth_client_id: 'cid' }).connectStatus, 1);
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));

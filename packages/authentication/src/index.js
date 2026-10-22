@@ -24,4 +24,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-master-key-store"),
   ...require("./runtime/oauth-persistence"),
   ...require("./runtime/connector-oauth-store"),
+  ...require("./runtime/connector-oauth-api"),
 });
