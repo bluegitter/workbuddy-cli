@@ -202,6 +202,8 @@ const {
   managedEnvMismatchKeys,
   validateActivateReadyResponse,
   CliPrewarmPool,
+  SidecarManager,
+  createWorkbuddySidecarManager,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1101,6 +1103,25 @@ async function main() {
   assert.strictEqual(pool.hasReplenishCapacity(), true);
   pool.stop();
   assert.strictEqual(pool.hasReplenishCapacity(), false);
+  const sidecarCalls = [];
+  const fakeClient = {
+    isConnected: true,
+    async listSessions() { sidecarCalls.push('list'); return [{ sessionId: 's1', acpEndpoint: 'http://127.0.0.1:9/api/v1/acp' }]; },
+    async reconnectSession(id) { sidecarCalls.push(`reconnect:${id}`); return { sessionId: id }; },
+    async createSession(params) { sidecarCalls.push(`create:${params.sessionId}`); return { sessionId: params.sessionId, acpEndpoint: 'http://127.0.0.1:10/api/v1/acp' }; },
+    async killSession(id) { sidecarCalls.push(`kill:${id}`); },
+    onClose() {},
+    dispose() {},
+  };
+  const manager = createWorkbuddySidecarManager({ connectClient: async () => fakeClient });
+  assert.deepStrictEqual(await manager.createSession({ sessionId: 's1', cols: 80, rows: 24 }), { sessionId: 's1' });
+  assert.strictEqual(sidecarCalls.includes('reconnect:s1'), true);
+  manager.setPrewarmPool({ getActiveEndpoints: () => ['http://127.0.0.1:10'], getActiveEndpointForSession: (id) => id === 'warm' ? 'http://127.0.0.1:11' : undefined });
+  assert.deepStrictEqual(await manager.getAllActiveEndpoints(), ['http://127.0.0.1:9', 'http://127.0.0.1:10']);
+  assert.strictEqual(await manager.resolveSessionHttpBase('warm'), 'http://127.0.0.1:11');
+  await manager.shutdown();
+  assert.strictEqual(manager.disposed, true);
+  assert(manager instanceof SidecarManager);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
