@@ -13,4 +13,5 @@ module.exports = Object.freeze({
   ...require("./runtime/stream"),
   ...require("./runtime/rpc-connection"),
   ...require("./runtime/facade"),
+  ...require("./runtime/sse"),
 });

@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { createDecoder, encode, ndJsonStream, RequestError, RpcConnection, AGENT_METHODS, ClientSideConnection, PROTOCOL_VERSION } = require('../packages/agent-client-protocol/src');
+const { createDecoder, encode, ndJsonStream, RequestError, RpcConnection, AGENT_METHODS, ClientSideConnection, PROTOCOL_VERSION, createSSEDecoder, parseSSELine } = require('../packages/agent-client-protocol/src');
 const { ProtocolConnection } = require('../packages/agent-client-protocol/src');
 const { parseFrontmatter } = require('../packages/plugin-core/src');
 const {
@@ -274,6 +274,12 @@ async function main() {
   assert.strictEqual(await rpcOutbound.sendRequest('ping', {}), 'ok');
   assert.strictEqual(PROTOCOL_VERSION, 1);
   assert.strictEqual(AGENT_METHODS.session_prompt, 'session/prompt');
+  const sseEvents = [];
+  const sse = createSSEDecoder((event) => sseEvents.push(event));
+  sse.push('event: message\ndata: {"id":1}\n\n');
+  sse.push('id: 2\ndata: next'); sse.flush();
+  assert.deepStrictEqual(sseEvents, [{ type: 'message', data: '{"id":1}' }, { type: 'message', data: 'next', id: '2' }]);
+  const parsedSse = {}; assert.strictEqual(parseSSELine(': heartbeat', parsedSse).isComment, true);
   const facadeWrites = [];
   const facade = new ClientSideConnection(() => ({ sessionUpdate() {} }), { readable: new ReadableStream({ start(controller) { setTimeout(() => controller.close(), 20); } }), writable: { getWriter: () => ({ write: async (message) => { facadeWrites.push(message); setTimeout(() => facade.connection.handleResponse({ id: message.id, result: { sessionId: 's1' } }), 0); }, releaseLock() {} }) } });
   assert.deepStrictEqual(await facade.newSession({ cwd: '/tmp' }), { sessionId: 's1' });
