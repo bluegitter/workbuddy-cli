@@ -1,6 +1,6 @@
 {
   "$schema": "product-schema.json",
-  "productName": "WorkBuddy",
+  "productName": "御风Work",
   "productConfigPathEnv": "ACC_PRODUCT_CONFIG_PATH",
   "productConfigEnv": [
     "ACC_PRODUCT_CONFIG_V3",

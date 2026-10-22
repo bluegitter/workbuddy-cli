@@ -2,7 +2,7 @@
   "private": true,
   "name": "@genie/workbuddy-desktop",
   "version": "5.3.8",
-  "description": "WorkBuddy Desktop - AI Agent Desktop Application",
+  "description": "御风Work Desktop - AI Agent Desktop Application",
   "author": {
     "name": "Tencent Technology (Shenzhen) Company Limited",
     "email": "workbuddy@tencent.com"
@@ -53,5 +53,6 @@
     "@lydell/node-pty-win32-arm64": "1.2.0-beta.14",
     "@lydell/node-pty-win32-x64": "1.2.0-beta.14",
     "node-pty": "1.1.0"
-  }
+  },
+  "productName": "御风Work"
 }
