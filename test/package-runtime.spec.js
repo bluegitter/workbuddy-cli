@@ -178,6 +178,11 @@ const {
   hostedCliRotationKeyOfNormalized,
   normalizeJsonValue,
   redactProductSnapshotLogValue,
+  applyClientAuthentication,
+  buildDiscoveryUrls,
+  checkResourceAllowed,
+  resourceUrlFromServerUrl,
+  selectClientAuthMethod,
 } = require('../packages/authentication/src');
 
 async function main() {
@@ -253,6 +258,14 @@ async function main() {
   assert.strictEqual(hostedCliRotationKeyOfNormalized({ download_url: 'https://cdn.test/a?sign=1&q-ak=2&x=3' }), '{"download_url":"https://cdn.test/a?x=3"}');
   assert.deepStrictEqual(collectJsonChangedPaths({ a: 1, nested: { x: true } }, { a: 2, nested: { x: true, y: 1 } }), ['$.a', '$.nested.y']);
   assert.deepStrictEqual(normalizeJsonValue({ b: undefined, a: 1 }), { a: 1 });
+  assert.strictEqual(resourceUrlFromServerUrl('https://example.test/api#fragment').href, 'https://example.test/api');
+  assert.strictEqual(checkResourceAllowed({ requestedResource: 'https://example.test/api/v1/x', configuredResource: 'https://example.test/api' }), true);
+  assert.strictEqual(checkResourceAllowed({ requestedResource: 'https://example.test/apix', configuredResource: 'https://example.test/api' }), false);
+  assert.strictEqual(selectClientAuthMethod({ client_secret: 's' }, ['none', 'client_secret_basic']), 'client_secret_basic');
+  const authHeaders = new Headers(); const authParams = new URLSearchParams(); applyClientAuthentication('client_secret_post', { client_id: 'id', client_secret: 'secret' }, authHeaders, authParams);
+  assert.strictEqual(authParams.get('client_id'), 'id');
+  assert.strictEqual(authParams.get('client_secret'), 'secret');
+  assert.ok(buildDiscoveryUrls('https://example.test/mcp').some((url) => url.includes('oauth-authorization-server')));
   assert.strictEqual(resolveIsMainFramePreload({ processIsMainFrame: false, isTopWindow: true }), false);
   assert.strictEqual(readLocalFilePath('workbuddy://open?localFilePath=%2Ftmp%2Fa.txt'), '/tmp/a.txt');
   assert.strictEqual(toFileResourceUri('/tmp/a b.txt'), 'file:///tmp/a%20b.txt');
