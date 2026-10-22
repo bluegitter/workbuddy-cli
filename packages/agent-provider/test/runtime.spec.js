@@ -5,6 +5,8 @@ const {
   AgentSession,
   ActiveSession,
   ClientSessionManager,
+  LocalAgentConnection,
+  CloudAgentConnection,
   HookEvent,
   HookRegistry,
   InterruptionController,
@@ -67,6 +69,15 @@ async function main() {
   const clientSessions = new ClientSessionManager({ provider });
   assert.strictEqual((await clientSessions.listSessions()).agents[0].id, 'agent-1');
   assert.strictEqual((await clientSessions.createSession({ cwd: '/tmp' })).id, 'session-1');
+  const clientEvents = new Map();
+  const transportClient = { on: (event, listener) => clientEvents.set(event, listener), connect: async () => ({ protocolVersion: 1 }), createSession: async () => ({ sessionId: 'cloud-session' }), setSessionMode: async (value) => value };
+  const cloudConnection = new CloudAgentConnection('cloud-agent', { client: transportClient });
+  let connectedState = false; cloudConnection.on('connected', () => { connectedState = true; });
+  await cloudConnection.connect();
+  assert.strictEqual(connectedState, true);
+  assert.strictEqual((await cloudConnection.createSession({ cwd: '/workspace' })).sessionId, 'cloud-session');
+  assert.strictEqual(cloudConnection.isOwnSessionNotification({ sessionId: 'other' }), false);
+  assert.strictEqual(new LocalAgentConnection('local', { client: transportClient }).transport, 'local');
   let turn = 0;
   await runAgentLoop(session, {
     tools,
