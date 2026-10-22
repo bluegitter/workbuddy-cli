@@ -224,6 +224,9 @@ const {
   parseJsonArray,
   configureWorkbuddySqliteConnection,
   createBackendRegistry,
+  normalizeCloudAgentListItem,
+  encodePath,
+  safeParseBigIntJSON,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1188,6 +1191,9 @@ async function main() {
   const registry = createBackendRegistry({ backends: [{ id: 'local', name: 'Local', capabilities: { supportsStreaming: true }, create: (params) => ({ params }) }], defaultBackendId: 'local' });
   assert.deepStrictEqual(registry.list(), [{ id: 'local', name: 'Local', capabilities: { supportsStreaming: true }, isDefault: true }]);
   assert.deepStrictEqual(registry.create({ sessionId: 's1' }), { params: { sessionId: 's1' } });
+  assert.strictEqual(encodePath('a/b'), 'a%2Fb');
+  assert.deepStrictEqual(safeParseBigIntJSON('{"value":12345678901234567}'), { value: '12345678901234567' });
+  assert.deepStrictEqual(normalizeCloudAgentListItem({ id: 'a', manifest: { name: 'demo' }, currentVersion: { version: '1' } }).currentVersion.manifest, { name: 'demo' });
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
