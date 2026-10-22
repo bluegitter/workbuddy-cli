@@ -159,6 +159,8 @@ const {
   resolveCliSettingsLanguage,
   parseCliJsonResponse,
   buildSessionReplayRequestHeaders,
+  getMediaInfo,
+  inferMediaInfoForUnknownExt,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -982,6 +984,8 @@ async function main() {
   assert.strictEqual(resolveCliSettingsLanguage({ readAppConfigValue: () => 'zh-CN' }), '简体中文');
   assert.deepStrictEqual(buildSessionReplayRequestHeaders({ 'X-Test': 'yes' }), { 'X-CodeBuddy-Request': '1', 'X-Test': 'yes' });
   assert.deepStrictEqual(await parseCliJsonResponse({ text: async () => '{"data":{"items":[1]}}' }), { data: { items: [1] }, bytes: 22 });
+  assert.deepStrictEqual(getMediaInfo('.png'), { mimeType: 'image/png', contentType: 'image' });
+  assert.deepStrictEqual(inferMediaInfoForUnknownExt('glb'), { mimeType: 'model/gltf-binary', contentType: 'document' });
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
