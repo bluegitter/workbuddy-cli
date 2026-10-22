@@ -249,7 +249,7 @@ const {
   readStates,
   writeStates,
 } = require('../packages/workbuddy-server/src');
-const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector } = require('../packages/authentication/src');
+const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
   ArtifactIndex,
   AutomationScheduler,
@@ -461,6 +461,15 @@ async function main() {
   assert.strictEqual(apiResult.data.ok, true);
   assert.strictEqual(apiResult._debug.requestId, 'req-1');
   assert.deepStrictEqual(mapOauthUserConnector({ connect_status: 1, display_name: 'GitHub', oauth_client_id: 'cid' }).connectStatus, 1);
+  const aclRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-acl-'));
+  const aclFile = path.join(aclRoot, 'token');
+  fs.writeFileSync(aclFile, 'secret', { mode: 0o644 });
+  assert.strictEqual(verifyFileAcl(aclFile).reason, 'mode-too-permissive');
+  assert.strictEqual(tryRepairAcl(aclFile, 'file'), true);
+  assert.strictEqual(verifyFileAcl(aclFile).ok, true);
+  assert.deepStrictEqual(parseIcaclsPrincipals('BUILTIN\\Users:(RX)\nDOMAIN\\user:(R,W)\nSuccessfully processed 1 files'), ['BUILTIN\\Users', 'DOMAIN\\user']);
+  assert.strictEqual(isBroadPrincipal('BUILTIN\\Users'), true);
+  fs.rmSync(aclRoot, { recursive: true, force: true });
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));

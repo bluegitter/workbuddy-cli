@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { enforceDirAcl, enforceFileAcl, verifyFileAcl, tryRepairAcl } = require('./oauth-acl');
 
 const KEY_BYTES = 32;
 const FILE_MODE = 0o600;
@@ -21,7 +22,15 @@ class ConnectorOAuthMasterKeyStore {
     const backupBaseDir = options.backupBaseDir ?? path.join(os.homedir(), '.workbuddy-key-fallback');
     this.primaryPath = path.join(primaryDir, PRIMARY_FILE_NAME);
     this.backupPath = path.join(backupBaseDir, BACKUP_DIR_NAME, `${hashUserId(options.userId)}.key`);
-    this.acl = options.acl || {};
+    this.acl = options.acl || {
+      enforceDir: enforceDirAcl,
+      enforceFile: enforceFileAcl,
+      verifyFile: (filePath) => {
+        const initial = verifyFileAcl(filePath);
+        if (initial.ok) return true;
+        return initial.recoverable && tryRepairAcl(filePath, 'file') && verifyFileAcl(filePath).ok;
+      },
+    };
   }
 
   getPrimaryPath() { return this.primaryPath; }
@@ -89,6 +98,7 @@ class ConnectorOAuthMasterKeyStore {
     try {
       fs.mkdirSync(dir, { recursive: true, mode: DIR_MODE });
       fs.chmodSync(dir, DIR_MODE);
+      this.acl.enforceDir?.(dir);
       const fd = fs.openSync(tempPath, 'wx', FILE_MODE);
       try { fs.writeSync(fd, key); fs.fchmodSync(fd, FILE_MODE); } finally { fs.closeSync(fd); }
       fs.renameSync(tempPath, filePath);

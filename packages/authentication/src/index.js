@@ -25,4 +25,5 @@ module.exports = Object.freeze({
   ...require("./runtime/oauth-persistence"),
   ...require("./runtime/connector-oauth-store"),
   ...require("./runtime/connector-oauth-api"),
+  ...require("./runtime/oauth-acl"),
 });

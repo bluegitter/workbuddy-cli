@@ -7,12 +7,15 @@ const {
   isCipherEnvelope,
 } = require('./oauth-cipher');
 const { ConnectorOAuthMasterKeyStore } = require('./connector-master-key-store');
+const { enforceDirAcl, enforceFileAcl, verifyDirAcl, verifyFileAcl, tryRepairAcl } = require('./oauth-acl');
 
 const FILE_MODE = 0o600;
 
 function readOAuthV3(options) {
   const { paths, userId } = options;
   if (!fs.existsSync(paths.v3Path)) return undefined;
+  if (fs.existsSync(paths.storageDir) && !ensureAclOk(paths.storageDir, 'dir')) return undefined;
+  if (!ensureAclOk(paths.v3Path, 'file')) return undefined;
   let raw;
   try { raw = JSON.parse(fs.readFileSync(paths.v3Path, 'utf8')); } catch { return undefined; }
   if (raw?.version !== 3 || !raw.encryption) return undefined;
@@ -40,6 +43,7 @@ function writeOAuthV3(options, data) {
   const { paths, userId } = options;
   try {
     fs.mkdirSync(paths.storageDir, { recursive: true, mode: 0o700 });
+    enforceDirAcl(paths.storageDir);
     const built = buildCipherForWrite(userId, paths);
     if (!built) return false;
     const persisted = { version: 3, encryption: built.header };
@@ -123,7 +127,14 @@ function atomicWriteFile(finalPath, content) {
   const tempPath = `${finalPath}.tmp-${process.pid}-${Date.now()}`;
   const fd = fs.openSync(tempPath, 'wx', FILE_MODE);
   try { fs.writeSync(fd, content); fs.fchmodSync(fd, FILE_MODE); } finally { fs.closeSync(fd); }
-  try { fs.renameSync(tempPath, finalPath); fs.chmodSync(finalPath, FILE_MODE); } catch (error) { try { fs.rmSync(tempPath, { force: true }); } catch {} throw error; }
+  try { fs.renameSync(tempPath, finalPath); fs.chmodSync(finalPath, FILE_MODE); enforceFileAcl(finalPath); } catch (error) { try { fs.rmSync(tempPath, { force: true }); } catch {} throw error; }
 }
 
-module.exports = Object.freeze({ readOAuthV3, writeOAuthV3, encryptOAuthInfo, encryptClientInfo, tryDecryptOAuthInfo, tryDecryptClientInfo, safeDecryptField, decryptField, atomicWriteFile });
+function ensureAclOk(targetPath, kind) {
+  const verify = kind === 'file' ? verifyFileAcl : verifyDirAcl;
+  const initial = verify(targetPath);
+  if (initial.ok) return true;
+  return Boolean(initial.recoverable && tryRepairAcl(targetPath, kind) && verify(targetPath).ok);
+}
+
+module.exports = Object.freeze({ readOAuthV3, writeOAuthV3, encryptOAuthInfo, encryptClientInfo, tryDecryptOAuthInfo, tryDecryptClientInfo, safeDecryptField, decryptField, atomicWriteFile, ensureAclOk });
