@@ -157,6 +157,11 @@ const {
   ImaFilesApi,
   ImaKnowledgeBaseApi,
   ImaUploadService,
+  getDocsFeatureListString,
+  getTencentDocsEngineDocType,
+  isLocalTencentDocsEnginePreviewUrl,
+  isTencentDocsClipboardOrigin,
+  isTencentDocsUrl,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -268,6 +273,12 @@ async function main() {
   assert.strictEqual(collected.fileArtifacts[0].requestId, 'r1');
   assert.strictEqual(buildQuery({ q: 'a b', empty: null }), '?q=a%20b');
   assert.strictEqual(resolveTeamsAcceptLanguage({ resolveIsOverseas: () => true }), 'en-US');
+  assert.strictEqual(getDocsFeatureListString({ inConversation: true }), '{"aiEdit":true}');
+  assert.strictEqual(getTencentDocsEngineDocType('/tmp/report.docx'), 'doc');
+  assert.strictEqual(isTencentDocsUrl('https://docs.qq.com/sheet/abc'), true);
+  assert.strictEqual(isTencentDocsUrl('https://evil.example/docs.qq.com'), false);
+  assert.strictEqual(isLocalTencentDocsEnginePreviewUrl('http://127.0.0.1:4321/static/doc/pc.html'), true);
+  assert.strictEqual(isTencentDocsClipboardOrigin('http://127.0.0.1:4321', 'http://127.0.0.1:4321'), true);
   assert.strictEqual(unwrap({ code: 0, data: 'ok' }, 'demo'), 'ok');
   assert.throws(() => unwrap({ code: 7, msg: 'bad', requestId: 'r1' }, 'demo'), (error) => error.code === 7 && error.requestId === 'r1');
   const wrappedRequests = [];
