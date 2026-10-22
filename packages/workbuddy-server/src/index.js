@@ -13,4 +13,6 @@ module.exports = Object.freeze({
   ...require("./runtime/session-store"),
   ...require("./runtime/expert-manifest"),
   ...require("./runtime/connector-config"),
+  ...require("./runtime/version-compatibility"),
+  ...require("./runtime/poi-consent-registry"),
 });

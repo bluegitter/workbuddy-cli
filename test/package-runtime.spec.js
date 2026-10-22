@@ -55,9 +55,11 @@ const {
   ArtifactIndex,
   AutomationScheduler,
   buildConnectorConfig,
+  checkCompatibility,
   connectorEntries,
   McpRegistry,
   mergeExpertManifests,
+  PoiConsentRegistry,
   readExpertMcpDeclaration,
   SessionStore,
 } = require('../packages/workbuddy-server/src');
@@ -228,6 +230,19 @@ async function main() {
   assert.strictEqual(connectors[0].authMode, 'oauth');
   assert.deepStrictEqual(connectors[1].skills, ['writer-skill']);
   assert.strictEqual(buildConnectorConfig({}, {}), undefined);
+  assert.deepStrictEqual(checkCompatibility({ currentVersion: '4.29.0', minWorkbuddyVersion: '4.30.0' }), { kind: 'needsUpgrade', requiredMinVersion: '4.30.0' });
+  assert.deepStrictEqual(checkCompatibility({ currentVersion: '4.31.0', maxWorkbuddyVersion: '4.30.0' }), { kind: 'connectorRetired' });
+  assert.strictEqual(checkCompatibility({ currentVersion: '4.30.0-beta.1', minWorkbuddyVersion: '4.30.0' }).kind, 'needsUpgrade');
+  assert.strictEqual(checkCompatibility({ currentVersion: 'invalid', minWorkbuddyVersion: '4.30.0' }), null);
+  const consent = new PoiConsentRegistry();
+  const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
+  const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
+  assert.strictEqual(firstConsent.isFirst, true);
+  assert.strictEqual(secondConsent.isFirst, false);
+  assert.strictEqual(consent.answer('mcp:docs', 'approved'), true);
+  assert.strictEqual(await firstConsent.promise, 'approved');
+  assert.strictEqual(await secondConsent.promise, 'approved');
+  assert.strictEqual(await consent.wait('mcp:timeout', 1), 'denied');
 
   const ring = new RingBuffer(5);
   ring.write(Buffer.from('abc'));
