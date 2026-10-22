@@ -325,6 +325,10 @@ const {
   shouldSkipFallback,
   captureResourceMetadataUrl,
   resolveServiceProxyUrl,
+  normalizeOAuthBaseUrl,
+  isOAuthCallbackUrl,
+  extractConfigIdFromCallbackUrl,
+  parseOAuthCallbackUrl,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1449,6 +1453,14 @@ async function main() {
   assert.strictEqual(captureResourceMetadataUrl({ _resourceMetadataUrl: new URL('https://mcp/.well-known') }), 'https://mcp/.well-known');
   assert.strictEqual(resolveServiceProxyUrl('http://127.0.0.1:123/'), 'http://127.0.0.1:123/internal/hooks/services/invoke');
   fs.rmSync(cwdRoot, { recursive: true, force: true });
+  const oauthBase = normalizeOAuthBaseUrl('workbuddy://workbuddy/mcp/');
+  assert.strictEqual(oauthBase, 'workbuddy://workbuddy/mcp');
+  assert.strictEqual(isOAuthCallbackUrl('workbuddy://workbuddy/mcp/connector%3Adocs/oauth/callback?code=x', oauthBase), true);
+  assert.strictEqual(extractConfigIdFromCallbackUrl('workbuddy://workbuddy/mcp/connector%3Adocs/oauth/callback'), 'connector:docs');
+  const oauthStates = new Map([['state-1', 'connector:docs']]);
+  assert.deepStrictEqual(parseOAuthCallbackUrl('http://127.0.0.1/oauth/callback?error=access_denied&state=state-1&error_description=Nope', oauthStates), { success: false, configId: 'connector:docs', error: 'access_denied: Nope' });
+  assert.strictEqual(oauthStates.has('state-1'), false);
+  assert.deepStrictEqual(parseOAuthCallbackUrl('workbuddy://workbuddy/mcp/connector%3Adocs/oauth/callback?code=abc&state=s'), { success: true, state: 's', code: 'abc', configId: 'connector:docs' });
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
