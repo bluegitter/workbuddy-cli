@@ -243,6 +243,7 @@ const {
   isRetryBlockingToolName,
   classifyTransientPromptRetryReason,
   sanitizeErrorForNotification,
+  RunCoordinator,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -360,6 +361,13 @@ async function main() {
   assert.strictEqual(isRetryBlockingToolName('read_file'), false);
   assert.strictEqual(classifyTransientPromptRetryReason('HTTP 503 gateway timeout'), 'server-5xx');
   assert.strictEqual(sanitizeErrorForNotification('Error at /Users/example/project/file.js\ntrace'), 'Error at <path>');
+  const coordinator = new RunCoordinator();
+  const runId = coordinator.startRun('automation-1');
+  assert.strictEqual(coordinator.isRunning('automation-1'), true);
+  assert.strictEqual(coordinator.startRun('automation-1'), undefined);
+  coordinator.finishRun(runId);
+  assert.strictEqual(coordinator.isRunning('automation-1'), false);
+  coordinator.dispose();
   assert.deepStrictEqual(mergeMarketplaceManifests(
     { plugins: [{ source: './a', name: 'A' }] },
     [{ plugins: [{ source: './a', name: 'A2' }, { source: './b', name: 'B' }] }],

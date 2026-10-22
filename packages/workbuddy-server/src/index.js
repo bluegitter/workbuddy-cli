@@ -51,4 +51,5 @@ module.exports = Object.freeze({
   ...require("./runtime/automation-tool-policy"),
   ...require("./runtime/automation-retry"),
   ...require("./runtime/automation-error"),
+  ...require("./runtime/automation-run-coordinator"),
 });
