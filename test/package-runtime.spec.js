@@ -233,6 +233,10 @@ const {
   createWorkbuddySessionPersistence,
   AutomationDeliveryOutboxWorker,
   EmbeddingClient,
+  isEnglishConnectorLocale,
+  parseLocalizedMapKey,
+  resolveLocalizedMapText,
+  resolveConnectorDisplayText,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -354,6 +358,16 @@ const {
 } = require('../packages/authentication/src');
 
 async function main() {
+  const localeConfigDir = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-locale-'));
+  fs.mkdirSync(path.join(localeConfigDir, 'app'), { recursive: true });
+  fs.writeFileSync(path.join(localeConfigDir, 'app', 'app-config.json'), JSON.stringify({ locale: 'zh-CN' }));
+  assert.strictEqual(isEnglishConnectorLocale({ configDir: localeConfigDir, getProductLocale: () => 'en-US', getSystemLocale: () => 'en-US' }), false);
+  fs.writeFileSync(path.join(localeConfigDir, 'app', 'app-config.json'), JSON.stringify({ locale: 'en-US' }));
+  assert.strictEqual(isEnglishConnectorLocale({ configDir: localeConfigDir, getProductLocale: () => 'zh-CN' }), true);
+  assert.deepStrictEqual(parseLocalizedMapKey('enterprise; plan:pro, zh'), ['enterprise', 'plan:pro', 'zh']);
+  assert.strictEqual(resolveLocalizedMapText({ enterprise: { en: ' Enterprise ', zh: '企业' } }, true, ['enterprise']), 'Enterprise');
+  assert.deepStrictEqual(resolveConnectorDisplayText({ name: 'Fallback', name_en: 'English', name_map: { pro: { en: 'Pro', zh: '专业版' } }, description: 'Description' }, { isEnglish: true, candidateKeys: ['pro'] }), { name: 'Pro', description: 'Description' });
+  fs.rmSync(localeConfigDir, { recursive: true, force: true });
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
