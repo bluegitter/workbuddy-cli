@@ -194,6 +194,9 @@ const {
   isValidW3CTraceId,
   formatTraceparent,
   registerServiceHandlers,
+  getHostedCliSessionOwnerKey,
+  createWorkbuddyAgentAcpClient,
+  isPoiMapEnabled,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1080,6 +1083,11 @@ async function main() {
   const handlers = new Map();
   assert.deepStrictEqual(registerServiceHandlers({ handle: (channel, fn) => handlers.set(channel, fn) }, 'demo', { ping() { return 'pong'; } }, {}, { info() {} }), ['ping']);
   assert.strictEqual(handlers.get('demo:ping')(), 'pong');
+  assert.strictEqual(getHostedCliSessionOwnerKey({ account: { uid: 'u1' }, auth: { domain: 'd' } }), 'u1|d|');
+  class FakeAcpClient { constructor(options) { this.options = options; this.connection = { prompt: async (value) => value }; } connect() { return Promise.resolve(); } disconnect() {} debugState() { return 'ready'; } resolvePermission() {} rejectPermission() {} answerQuestion() {} cancelQuestion() {} respondElicitation() {} resolveInterruption() {} }
+  const acpFacade = createWorkbuddyAgentAcpClient({ ClientClass: FakeAcpClient, endpoint: 'http://127.0.0.1:1' });
+  assert.strictEqual(await acpFacade.connection.prompt('ok'), 'ok');
+  assert.strictEqual(isPoiMapEnabled({ configuration: { getValue: () => ({ productFeatures: { PoiMap: true } }) } }), true);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
