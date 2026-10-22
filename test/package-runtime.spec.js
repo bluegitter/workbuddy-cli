@@ -123,6 +123,8 @@ const {
   createHttpError,
   tryParseEnvelope,
   SidecarSessionManager,
+  MemoryLocalStorage,
+  DefaultWorkspace,
 } = require('../packages/runtime/src');
 const {
   ArtifactIndex,
@@ -665,6 +667,15 @@ async function main() {
   assert.strictEqual(childEnv.CODEBUDDY_TEST, undefined);
   assert.strictEqual(childEnv.CUSTOM_MANAGED, 'yes');
   assert.strictEqual(childEnv.SERVER__PORT, '0');
+  const memoryStorage = new MemoryLocalStorage();
+  const storageChanges = [];
+  const disposeStorageListener = memoryStorage.changeEvent((event) => storageChanges.push(event.domain));
+  await memoryStorage.set('theme', 'dark');
+  assert.strictEqual(await memoryStorage.get('theme'), 'dark');
+  await memoryStorage.remove('theme');
+  disposeStorageListener();
+  assert.deepStrictEqual(storageChanges, ['theme', 'theme']);
+  assert.deepStrictEqual(new DefaultWorkspace(['/tmp/project']).workspaceFolders, ['/tmp/project']);
 
   const expertManifest = mergeExpertManifests(
     { version: '1', categories: [{ id: 'writing', name: 'Writing' }], experts: [{ id: 'editor', name: 'Editor' }] },
