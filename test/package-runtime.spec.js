@@ -126,6 +126,11 @@ const {
   inferMimeByExt,
   mapRawKnowledgeItem,
   ImaAuthEventEmitter,
+  normalizeLocalPath,
+  getMaxUploadSizeBytes,
+  formatHumanSize,
+  createUploadProgress,
+  throwIfUploadAborted,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -275,6 +280,9 @@ async function main() {
   assert.strictEqual(inferMimeByExt('DOCX'), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
   assert.strictEqual(mapRawKnowledgeItem({ media_id: 'm1', file_size: '42' }).fileSize, 42);
   const authEvents = []; const authEmitter = new ImaAuthEventEmitter(); authEmitter.on((value) => authEvents.push(value)); authEmitter.emit(true); authEmitter.emit(true); authEmitter.emit(false); assert.deepStrictEqual(authEvents, [true, false]);
+  assert.strictEqual(normalizeLocalPath('file:///tmp/a.txt'), '/tmp/a.txt'); assert.strictEqual(getMaxUploadSizeBytes('xlsx'), 10 * 1024 * 1024); assert.strictEqual(formatHumanSize(1024 * 1024), '1.0 MB');
+  const uploadProgress = []; createUploadProgress((event) => uploadProgress.push(event))('cosPut', 110, { loaded: 1 }); assert.deepStrictEqual(uploadProgress[0], { stage: 'cosPut', percent: 100, loaded: 1 });
+  const abortUpload = new AbortController(); abortUpload.abort(); assert.throws(() => throwIfUploadAborted(abortUpload.signal), /Upload cancelled/);
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
