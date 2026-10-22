@@ -44,6 +44,10 @@ const {
   readCwdArtifacts,
   replaceLocalPathsInMessages,
   resolveArtifactFilePath,
+  classifyDesktopOpenUrl,
+  createDesktopOpenUrlHandler,
+  consumePendingDesktopOpenUrls,
+  normalizePendingOpenUrlPayload,
 } = require('../packages/agent-ui/src');
 const {
   QueueSnapshotStore,
@@ -561,6 +565,18 @@ async function main() {
   assert.strictEqual(hasUnsettledTeamRuntime(team), true);
   assert.deepStrictEqual(parseTeammateMessage('<teammate-message teammate_id="researcher" summary="Done">ok</teammate-message>'), { teammateId: 'researcher', summary: 'Done', content: 'ok' });
   assert.strictEqual(formatTeammateContent('{"type":"shutdown_response","approve":true}'), 'Shutdown accepted');
+  assert.strictEqual(normalizePendingOpenUrlPayload({ url: 'workbuddy://home' }), 'workbuddy://home');
+  const classified = classifyDesktopOpenUrl('workbuddy://task?action=start&prompt=hello', {
+    isTaskDeepLink: () => true,
+  });
+  assert.strictEqual(classified.type, 'task');
+  const deepLinkEvents = [];
+  const handleOpenUrl = createDesktopOpenUrlHandler({ isKnownDeepLinkHost: () => false, mapRoute: () => '/callback', onRoute: (event) => deepLinkEvents.push(event.route) });
+  assert.strictEqual(handleOpenUrl('workbuddy://callback').type, 'route');
+  assert.deepStrictEqual(deepLinkEvents, ['/callback']);
+  let handledUrls = [];
+  assert.strictEqual(await consumePendingDesktopOpenUrls(async () => [{ url: 'workbuddy://home' }, 'workbuddy://chat', { bad: true }], (url) => handledUrls.push(url)), 2);
+  assert.deepStrictEqual(handledUrls, ['workbuddy://home', 'workbuddy://chat']);
   assert.strictEqual(new WindowState().show().visible, true);
   assert.strictEqual(resolveAppConfig(root, { WORKBUDDY_CONFIG_DIR: '/tmp/config' }).config, '/tmp/config');
   assert.strictEqual(deriveDisplayStatus('working', {}), 'working');
