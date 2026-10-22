@@ -84,6 +84,8 @@ const {
   resolveTeamsAcceptLanguage,
   unwrap,
   withHandoffCanaryHeaders,
+  ClientInfoProvider,
+  createDevEndpointProvider,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -159,6 +161,13 @@ async function main() {
     decryptString: async () => JSON.stringify({ auth: { accessToken: 'a' }, account: { uid: 'u' } }),
   }).migrate();
   assert.strictEqual(migrated.account.uid, 'u');
+  const clientInfo = new ClientInfoProvider({
+    productManager: { getCurrentConfiguration: () => ({ productName: 'Buddy', applicationName: 'WorkBuddy', productVersion: '2.0' }) },
+    machineId: () => 'machine-1', env: { CODEBUDDY_CLIENT_IDE_TYPE: 'VSCode' }, runtimeVersion: () => '1.0',
+  });
+  assert.strictEqual((await clientInfo.get()).productName, 'Buddy');
+  assert.strictEqual(clientInfo.clientInfo.machineId, 'machine-1');
+  assert.deepStrictEqual(await createDevEndpointProvider({ resolve: () => 'https://dev.example' }).provide(), { endpoint: 'https://dev.example' });
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);

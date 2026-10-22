@@ -18,4 +18,5 @@ module.exports = Object.freeze({
   ...require("./runtime/tool-routing"),
   ...require("./runtime/expert-cache"),
   ...require("./runtime/http-contract"),
+  ...require("./runtime/client-info-provider"),
 });
