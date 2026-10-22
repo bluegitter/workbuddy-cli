@@ -1,2 +1,0 @@
-// Recovered bundle module 26198; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.default=isBIC;var eu=_interopRequireDefault(ec(8354)),ed=ec(22736);function _interopRequireDefault(eA){return eA&&eA.__esModule?eA:{default:eA}}var ep=/^[A-Za-z]{6}[A-Za-z0-9]{2}([A-Za-z0-9]{3})?$/;function isBIC(eA){(0,eu.default)(eA);var el=eA.slice(4,6).toUpperCase();return(!!ed.CountryCodes.has(el)||"XK"===el)&&ep.test(eA)}eA.exports=el.default,eA.exports.default=el.default};

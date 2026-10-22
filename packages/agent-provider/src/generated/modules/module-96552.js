@@ -1,2 +1,0 @@
-// Recovered bundle module 96552; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.getClassElementMetadataFromNewable=getClassElementMetadataFromNewable;let eu=ec(63094);function getClassElementMetadataFromNewable(eA){return{kind:eu.ClassElementMetadataKind.singleInjection,name:void 0,optional:!1,tags:new Map,targetName:void 0,value:eA}}};

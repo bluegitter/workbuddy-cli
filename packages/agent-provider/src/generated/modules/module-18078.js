@@ -1,2 +1,0 @@
-// Recovered bundle module 18078; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";if(ec(33955)()){var eu=BigInt.prototype.valueOf,tryBigInt=function(eA){try{return eu.call(eA),!0}catch(eA){}return!1};eA.exports=function(eA){return null!=eA&&"boolean"!=typeof eA&&"string"!=typeof eA&&"number"!=typeof eA&&"symbol"!=typeof eA&&"function"!=typeof eA&&("bigint"==typeof eA||tryBigInt(eA))}}else eA.exports=function(eA){return!1}};

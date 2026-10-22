@@ -1,2 +1,0 @@
-// Recovered bundle module 39958; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.merge=void 0;let eu=ec(23532);function propagateCloseEventToSources(eA){eA.forEach(eA=>eA.emit("close"))}el.merge=function(eA){let el=eu(eA);return eA.forEach(eA=>{eA.once("error",eA=>el.emit("error",eA))}),el.once("close",()=>propagateCloseEventToSources(eA)),el.once("end",()=>propagateCloseEventToSources(eA)),el}};

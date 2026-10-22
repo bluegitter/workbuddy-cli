@@ -1,2 +1,0 @@
-// Recovered bundle module 42163; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.Arg=void 0;let eu=ec(10820),ed=ec(30382);let Arg=class Arg extends ed.PropertyInstruction{constructor(eA,el,ec,ed,ep,eg){super(eA,el,ec,ed,ep,eg),this.property=null;const eh=this.getPropertyArguments();1===eh.length?this.property=new eu.Property(this.document,this.escapeChar,eh[0]):this.property=null}getProperty(){return this.property}};el.Arg=Arg};

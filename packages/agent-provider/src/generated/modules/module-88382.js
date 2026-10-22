@@ -1,2 +1,0 @@
-// Recovered bundle module 88382; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";var ec,eu;Object.defineProperty(el,"__esModule",{value:!0}),el.DEFAULT_MERGE_STRATEGY=el.MergeStrategy=el.Platform=void 0,function(eA){eA.VSCode="vscode",eA.Jetbrains="jetbrains"}(ec||(el.Platform=ec={})),function(eA){eA.Override="override",eA.Merge="merge",eA.SmartMerge="smartMerge",eA.DeepSmartMerge="deepSmartMerge",eA.CommandsSmartMerge="commandsSmartMerge"}(eu||(el.MergeStrategy=eu={})),el.DEFAULT_MERGE_STRATEGY=eu.SmartMerge};

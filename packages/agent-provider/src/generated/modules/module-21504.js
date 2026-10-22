@@ -1,2 +1,0 @@
-// Recovered bundle module 21504; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(3205);let ed={identify:eA=>null==eA,createNode:()=>new eu.Scalar(null),default:!0,tag:"tag:yaml.org,2002:null",test:/^(?:~|[Nn]ull|NULL)?$/,resolve:()=>new eu.Scalar(null),stringify:({source:eA},el)=>"string"==typeof eA&&ed.test.test(eA)?eA:el.options.nullStr};el.nullTag=ed};

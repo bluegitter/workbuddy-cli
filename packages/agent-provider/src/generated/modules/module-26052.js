@@ -1,2 +1,0 @@
-// Recovered bundle module 26052; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.CustomError=void 0;let eu=ec(17237);let CustomError=class CustomError extends Error{constructor(eA,el){super(eA,el),Object.defineProperty(this,"name",{value:new.target.name,enumerable:!1,configurable:!0}),eu.ErrorUtil.fixProto(this,new.target.prototype),eu.ErrorUtil.fixStack(this)}};el.CustomError=CustomError};

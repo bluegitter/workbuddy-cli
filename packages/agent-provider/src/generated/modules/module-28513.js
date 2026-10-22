@@ -1,2 +1,0 @@
-// Recovered bundle module 28513; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.Aspect=void 0;let eu=ec(68953),ed=ec(39118);el.Aspect=eA=>el=>{let ec=(0,ed.parseComponentOption)(el,eA);ec.id=Array.isArray(ec.id)?ec.id[1]:ec.id,ec.pointcut=ec.pointcut||ed.COMPONENT_TAG,ec.tag={tag:eu.AOP_TAG,value:ec.pointcut},(0,ed.applyComponentDecorator)({proxy:!1,...ec},el)}};

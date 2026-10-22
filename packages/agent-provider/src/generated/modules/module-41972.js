@@ -1,2 +1,0 @@
-// Recovered bundle module 41972; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"use strict";let el={pronoun:"it",is:"is",was:"was",this:"this"},ec={pronoun:"they",is:"are",was:"were",this:"these"};eA.exports=class{constructor(eA,el){this.singular=eA,this.plural=el}pluralize(eA){let eu=1===eA,ed=eu?el:ec,ep=eu?this.singular:this.plural;return{...ed,count:eA,noun:ep}}}};

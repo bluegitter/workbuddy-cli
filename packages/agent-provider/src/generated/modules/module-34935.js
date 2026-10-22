@@ -1,2 +1,0 @@
-// Recovered bundle module 34935; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.NotFoundAndContinueError=el.NotFoundError=void 0;let eu=ec(41585),ed=ec(67062);let NotFoundError=class NotFoundError extends eu.HttpError{constructor(eA){super(ed.HttpStatus.NOT_FOUND,eA)}};el.NotFoundError=NotFoundError;let NotFoundAndContinueError=class NotFoundAndContinueError extends NotFoundError{};el.NotFoundAndContinueError=NotFoundAndContinueError};

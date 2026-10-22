@@ -1,2 +1,0 @@
-// Recovered bundle module 10706; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.read=void 0,el.read=function(eA,el){let ec=el.fs.lstatSync(eA);if(!ec.isSymbolicLink()||!el.followSymbolicLink)return ec;try{let ec=el.fs.statSync(eA);return el.markSymbolicLink&&(ec.isSymbolicLink=()=>!0),ec}catch(eA){if(!el.throwErrorOnBrokenSymbolicLink)return ec;throw eA}}};

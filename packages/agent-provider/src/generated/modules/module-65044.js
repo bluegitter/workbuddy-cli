@@ -1,2 +1,0 @@
-// Recovered bundle module 65044; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.restoreJsonNames=restoreJsonNames;let eu=ec(57320),ed=ec(88176);function restoreJsonNames(eA){for(let el of eA.field)(0,ed.unsafeIsSetExplicit)(el,"jsonName")||(el.jsonName=(0,eu.protoCamelCase)(el.name));eA.nestedType.forEach(restoreJsonNames)}};

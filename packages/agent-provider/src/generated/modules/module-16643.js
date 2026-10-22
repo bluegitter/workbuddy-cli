@@ -1,2 +1,0 @@
-// Recovered bundle module 16643; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(65697);function UIEvent(){eu.call(this),this.view=null,this.detail=0}eA.exports=UIEvent,UIEvent.prototype=Object.create(eu.prototype,{constructor:{value:UIEvent},initUIEvent:{value:function(eA,el,ec,eu,ed){this.initEvent(eA,el,ec),this.view=eu,this.detail=ed}}})};

@@ -1,2 +1,0 @@
-// Recovered bundle module 72711; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{RandomIdGenerator:()=>ep});var eu=8,ed=16,ep=function(){return function(){this.generateTraceId=getIdGenerator(ed),this.generateSpanId=getIdGenerator(eu)}}(),eg=Buffer.allocUnsafe(ed);function getIdGenerator(eA){return function(){for(var el=0;el<eA/4;el++)eg.writeUInt32BE(0x100000000*Math.random()>>>0,4*el);for(var el=0;el<eA;el++)if(eg[el]>0)break;else el===eA-1&&(eg[eA-1]=1);return eg.toString("hex",0,eA)}}};

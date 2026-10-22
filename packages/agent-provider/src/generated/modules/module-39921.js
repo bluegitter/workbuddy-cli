@@ -1,2 +1,0 @@
-// Recovered bundle module 39921; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0});let eu=ec(8444),ed={isChangeErrorOk:eA=>{let{code:el}=eA;return"ENOSYS"===el||!eu.IS_USER_ROOT&&("EINVAL"===el||"EPERM"===el)},isRetriableError:eA=>{let{code:el}=eA;return"EMFILE"===el||"ENFILE"===el||"EAGAIN"===el||"EBUSY"===el||"EACCESS"===el||"EACCS"===el||"EPERM"===el||!1},onChangeError:eA=>{if(!ed.isChangeErrorOk(eA))throw eA}};el.default=ed};

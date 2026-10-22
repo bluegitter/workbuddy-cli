@@ -1,2 +1,0 @@
-// Recovered bundle module 24806; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(14607),ed=ec(46132),ep=eu("Object.prototype.toString"),eg=eu("Function.prototype.toString"),eh=ed(/^\s*async(?:\s+function(?:\s+|\()|\s*\()/),ef=ec(51913)(),em=ec(46369),eE=ec(1361);eA.exports=function(eA){if("function"!=typeof eA)return!1;if(eh(eg(eA)))return!0;if(!ef)return"[object AsyncFunction]"===ep(eA);if(!em)return!1;var el=eE();return el&&el.prototype===em(eA)}};

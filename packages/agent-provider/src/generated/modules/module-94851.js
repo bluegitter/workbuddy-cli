@@ -1,2 +1,0 @@
-// Recovered bundle module 94851; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(32187);el.flowIndentCheck=function(eA,el,ec){if(el?.type==="flow-collection"){let ed=el.end[0];ed.indent===eA&&("]"===ed.source||"}"===ed.source)&&eu.containsNewline(el)&&ec(ed,"BAD_INDENT","Flow end indicator should be more indented than parent",!0)}}};

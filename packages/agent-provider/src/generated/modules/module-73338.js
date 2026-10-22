@@ -1,2 +1,0 @@
-// Recovered bundle module 73338; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.EndOfStreamError=el.defaultMessages=void 0,el.defaultMessages="End-Of-Stream";let EndOfStreamError=class EndOfStreamError extends Error{constructor(){super(el.defaultMessages)}};el.EndOfStreamError=EndOfStreamError};

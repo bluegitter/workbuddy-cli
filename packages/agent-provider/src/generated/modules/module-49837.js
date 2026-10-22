@@ -1,2 +1,0 @@
-// Recovered bundle module 49837; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0});let eu=ec(3080);let ErrorFilter=class ErrorFilter{constructor(eA){this._settings=eA}getFilter(){return eA=>this._isNonFatalError(eA)}_isNonFatalError(eA){return eu.errno.isEnoentCodeError(eA)||this._settings.suppressErrors}};el.default=ErrorFilter};

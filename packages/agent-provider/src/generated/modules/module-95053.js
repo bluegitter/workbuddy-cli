@@ -1,2 +1,0 @@
-// Recovered bundle module 95053; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";var ec,eu;Object.defineProperty(el,"__esModule",{value:!0}),el.ReplacementFile=el.ReplacementContent=void 0,function(eA){eA.is=function(eA){return"pattern"in eA&&"search"in eA&&"replace"in eA}}(ec||(el.ReplacementContent=ec={})),function(eA){eA.is=function(eA){return"sourcePath"in eA&&"targetPath"in eA}}(eu||(el.ReplacementFile=eu={}))};

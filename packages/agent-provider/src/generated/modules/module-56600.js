@@ -1,2 +1,0 @@
-// Recovered bundle module 56600; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.bufferFrom=el.bufferAllocUnsafe=el.Buffer=void 0;let eu=ec(20181);function bufferV0P12Ponyfill(eA,...el){return new eu.Buffer(eA,...el)}Object.defineProperty(el,"Buffer",{enumerable:!0,get:function(){return eu.Buffer}}),el.bufferAllocUnsafe=eu.Buffer.allocUnsafe||bufferV0P12Ponyfill,el.bufferFrom=eu.Buffer.from||bufferV0P12Ponyfill};

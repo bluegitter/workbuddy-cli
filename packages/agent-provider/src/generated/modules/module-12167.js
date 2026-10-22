@@ -1,2 +1,0 @@
-// Recovered bundle module 12167; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.default=isHalfWidth,el.halfWidth=void 0;var eu=_interopRequireDefault(ec(8354));function _interopRequireDefault(eA){return eA&&eA.__esModule?eA:{default:eA}}var ed=el.halfWidth=/[\u0020-\u007E\uFF61-\uFF9F\uFFA0-\uFFDC\uFFE8-\uFFEE0-9a-zA-Z]/;function isHalfWidth(eA){return(0,eu.default)(eA),ed.test(eA)}};

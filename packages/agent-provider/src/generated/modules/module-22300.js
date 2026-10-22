@@ -1,2 +1,0 @@
-// Recovered bundle module 22300; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{default:()=>Transform});var eu=ec(96540),ed=ec(79453);function Transform({children:eA,transform:el,accessibilityLabel:ec}){let{isScreenReaderEnabled:ep}=(0,eu.useContext)(ed.accessibilityContext);return null==eA?null:eu.createElement("ink-text",{style:{flexGrow:0,flexShrink:1,flexDirection:"row"},internal_transform:el},ep&&ec?ec:eA)}};

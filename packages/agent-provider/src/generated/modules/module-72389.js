@@ -1,2 +1,0 @@
-// Recovered bundle module 72389; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){eA.exports=function(eA){return{name:"LDIF",contains:[{className:"attribute",begin:"^dn",end:": ",excludeEnd:!0,starts:{end:"$",relevance:0},relevance:10},{className:"attribute",begin:"^\\w",end:": ",excludeEnd:!0,starts:{end:"$",relevance:0}},{className:"literal",begin:"^-",end:"$"},eA.HASH_COMMENT_MODE]}}};

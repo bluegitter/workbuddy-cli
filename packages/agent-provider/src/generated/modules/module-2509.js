@@ -1,2 +1,0 @@
-// Recovered bundle module 2509; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(528)("%Symbol.species%",!0),ed=ec(3468),ep=ec(75591),eg=ec(73365);eA.exports=function(eA,el){if(!eg(eA))throw new ed("Assertion failed: Type(O) is not Object");var ec=eA.constructor;if(void 0===ec)return el;if(!eg(ec))throw new ed("O.constructor is not an Object");var eh=eu?ec[eu]:void 0;if(null==eh)return el;if(ep(eh))return eh;throw new ed("no constructor found")}};

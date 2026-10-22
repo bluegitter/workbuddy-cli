@@ -1,2 +1,0 @@
-// Recovered bundle module 73470; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";function parseMcpServerFromToolName(eA){if(!eA||!eA.startsWith("mcp__"))return;let el=eA.slice(5),ec=el.indexOf("__");if(!(ec<=0))return el.substring(0,ec)||void 0}function resolveMcpServerDim(eA){return parseMcpServerFromToolName(eA)??"builtin"}ec.r(el),ec.d(el,{parseMcpServerFromToolName:()=>parseMcpServerFromToolName,resolveMcpServerDim:()=>resolveMcpServerDim})};

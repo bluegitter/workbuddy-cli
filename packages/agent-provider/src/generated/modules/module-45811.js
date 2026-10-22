@@ -1,2 +1,0 @@
-// Recovered bundle module 45811; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.JsonCodec=void 0;let jsonEncode=eA=>Buffer.from(JSON.stringify(eA)),jsonDecode=eA=>JSON.parse(eA.toString());el.JsonCodec={in:{encode:jsonEncode,decode:jsonDecode},out:{encode:jsonEncode,decode:jsonDecode}}};

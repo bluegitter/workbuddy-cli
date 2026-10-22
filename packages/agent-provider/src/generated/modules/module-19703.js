@@ -1,2 +1,0 @@
-// Recovered bundle module 19703; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.AsyncContainerModule=el.ContainerModule=void 0;var eu=ec(93960);el.ContainerModule=function(){return function(eA){this.id=(0,eu.id)(),this.registry=eA}}(),el.AsyncContainerModule=function(){return function(eA){this.id=(0,eu.id)(),this.registry=eA}}()};

@@ -1,2 +1,0 @@
-// Recovered bundle module 16639; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";let eu=ec(51012);async function symlinkType(eA,el){let ec;if(el)return el;try{ec=await eu.lstat(eA)}catch{return"file"}return ec&&ec.isDirectory()?"dir":"file"}function symlinkTypeSync(eA,el){let ec;if(el)return el;try{ec=eu.lstatSync(eA)}catch{return"file"}return ec&&ec.isDirectory()?"dir":"file"}eA.exports={symlinkType:(0,ec(87111).fromPromise)(symlinkType),symlinkTypeSync}};

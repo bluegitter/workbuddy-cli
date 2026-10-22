@@ -1,2 +1,0 @@
-// Recovered bundle module 94972; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.Settings=el.scandirSync=el.scandir=void 0;let eu=ec(62377),ed=ec(45522),ep=ec(22355);function getSettings(eA={}){return eA instanceof ep.default?eA:new ep.default(eA)}el.Settings=ep.default,el.scandir=function(eA,el,ec){"function"==typeof el?eu.read(eA,getSettings(),el):eu.read(eA,getSettings(el),ec)},el.scandirSync=function(eA,el){let ec=getSettings(el);return ed.read(eA,ec)}};

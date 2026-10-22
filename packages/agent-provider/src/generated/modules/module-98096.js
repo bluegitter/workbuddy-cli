@@ -1,2 +1,0 @@
-// Recovered bundle module 98096; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{TEAMMATE_MAX_RECENT_ACTIVITIES:()=>ed,TeammateIdleTracker:()=>eu,isTeammateIdleDetectionDisabled:()=>isTeammateIdleDetectionDisabled});let eu=Symbol("TeammateIdleTracker"),ed=10;function isTeammateIdleDetectionDisabled(){return"1"===process.env.CODEBUDDY_TEAM_IDLE_DETECTION_DISABLED}};

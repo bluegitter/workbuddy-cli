@@ -1,2 +1,0 @@
-// Recovered bundle module 10661; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";let{ObjectSetPrototypeOf:eu}=ec(67863);eA.exports=PassThrough;let ed=ec(75751);function PassThrough(eA){if(!(this instanceof PassThrough))return new PassThrough(eA);ed.call(this,eA)}eu(PassThrough.prototype,ed.prototype),eu(PassThrough,ed),PassThrough.prototype._transform=function(eA,el,ec){ec(null,eA)}};

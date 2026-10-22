@@ -1,2 +1,0 @@
-// Recovered bundle module 56227; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(28498),ed=ec(14607),ep=ec(528)("%ArrayBuffer%",!0),eg=ed("ArrayBuffer.prototype.byteLength",!0),eh=ed("Object.prototype.toString"),ef=!!ep&&!eg&&new ep(0).slice,em=!!ef&&eu(ef);eA.exports=eg||em?function(eA){if(!eA||"object"!=typeof eA)return!1;try{return eg?eg(eA):em(eA,0),!0}catch(eA){return!1}}:ep?function(eA){return"[object ArrayBuffer]"===eh(eA)}:function(eA){return!1}};

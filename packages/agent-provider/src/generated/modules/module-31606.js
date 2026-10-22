@@ -1,2 +1,0 @@
-// Recovered bundle module 31606; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.createCutter=void 0,el.createCutter=function(eA,el,ec){let eu=[],ed=0,ep=eA;return eg=>{if(eu.push(eg),(ed+=eg.length)<ep)return ed;eg=Buffer.concat(eu,ed);let eh=ed-eA,ef=0;do{if(ep===eA&&(ep=el(eg.slice(ef)))<=eA)throw Error(`invalid packet length ${ep} <= ${eA}`);let eu=ef+ep;if(ed<eu)break;ec(eg.slice(ef,eu)),ep=eA,ef=eu}while(ef<eh);return eu=[eg.slice(ef)],ed-=ef}}};

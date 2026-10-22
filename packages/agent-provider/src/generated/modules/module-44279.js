@@ -1,2 +1,0 @@
-// Recovered bundle module 44279; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){let{kFree:eu,kConnected:ed,kPending:ep,kQueued:eg,kRunning:eh,kSize:ef}=ec(87336),em=Symbol("pool");let PoolStats=class PoolStats{constructor(eA){this[em]=eA}get connected(){return this[em][ed]}get free(){return this[em][eu]}get pending(){return this[em][ep]}get queued(){return this[em][eg]}get running(){return this[em][eh]}get size(){return this[em][ef]}};eA.exports=PoolStats};

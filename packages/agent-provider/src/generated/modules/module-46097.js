@@ -1,2 +1,0 @@
-// Recovered bundle module 46097; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"use strict";eA.exports=Object.create(null,{appCodeName:{value:"Mozilla"},appName:{value:"Netscape"},appVersion:{value:"4.0"},platform:{value:""},product:{value:"Gecko"},productSub:{value:"20100101"},userAgent:{value:""},vendor:{value:""},vendorSub:{value:""},taintEnabled:{value:function(){return!1}}})};

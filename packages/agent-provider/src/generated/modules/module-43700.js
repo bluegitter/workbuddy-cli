@@ -1,2 +1,0 @@
-// Recovered bundle module 43700; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){el.render=ec(81169).render,el.renderToFile=function(eA,eu,ed,ep){void 0===ep&&(ep=ed,ed=void 0);let eg=ec(79896),eh='<?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'+el.render(eu,ed);eg.writeFile(eA,eh,ep)}};

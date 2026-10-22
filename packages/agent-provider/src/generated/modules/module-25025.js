@@ -1,2 +1,0 @@
-// Recovered bundle module 25025; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{formatNumber:()=>formatNumber,wrapText:()=>wrapText});var eu=ec(55582),ed=ec.n(eu);function wrapText(eA,el){let ec=[],eu="";for(let ep of eA)ed()(eu+ep)<=el?eu+=ep:(ec.push(eu),eu=ep);return eu&&ec.push(eu),ec}function formatNumber(eA){return new Intl.NumberFormat("en",{notation:"compact",maximumFractionDigits:1}).format(eA).toLowerCase()}};

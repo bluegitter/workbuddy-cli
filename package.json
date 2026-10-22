@@ -7,6 +7,7 @@
   "scripts": {
     "verify:structure": "sh scripts/verify-structure.sh",
     "build:packages": "node scripts/check-packages.js",
-    "test": "npm run verify:structure && npm run build:packages"
+    "test:agent": "node packages/agent-provider/test/runtime.spec.js",
+    "test": "npm run verify:structure && npm run build:packages && npm run test:agent"
   }
 }

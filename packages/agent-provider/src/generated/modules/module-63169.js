@@ -1,2 +1,0 @@
-// Recovered bundle module 63169; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"use strict";eA.exports=encodeUrl;var el=/(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g,ec=/(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g,eu="$1�$2";function encodeUrl(eA){return String(eA).replace(ec,eu).replace(el,encodeURI)}};

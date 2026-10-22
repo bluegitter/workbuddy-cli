@@ -1,2 +1,0 @@
-// Recovered bundle module 26106; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{PRODUCT_BINARY_NAME:()=>eE,PRODUCT_CLI_FULL_NAME:()=>em,PRODUCT_CLI_NAME:()=>ef,PRODUCT_LONG_NAME:()=>ep,PRODUCT_LOWERCASE_NAME:()=>eh,PRODUCT_NAME:()=>eu,PRODUCT_TYPE:()=>eC,PRODUCT_UPPERCASE_NAME:()=>eg,PROVIDER_NAME:()=>ed});let eu="CodeBuddy",ed="Tencent Cloud",ep=`${ed} ${eu}`,eg=eu.toUpperCase(),eh=eu.toLowerCase(),ef=`${eu} Code`,em=`@tencent-ai/${eh}-code`,eE="codebuddy",eC="CLI"};

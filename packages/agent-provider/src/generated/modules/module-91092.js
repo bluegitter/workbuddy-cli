@@ -1,2 +1,0 @@
-// Recovered bundle module 91092; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";let eu=ec(35317),ed=ec(8147),ep=ec(90995);function spawn(eA,el,ec){let eg=ed(eA,el,ec),eh=eu.spawn(eg.command,eg.args,eg.options);return ep.hookChildProcess(eh,eg),eh}function spawnSync(eA,el,ec){let eg=ed(eA,el,ec),eh=eu.spawnSync(eg.command,eg.args,eg.options);return eh.error=eh.error||ep.verifyENOENTSync(eh.status,eg),eh}eA.exports=spawn,eA.exports.spawn=spawn,eA.exports.sync=spawnSync,eA.exports._parse=ed,eA.exports._enoent=ep};

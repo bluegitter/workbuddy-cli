@@ -1,2 +1,0 @@
-// Recovered bundle module 33320; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.logger=el.NullLogger=void 0,el.setLogger=setLogger;let NullLogger=class NullLogger{info(){}error(){}trace(){}warn(){}fatal(){}debug(){}};function setLogger(eA){el.logger=eA}el.NullLogger=NullLogger,el.logger=new NullLogger};

@@ -1,2 +1,0 @@
-// Recovered bundle module 63705; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.Healthcheck=void 0;let eu=ec(65471);let Healthcheck=class Healthcheck extends eu.ModifiableInstruction{constructor(eA,el,ec,eu,ed,ep){super(eA,el,ec,eu,ed,ep)}stopSearchingForFlags(eA){return"CMD"===(eA=eA.toUpperCase())||"NONE"===eA}getSubcommand(){let eA=this.getArguments();return 0!==eA.length?eA[0]:null}};el.Healthcheck=Healthcheck};

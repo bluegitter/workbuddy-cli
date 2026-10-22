@@ -1,2 +1,0 @@
-// Recovered bundle module 54736; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){function isBuffer(eA){return!!eA.constructor&&"function"==typeof eA.constructor.isBuffer&&eA.constructor.isBuffer(eA)}function isSlowBuffer(eA){return"function"==typeof eA.readFloatLE&&"function"==typeof eA.slice&&isBuffer(eA.slice(0,0))}eA.exports=function(eA){return null!=eA&&(isBuffer(eA)||isSlowBuffer(eA)||!!eA._isBuffer)}};

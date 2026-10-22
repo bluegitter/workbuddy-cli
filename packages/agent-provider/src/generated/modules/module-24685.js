@@ -1,2 +1,0 @@
-// Recovered bundle module 24685; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.default=isMongoId;var eu=_interopRequireDefault(ec(8354)),ed=_interopRequireDefault(ec(53943));function _interopRequireDefault(eA){return eA&&eA.__esModule?eA:{default:eA}}function isMongoId(eA){return(0,eu.default)(eA),(0,ed.default)(eA)&&24===eA.length}eA.exports=el.default,eA.exports.default=el.default};

@@ -1,2 +1,0 @@
-// Recovered bundle module 85242; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){var eu=ec(91203),ed=ec(67326),ep=ec(48712),eg=ec(18141).Big5DistributionAnalysis;function Big5Prober(){ed.apply(this);var eA=this;function init(){eA._mCodingSM=new eu(ep),eA._mDistributionAnalyzer=new eg,eA.reset()}this.getCharsetName=function(){return"Big5"},init()}Big5Prober.prototype=new ed,eA.exports=Big5Prober};

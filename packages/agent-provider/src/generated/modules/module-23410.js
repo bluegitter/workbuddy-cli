@@ -1,2 +1,0 @@
-// Recovered bundle module 23410; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){var eu=ec(32670),ed=ec(9886);el.ALGORITHMS=["HS256","HS384","HS512","RS256","RS384","RS512","PS256","PS384","PS512","ES256","ES384","ES512"],el.sign=eu.sign,el.verify=ed.verify,el.decode=ed.decode,el.isValid=ed.isValid,el.createSign=function(eA){return new eu(eA)},el.createVerify=function(eA){return new ed(eA)}};

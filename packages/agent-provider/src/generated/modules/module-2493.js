@@ -1,2 +1,0 @@
-// Recovered bundle module 2493; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.ContextVariableUtils=void 0;let ContextVariableUtils=class ContextVariableUtils{static toObject(eA){let el={};for(let ec of eA)el[ec.name]=ec.value;return el}static toArray(eA){let el=[];for(let[ec,eu]of Object.entries(eA))el.push({name:ec,value:eu});return el}};el.ContextVariableUtils=ContextVariableUtils};

@@ -1,2 +1,0 @@
-// Recovered bundle module 89536; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{InputMenuBox:()=>InputMenuBox});var ed=ec(96540),ep=ec(71309),eg=ec(98632),eh=ec(98560),ef=eA([ep,eg,eh]);[ep,eg,eh]=ef.then?(await ef)():ef;let InputMenuBox=()=>{let{isMemoryMenu:eA}=(0,ep.useMenuState)();return eA?ed.createElement(eg.MemorySavingMenu,null):ed.createElement(eh.InputSuggestionsMenu,null)};eu()}catch(eA){eu(eA)}})};

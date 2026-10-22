@@ -1,2 +1,0 @@
-// Recovered bundle module 38136; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{default:()=>__rspack_default_export});var eu=ec(96540),ed=ec(3049);let __rspack_default_export=()=>{let eA=(0,eu.useContext)(ed.default);return{enableFocus:eA.enableFocus,disableFocus:eA.disableFocus,focusNext:eA.focusNext,focusPrevious:eA.focusPrevious,focus:eA.focus}}};

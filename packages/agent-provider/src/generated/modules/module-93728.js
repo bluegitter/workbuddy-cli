@@ -1,2 +1,0 @@
-// Recovered bundle module 93728; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";function normalizeHeaders(eA){return eA?eA instanceof Headers?Object.fromEntries(eA.entries()):Array.isArray(eA)?Object.fromEntries(eA):{...eA}:{}}function createFetchWithInit(eA=fetch,el){return el?async(ec,eu)=>eA(ec,{...el,...eu,headers:eu?.headers?{...normalizeHeaders(el.headers),...normalizeHeaders(eu.headers)}:el.headers}):eA}ec.r(el),ec.d(el,{createFetchWithInit:()=>createFetchWithInit,normalizeHeaders:()=>normalizeHeaders})};

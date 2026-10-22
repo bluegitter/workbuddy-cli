@@ -1,2 +1,0 @@
-// Recovered bundle module 89271; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.ToolResponseMessage=void 0;let eu=ec(92367),ed=ec(54305);let ToolResponseMessage=class ToolResponseMessage extends eu.AbstractMessage{constructor(eA,el={}){super(ed.MessageType.TOOL,"",[],el),this.responses=eA,this.responses=eA}};el.ToolResponseMessage=ToolResponseMessage};

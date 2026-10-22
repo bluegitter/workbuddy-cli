@@ -1,2 +1,0 @@
-// Recovered bundle module 31937; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{requireAuth:()=>requireAuth});var eu=ec(75588);function requireAuth(eA,el){if(!el||!el.isEnabled())return!0;let ec={method:eA.request.method||"GET",url:eA.request.url||"/",headers:eA.request.headers||{},body:void 0,query:{}};return!!el.authenticate(ec)||((0,eu.sendError)(eA,401,eu.ApiErrorCode.AUTH_REQUIRED,"Authentication required"),!1)}};

@@ -1,2 +1,0 @@
-// Recovered bundle module 84762; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{NoopSpanProcessor:()=>eu});var eu=function(){function NoopSpanProcessor(){}return NoopSpanProcessor.prototype.onStart=function(eA,el){},NoopSpanProcessor.prototype.onEnd=function(eA){},NoopSpanProcessor.prototype.shutdown=function(){return Promise.resolve()},NoopSpanProcessor.prototype.forceFlush=function(){return Promise.resolve()},NoopSpanProcessor}()};

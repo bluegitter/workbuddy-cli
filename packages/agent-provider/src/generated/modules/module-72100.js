@@ -1,2 +1,0 @@
-// Recovered bundle module 72100; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){function BitBuffer(){this.buffer=[],this.length=0}BitBuffer.prototype={get:function(eA){let el=Math.floor(eA/8);return(this.buffer[el]>>>7-eA%8&1)==1},put:function(eA,el){for(let ec=0;ec<el;ec++)this.putBit((eA>>>el-ec-1&1)==1)},getLengthInBits:function(){return this.length},putBit:function(eA){let el=Math.floor(this.length/8);this.buffer.length<=el&&this.buffer.push(0),eA&&(this.buffer[el]|=128>>>this.length%8),this.length++}},eA.exports=BitBuffer};

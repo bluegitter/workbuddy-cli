@@ -1,2 +1,0 @@
-// Recovered bundle module 61846; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.createFileSystemAdapter=el.FILE_SYSTEM_ADAPTER=void 0;let eu=ec(79896);function createFileSystemAdapter(eA){return void 0===eA?el.FILE_SYSTEM_ADAPTER:Object.assign(Object.assign({},el.FILE_SYSTEM_ADAPTER),eA)}el.FILE_SYSTEM_ADAPTER={lstat:eu.lstat,stat:eu.stat,lstatSync:eu.lstatSync,statSync:eu.statSync},el.createFileSystemAdapter=createFileSystemAdapter};

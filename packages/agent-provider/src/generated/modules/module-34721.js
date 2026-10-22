@@ -1,2 +1,0 @@
-// Recovered bundle module 34721; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.DEFAULT_FEEDBACK_SURVEY_CONFIG=void 0,el.DEFAULT_FEEDBACK_SURVEY_CONFIG={disabled:!1,minTimeBeforeFeedbackMs:6e5,minTimeBetweenGlobalFeedbackMs:1e8,minUserTurnsBeforeFeedback:5,minUserTurnsBetweenFeedback:10,hideThanksAfterMs:3e3,onForModels:["*"],probability:.005}};

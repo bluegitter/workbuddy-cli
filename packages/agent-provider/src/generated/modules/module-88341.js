@@ -1,2 +1,0 @@
-// Recovered bundle module 88341; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"use strict";var el,ec="function"==typeof WeakMap&&WeakMap.prototype?WeakMap:null,eu="function"==typeof WeakSet&&WeakSet.prototype?WeakSet:null;ec||(el=function(eA){return!1});var ed=ec?ec.prototype.has:null,ep=eu?eu.prototype.has:null;el||ed||(el=function(eA){return!1}),eA.exports=el||function(eA){if(!eA||"object"!=typeof eA)return!1;try{if(ed.call(eA,ed),ep)try{ep.call(eA,ep)}catch(eA){return!0}return eA instanceof ec}catch(eA){}return!1}};

@@ -1,2 +1,0 @@
-// Recovered bundle module 68794; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"use strict";let LRUCache=class LRUCache{constructor(){this.max=1e3,this.map=new Map}get(eA){let el=this.map.get(eA);if(void 0!==el)return this.map.delete(eA),this.map.set(eA,el),el}delete(eA){return this.map.delete(eA)}set(eA,el){if(!this.delete(eA)&&void 0!==el){if(this.map.size>=this.max){let eA=this.map.keys().next().value;this.delete(eA)}this.map.set(eA,el)}return this}};eA.exports=LRUCache};

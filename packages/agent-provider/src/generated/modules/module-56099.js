@@ -1,2 +1,0 @@
-// Recovered bundle module 56099; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(58611);function getBasicNodeMethods(){return["get","post","put","head","delete","options","trace","copy","lock","mkcol","move","purge","propfind","proppatch","unlock","report","mkactivity","checkout","merge","m-search","notify","subscribe","unsubscribe","patch","search","connect"]}eA.exports=function getCurrentNodeMethods(){return eu.METHODS&&eu.METHODS.map(function(eA){return eA.toLowerCase()})}()||getBasicNodeMethods()};

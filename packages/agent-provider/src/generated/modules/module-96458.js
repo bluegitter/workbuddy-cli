@@ -1,2 +1,0 @@
-// Recovered bundle module 96458; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){eA.exports=function(eA){if("string"!=typeof eA)throw TypeError("expected a string.");return 1===(eA=eA.replace(/([A-Z])/g," $1")).length?eA.toUpperCase():(eA=(eA=eA.replace(/^[\W_]+|[\W_]+$/g,"").toLowerCase()).charAt(0).toUpperCase()+eA.slice(1)).replace(/[\W_]+(\w|$)/g,function(eA,el){return el.toUpperCase()})}};

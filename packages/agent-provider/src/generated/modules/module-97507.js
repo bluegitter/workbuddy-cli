@@ -1,2 +1,0 @@
-// Recovered bundle module 97507; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(85865);eA.exports=function(eA){var el=128&eA[7]?-1:1,ec=(127&eA[7])<<4|(240&eA[6])>>4,ed=(15&eA[6])*0x1000000000000+0x10000000000*eA[5]+0x100000000*eA[4]+0x1000000*eA[3]+65536*eA[2]+256*eA[1]+eA[0];return 0===ec&&0===ed?0*el:2047===ec&&0!==ed?NaN:2047===ec&&0===ed?1/0*el:-1023==(ec-=1023)?el*ed*5e-324:el*(1+ed/0x10000000000000)*eu(2,ec)}};

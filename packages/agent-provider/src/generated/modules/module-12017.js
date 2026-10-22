@@ -1,2 +1,0 @@
-// Recovered bundle module 12017; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){eA.exports=function(eA){return{name:"Test Anything Protocol",case_insensitive:!0,contains:[eA.HASH_COMMENT_MODE,{className:"meta",variants:[{begin:"^TAP version (\\d+)$"},{begin:"^1\\.\\.(\\d+)$"}]},{begin:/---$/,end:"\\.\\.\\.$",subLanguage:"yaml",relevance:0},{className:"number",begin:" (\\d+) "},{className:"symbol",variants:[{begin:"^ok"},{begin:"^not ok"}]}]}}};

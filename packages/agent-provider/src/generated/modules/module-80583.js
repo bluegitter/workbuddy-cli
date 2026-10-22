@@ -1,2 +1,0 @@
-// Recovered bundle module 80583; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(69063),ed=ec(16928).posix.dirname,ep="win32"===ec(70857).platform(),eg="/",eh=/\\/g,ef=/[\{\[].*[\}\]]$/,em=/(^|[^\\])([\{\[]|\([^\)]+$)/,eE=/\\([\!\*\?\|\[\]\(\)\{\}])/g;eA.exports=function(eA,el){Object.assign({flipBackslashes:!0},el).flipBackslashes&&ep&&0>eA.indexOf(eg)&&(eA=eA.replace(eh,eg)),ef.test(eA)&&(eA+=eg),eA+="a";do eA=ed(eA);while(eu(eA)||em.test(eA));return eA.replace(eE,"$1")}};

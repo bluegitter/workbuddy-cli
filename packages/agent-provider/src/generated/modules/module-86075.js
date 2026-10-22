@@ -1,2 +1,0 @@
-// Recovered bundle module 86075; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.fromBuffer=el.fromStream=el.EndOfStreamError=void 0;let eu=ec(3759),ed=ec(317);var ep=ec(612);Object.defineProperty(el,"EndOfStreamError",{enumerable:!0,get:function(){return ep.EndOfStreamError}}),el.fromStream=function(eA,el){return el=el||{},new eu.ReadStreamTokenizer(eA,el)},el.fromBuffer=function(eA,el){return new ed.BufferTokenizer(eA,el)}};

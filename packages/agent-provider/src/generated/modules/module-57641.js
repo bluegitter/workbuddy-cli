@@ -1,2 +1,0 @@
-// Recovered bundle module 57641; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{default:()=>__rspack_default_export});var ed=ec(19820),ep=eA([ed]);ed=(ep.then?(await ep)():ep)[0];let __rspack_default_export=eA=>eA.getComputedWidth()-eA.getComputedPadding(ed.default.EDGE_LEFT)-eA.getComputedPadding(ed.default.EDGE_RIGHT)-eA.getComputedBorder(ed.default.EDGE_LEFT)-eA.getComputedBorder(ed.default.EDGE_RIGHT);eu()}catch(eA){eu(eA)}})};

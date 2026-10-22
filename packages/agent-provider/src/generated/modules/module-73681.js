@@ -1,2 +1,0 @@
-// Recovered bundle module 73681; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";function trailerDemux(eA){let el=new Headers,ec=new Headers;return eA.forEach((eA,eu)=>{eu.toLowerCase().startsWith("trailer-")?ec.append(eu.substring(8),eA):el.append(eu,eA)}),[el,ec]}function trailerMux(eA,el){let ec=new Headers(eA);return el.forEach((eA,el)=>{ec.append(`trailer-${el}`,eA)}),ec}Object.defineProperty(el,"__esModule",{value:!0}),el.trailerDemux=trailerDemux,el.trailerMux=trailerMux};

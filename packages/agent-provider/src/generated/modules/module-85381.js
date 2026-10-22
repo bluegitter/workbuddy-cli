@@ -1,2 +1,0 @@
-// Recovered bundle module 85381; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"use strict";let XmlNode=class XmlNode{constructor(eA){this.tagname=eA,this.child=[],this[":@"]={}}add(eA,el){"__proto__"===eA&&(eA="#__proto__"),this.child.push({[eA]:el})}addChild(eA){"__proto__"===eA.tagname&&(eA.tagname="#__proto__"),eA[":@"]&&Object.keys(eA[":@"]).length>0?this.child.push({[eA.tagname]:eA.child,":@":eA[":@"]}):this.child.push({[eA.tagname]:eA.child})}};eA.exports=XmlNode};

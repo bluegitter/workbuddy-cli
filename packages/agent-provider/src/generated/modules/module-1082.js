@@ -1,2 +1,0 @@
-// Recovered bundle module 1082; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.encode=encode,el.encodeSync=encodeSync;let eu=ec(39023),ed=ec(43106),ep=(0,eu.promisify)(ed.gzip);function encode(eA){return eA.encodeAsync().then(ep)}function encodeSync(eA){return(0,ed.gzipSync)(eA.encode())}};

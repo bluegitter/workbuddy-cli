@@ -1,2 +1,0 @@
-// Recovered bundle module 35367; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";let eu=ec(57772),ed=ec(21600);el.parse=function(eA,el){return new eu(el).parse(eA)},el.parseFragment=function(eA,el,ec){return"string"==typeof eA&&(ec=el,el=eA,eA=null),new eu(ec).parseFragment(el,eA)},el.serialize=function(eA,el){return new ed(eA,el).serialize()}};

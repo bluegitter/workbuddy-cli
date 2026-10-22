@@ -1,2 +1,0 @@
-// Recovered bundle module 16834; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{default:()=>eg,getLogger:()=>getLogger,logger:()=>ep});var eu=ec(3680),ed=ec(37884);function getLogger(eA="openai-agents"){return{namespace:eA,debug:eu(eA),error:(...eA)=>console.error(...eA),warn:(...eA)=>console.warn(...eA),get dontLogModelData(){return ed.logging.dontLogModelData},get dontLogToolData(){return ed.logging.dontLogToolData}}}let ep=getLogger("openai-agents:core"),eg=ep};

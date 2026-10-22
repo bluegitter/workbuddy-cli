@@ -1,2 +1,0 @@
-// Recovered bundle module 93280; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.ErrorUtil=void 0;let ErrorUtil=class ErrorUtil{static fixProto(eA,el){let ec=Object.setPrototypeOf;ec?ec(eA,el):eA.__proto__=el}static fixStack(eA,el=eA.constructor){let ec=Error.captureStackTrace;ec&&ec(eA,el)}};el.ErrorUtil=ErrorUtil};

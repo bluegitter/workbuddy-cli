@@ -1,2 +1,0 @@
-// Recovered bundle module 86856; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.JSONArgument=void 0;let eu=ec(95382);let JSONArgument=class JSONArgument extends eu.Argument{constructor(eA,el,ec){super(eA,el),this.jsonRange=ec}getJSONRange(){return this.jsonRange}getJSONValue(){let eA=super.getValue();return eA.substring(1,eA.length-1)}};el.JSONArgument=JSONArgument};

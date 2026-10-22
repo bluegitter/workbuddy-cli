@@ -1,2 +1,0 @@
-// Recovered bundle module 51017; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.Constant=void 0,el.applyConstantDecorator=applyConstantDecorator;let eu=ec(95102);function applyConstantDecorator(eA,el){let ec=[eA].concat(Reflect.getMetadata(eu.METADATA_KEY.constantValue,Reflect)||[]);Reflect.defineMetadata(eu.METADATA_KEY.constantValue,ec,Reflect)}el.Constant=function(eA,el,ec=!1){return eu=>{applyConstantDecorator({id:eA,constantValue:el,rebind:ec},eu)}}};

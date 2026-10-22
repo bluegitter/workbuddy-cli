@@ -1,2 +1,0 @@
-// Recovered bundle module 56257; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"use strict";eA.exports=JSON.parse('{"$schema":"http://json-schema.org/draft-07/schema#","definitions":{"Global":{"title":"Global","type":"object","properties":{"namespace":{"description":"命名空间，一般用于 123.oa 平台和北极星名字服务","type":"string","title":"namespace"},"env_name":{"description":"环境名，一般用于 123.oa 平台","type":"string","title":"env_name"},"full_set_name":{"description":"set name\\n格式：\'a.b.c\'","type":"string","title":"full_set_name"}}}}}')};

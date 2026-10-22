@@ -1,2 +1,0 @@
-// Recovered bundle module 3250; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{BAGGAGE_HEADER:()=>eg,BAGGAGE_ITEMS_SEPARATOR:()=>ep,BAGGAGE_KEY_PAIR_SEPARATOR:()=>eu,BAGGAGE_MAX_NAME_VALUE_PAIRS:()=>eh,BAGGAGE_MAX_PER_NAME_VALUE_PAIRS:()=>ef,BAGGAGE_MAX_TOTAL_LENGTH:()=>em,BAGGAGE_PROPERTIES_SEPARATOR:()=>ed});var eu="=",ed=";",ep=",",eg="baggage",eh=180,ef=4096,em=8192};

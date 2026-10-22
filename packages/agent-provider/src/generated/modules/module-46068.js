@@ -1,2 +1,0 @@
-// Recovered bundle module 46068; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{LoadPlaceholderBox:()=>LoadPlaceholderBox});var ed=ec(96540),ep=ec(82101),eg=eA([ep]);ep=(eg.then?(await eg)():eg)[0];let LoadPlaceholderBox=({loadingText:eA="loading"})=>ed.createElement(ep.Box,{paddingLeft:1,justifyContent:"center",paddingY:2},ed.createElement(ep.Text,null,eA," ",ed.createElement(ep.Spinner,{type:"simpleDots"})));eu()}catch(eA){eu(eA)}})};

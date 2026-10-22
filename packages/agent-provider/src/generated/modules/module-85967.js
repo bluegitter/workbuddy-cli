@@ -1,2 +1,0 @@
-// Recovered bundle module 85967; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{default:()=>Item});var ed=ec(14083),ep=ec(96540),eg=ec(49034),eh=eA([eg,ed]);function Item({isSelected:eA=!1,label:el}){let{theme:ec}=(0,eg.useTheme)();return ep.createElement(ed.Text,{color:eA?ec.colors.brand:void 0},el)}[eg,ed]=eh.then?(await eh)():eh,eu()}catch(eA){eu(eA)}})};

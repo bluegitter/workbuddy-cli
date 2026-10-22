@@ -1,2 +1,0 @@
-// Recovered bundle module 35615; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"function"==typeof Object.create?eA.exports=function(eA,el){el&&(eA.super_=el,eA.prototype=Object.create(el.prototype,{constructor:{value:eA,enumerable:!1,writable:!0,configurable:!0}}))}:eA.exports=function(eA,el){if(el){eA.super_=el;var TempCtor=function(){};TempCtor.prototype=el.prototype,eA.prototype=new TempCtor,eA.prototype.constructor=eA}}};

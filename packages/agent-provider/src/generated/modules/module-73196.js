@@ -1,2 +1,0 @@
-// Recovered bundle module 73196; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{generateTerminalQRCode:()=>generateTerminalQRCode,getQRCodeVersion:()=>getQRCodeVersion});var eu=ec(17304);async function generateTerminalQRCode(eA,el){try{return(await eu.toString(eA,{type:"utf8",errorCorrectionLevel:"M",margin:0,version:el?.version})).trimEnd()}catch{return""}}function getQRCodeVersion(eA){try{return eu.create(eA,{errorCorrectionLevel:"M"}).version}catch{return 1}}};

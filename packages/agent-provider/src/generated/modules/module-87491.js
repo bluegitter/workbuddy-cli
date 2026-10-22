@@ -1,2 +1,0 @@
-// Recovered bundle module 87491; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.ContainerSnapshot=void 0,el.ContainerSnapshot=function(){function ContainerSnapshot(){}return ContainerSnapshot.of=function(eA,el,ec,eu,ed){var ep=new ContainerSnapshot;return ep.bindings=eA,ep.middleware=el,ep.deactivations=eu,ep.activations=ec,ep.moduleActivationStore=ed,ep},ContainerSnapshot}()};

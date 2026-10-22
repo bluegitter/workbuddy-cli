@@ -1,2 +1,0 @@
-// Recovered bundle module 34882; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.contentVocabulary=el.metadataVocabulary=void 0,el.metadataVocabulary=["title","description","default","deprecated","readOnly","writeOnly","examples"],el.contentVocabulary=["contentMediaType","contentEncoding","contentSchema"]};

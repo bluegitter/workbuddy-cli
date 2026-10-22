@@ -1,2 +1,0 @@
-// Recovered bundle module 54497; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";let{Writable:eu}=ec(95089);eA.exports=class extends eu{constructor(eA){if(super({objectMode:!0}),!eA)throw Error("ExceptionStream requires a TransportStream instance.");this.handleExceptions=!0,this.transport=eA}_write(eA,el,ec){return eA.exception?this.transport.log(eA,ec):(ec(),!0)}}};

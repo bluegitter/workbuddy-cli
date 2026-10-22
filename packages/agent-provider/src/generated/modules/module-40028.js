@@ -1,2 +1,0 @@
-// Recovered bundle module 40028; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";var eu=ec(80270).codes.ERR_INVALID_OPT_VALUE;function highWaterMarkFrom(eA,el,ec){return null!=eA.highWaterMark?eA.highWaterMark:el?eA[ec]:null}eA.exports={getHighWaterMark:function(eA,el,ec,ed){var ep=highWaterMarkFrom(el,ed,ec);if(null!=ep){if(!(isFinite(ep)&&Math.floor(ep)===ep)||ep<0)throw new eu(ed?ec:"highWaterMark",ep);return Math.floor(ep)}return eA.objectMode?16:16384}}};

@@ -1,2 +1,0 @@
-// Recovered bundle module 47294; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";let{ArrayPrototypePop:eu,Promise:ed}=ec(26045),{isIterable:ep,isNodeStream:eg,isWebStream:eh}=ec(95060),{pipelineImpl:ef}=ec(50059),{finished:em}=ec(8041);ec(70389),eA.exports={finished:em,pipeline:function(...eA){return new ed((el,ec)=>{let ed,em,eE=eA[eA.length-1];if(eE&&"object"==typeof eE&&!eg(eE)&&!ep(eE)&&!eh(eE)){let el=eu(eA);ed=el.signal,em=el.end}ef(eA,(eA,eu)=>{eA?ec(eA):el(eu)},{signal:ed,end:em})})}}};

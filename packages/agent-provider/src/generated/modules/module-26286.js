@@ -1,3 +1,0 @@
-// Recovered bundle module 26286; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{getModelSwitchSuccessMessage:()=>getModelSwitchSuccessMessage});var eu=ec(24618);let ed='Note: The model was saved to user settings, but the project "model" setting will override it after restart. Remove the project "model" setting to persist this choice.';async function getModelSwitchSuccessMessage(eA,el,ec="Successfully switched model to"){let[ep,eg]=await Promise.all([eA.list(eu.SettingsScope.PROJECT),eA.list(eu.SettingsScope.PROJECT_LOCAL)]),eh=`${ec} ${el}`;return void 0!==ep.model||void 0!==eg.model?`${eh}
-${ed}`:eh}};

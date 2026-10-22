@@ -1,2 +1,0 @@
-// Recovered bundle module 74033; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"use strict";let el=["nodebuffer","arraybuffer","fragments"],ec="u">typeof Blob;ec&&el.push("blob"),eA.exports={BINARY_TYPES:el,EMPTY_BUFFER:Buffer.alloc(0),GUID:"258EAFA5-E914-47DA-95CA-C5AB0DC85B11",hasBlob:ec,kForOnEventAttribute:Symbol("kIsForOnEventAttribute"),kListener:Symbol("kListener"),kStatusCode:Symbol("status-code"),kWebSocket:Symbol("websocket"),NOOP:()=>{}}};

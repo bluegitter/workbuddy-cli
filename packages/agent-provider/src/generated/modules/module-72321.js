@@ -1,2 +1,0 @@
-// Recovered bundle module 72321; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.AgentEditContext=void 0;let AgentEditContext=class AgentEditContext{static beginSession(){this._activeCount++}static endSession(){this._activeCount=Math.max(0,this._activeCount-1)}static get isActive(){return this._activeCount>0}static reset(){this._activeCount=0}};el.AgentEditContext=AgentEditContext,AgentEditContext._activeCount=0};

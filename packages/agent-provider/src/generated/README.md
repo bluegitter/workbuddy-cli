@@ -1,6 +1,6 @@
-# Recovered CLI modules
+# Generated sources
 
-`module-*.js` are the individual CommonJS module bodies recovered from the
-Rspack `codebuddy.js` table. They retain the original module contract so the
-runtime bundle remains authoritative, while each module can be inspected and
-documented independently. `manifest.json` records module IDs and byte sizes.
+Do not treat delimiter-based bundle splitting as source recovery. JavaScript
+regexes, templates, and nested factories make those boundaries ambiguous.
+Maintain recovered behavior in `../runtime/`; keep `../source/cli-bundle.js`
+as the byte-equivalent evidence and compatibility snapshot.

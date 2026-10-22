@@ -1,2 +1,0 @@
-// Recovered bundle module 14983; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.durationFromMs=durationFromMs,el.durationMs=durationMs;let eu=ec(28665),ed=ec(8796),ep=ec(11498);function durationFromMs(eA){let el=eA<0?-1:1,ec=Math.abs(eA),eg=Math.floor(ec/1e3),eh=(ec-1e3*eg)*1e6;return(0,ed.create)(eu.DurationSchema,{seconds:ep.protoInt64.parse(eg*el),nanos:0===eh?0:eh*el})}function durationMs(eA){return 1e3*Number(eA.seconds)+Math.round(eA.nanos/1e6)}};

@@ -1,2 +1,0 @@
-// Recovered bundle module 30942; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA){"use strict";eA.exports=JSON.parse('{"$id":"log.json#","$schema":"http://json-schema.org/draft-06/schema#","type":"object","required":["version","creator","entries"],"properties":{"version":{"type":"string"},"creator":{"$ref":"creator.json#"},"browser":{"$ref":"browser.json#"},"pages":{"type":"array","items":{"$ref":"page.json#"}},"entries":{"type":"array","items":{"$ref":"entry.json#"}},"comment":{"type":"string"}}}')};

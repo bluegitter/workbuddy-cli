@@ -1,2 +1,0 @@
-// Recovered bundle module 78881; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.getOwnMetadata=getOwnMetadata;let eu=ec(51582);function getOwnMetadata(eA,el,ec){let ed=[el,...(0,eu.getSuperClasses)(el)],ep=[];for(let el=0;el<ed.length;el++){let eu,eg=ed[ed.length-el-1];if(eu=ec?Reflect.getOwnMetadata(eA,eg,ec):Reflect.getOwnMetadata(eA,eg))if(!Array.isArray(eu))return[eu];else ep=[...ep,...eu]}return ep}};

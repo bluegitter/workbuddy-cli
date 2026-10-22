@@ -1,2 +1,0 @@
-// Recovered bundle module 79845; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el){"use strict";var ec;Object.defineProperty(el,"__esModule",{value:!0}),el.AuthenticationType=void 0,function(eA){eA.CUSTOM_TOKEN="custom-token",eA.WECHAT="wechat",eA.EXTERNAL_LINK="external-link",eA.EXTERNAL_LINK_V2="external-link-v2",eA.IDE_HOST="ide-host",eA.CUSTOM_HOSTNAME="custom-hostname",eA.CLI_EXTERNAL_LINK="cli-external-link"}(ec||(el.AuthenticationType=ec={}))};

@@ -1,2 +1,0 @@
-// Recovered bundle module 73511; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.default=isBtcAddress;var eu=_interopRequireDefault(ec(8354));function _interopRequireDefault(eA){return eA&&eA.__esModule?eA:{default:eA}}var ed=/^(bc1|tb1|bc1p|tb1p)[ac-hj-np-z02-9]{39,58}$/,ep=/^(1|2|3|m)[A-HJ-NP-Za-km-z1-9]{25,39}$/;function isBtcAddress(eA){return(0,eu.default)(eA),ed.test(eA)||ep.test(eA)}eA.exports=el.default,eA.exports.default=el.default};

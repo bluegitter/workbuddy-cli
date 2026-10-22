@@ -1,2 +1,0 @@
-// Recovered bundle module 30629; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.r(el),ec.d(el,{EventSourceParserStream:()=>EventSourceParserStream});var eu=ec(64225);let EventSourceParserStream=class EventSourceParserStream extends TransformStream{constructor({onError:eA,onRetry:el,onComment:ec}={}){let ed;super({start(ep){ed=(0,eu.createParser)({onEvent:eA=>{ep.enqueue(eA)},onError(el){"terminate"===eA?ep.error(el):"function"==typeof eA&&eA(el)},onRetry:el,onComment:ec})},transform(eA){ed.feed(eA)}})}}};

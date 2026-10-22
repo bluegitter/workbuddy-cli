@@ -1,2 +1,0 @@
-// Recovered bundle module 56557; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";ec.a(eA,async function(eA,eu){try{ec.r(el),ec.d(el,{useProductLinks:()=>useProductLinks});var ed=ec(96540),ep=ec(47693),eg=eA([ep]);ep=(eg.then?(await eg)():eg)[0];let useProductLinks=()=>{let[eA,el]=(0,ed.useState)({});return(0,ed.useEffect)(()=>{let eA=[(0,ep.productManager)().configuration.subscribe(eA=>{el(eA?.links||{})})];return()=>eA.forEach(eA=>eA.unsubscribe())},[]),{links:eA}};eu()}catch(eA){eu(eA)}})};

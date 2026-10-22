@@ -1,2 +1,0 @@
-// Recovered bundle module 63776; dependencies use the original __webpack_require__ contract.
-module.exports = function(eA,el,ec){"use strict";Object.defineProperty(el,"__esModule",{value:!0}),el.codeFromHttpStatus=codeFromHttpStatus;let eu=ec(26460);function codeFromHttpStatus(eA){switch(eA){case 400:return eu.Code.Internal;case 401:return eu.Code.Unauthenticated;case 403:return eu.Code.PermissionDenied;case 404:return eu.Code.Unimplemented;case 429:case 502:case 503:case 504:return eu.Code.Unavailable;default:return eu.Code.Unknown}}};
