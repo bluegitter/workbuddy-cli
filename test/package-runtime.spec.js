@@ -144,6 +144,15 @@ const {
   DefaultPagePreviewer,
 } = require('../packages/runtime/src');
 const {
+  translateDesktopToCloudPayload,
+  resolveDesktopSpanPlan,
+  sanitizeChannelTraceAttributes,
+  EdgeSyncMappingStore,
+  syncRenameConversation,
+  parseLineWithLazyLoad,
+  estimateItemPayloadBytes,
+} = require('../packages/workbuddy-server/src');
+const {
   ArtifactIndex,
   AutomationScheduler,
   buildConnectorConfig,
@@ -937,6 +946,22 @@ async function main() {
   assert.strictEqual(sidecarOutput, 'sidecar');
   assert.strictEqual(sidecars.capture('session-1'), undefined);
   assert.strictEqual(sidecars.list().length, 0);
+  assert.deepStrictEqual(translateDesktopToCloudPayload({ update: { sessionUpdate: 'state_update', currentState: 'error' } }).update, { sessionUpdate: 'session_end_turn', stopReason: 'refusal' });
+  assert.strictEqual(translateDesktopToCloudPayload({ sessionUpdate: 'assistant_message_chunk' }).sessionUpdate, 'agent_message_chunk');
+  assert.deepStrictEqual(resolveDesktopSpanPlan({ traceId: 'a'.repeat(32), spanId: 'b'.repeat(16), parentSpanId: 'c'.repeat(16) }).parentSpanId, 'c'.repeat(16));
+  assert.deepStrictEqual(sanitizeChannelTraceAttributes({ safe: 1, sessionId: 'secret' }), { safe: 1 });
+  const mapping = new EdgeSyncMappingStore(path.join(root, 'mapping'));
+  mapping.initialize(); mapping.upsert('s1', 'c1', 'convmsg:u1');
+  assert.deepStrictEqual([...mapping.loadAll().sessionToConversation], [['s1', 'c1']]);
+  mapping.close();
+  const calls = [];
+  const apiCtx = { deps: { http: { post: async (url, body) => { calls.push({ url, body }); } } }, getConversationId: () => 'c1', logger: { warn() {} } };
+  assert.strictEqual(await syncRenameConversation(apiCtx, 's1', 'New title'), 'c1');
+  assert.strictEqual(calls[0].url, '/console/as/conversations/c1');
+  const lazyLine = JSON.stringify({ id: 'tool-1', type: 'function_call_result', output: 'x'.repeat(120 * 1024) });
+  const lazyItem = parseLineWithLazyLoad(lazyLine);
+  assert.strictEqual(lazyItem._lazyLoad, true);
+  assert.strictEqual(estimateItemPayloadBytes(lazyItem, lazyLine), 512);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
