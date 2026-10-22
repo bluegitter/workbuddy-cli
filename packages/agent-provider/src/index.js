@@ -25,4 +25,5 @@ module.exports = Object.freeze({
   ...require("./runtime/client-session"),
   ...require("./runtime/client-session-manager"),
   ...require("./runtime/provider-connections"),
+  ...require("./runtime/client"),
 });
