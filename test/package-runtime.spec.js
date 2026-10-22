@@ -233,6 +233,9 @@ const {
   createWorkbuddyIdentityService,
   WorkbuddyIdleCapabilityService,
   computeIdleCandidates,
+  parseRRule,
+  computeNextRunAt,
+  isWithinMissedRunWindow,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -338,6 +341,10 @@ async function main() {
   assert.deepStrictEqual(computeIdleCandidates({ skills: {}, mcps: {}, dismissedIdle: {} }, '2026-01-05', { skills: ['reports'], skillInstalledAt: { reports: Date.parse('2026-01-01T00:00:00Z') } }), []);
   await idle.dismissGlobal();
   assert.strictEqual(await idle.getIdleCardData({ skills: ['reports'] }), null);
+  assert.strictEqual(parseRRule('FREQ=WEEKLY;BYDAY=MO,WE').byday.length, 2);
+  const onceAt = Date.parse('2026-01-02T10:00:00Z');
+  assert.strictEqual(computeNextRunAt({ id: 'a1', scheduleType: 'once', scheduledAt: '2026-01-02T10:00:00Z' }, onceAt - 1000), onceAt);
+  assert.strictEqual(isWithinMissedRunWindow(onceAt, onceAt + 60_000), true);
   assert.deepStrictEqual(mergeMarketplaceManifests(
     { plugins: [{ source: './a', name: 'A' }] },
     [{ plugins: [{ source: './a', name: 'A2' }, { source: './b', name: 'B' }] }],

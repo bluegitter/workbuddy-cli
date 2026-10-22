@@ -45,4 +45,5 @@ module.exports = Object.freeze({
   ...require("./runtime/local-memory-files"),
   ...require("./runtime/identity-service"),
   ...require("./runtime/idle-capability"),
+  ...require("./runtime/automation-schedule"),
 });
