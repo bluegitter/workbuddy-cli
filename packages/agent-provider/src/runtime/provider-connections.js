@@ -1,6 +1,7 @@
 'use strict';
 
 const { AcpJsonRpcClient } = require('./acp-json-rpc-client');
+const { CloudHttpClient } = require('./cloud-http-client');
 
 class AgentConnection {
   constructor(agentId, { transport, cwd = '/workspace', client, logger = console } = {}) {
@@ -140,6 +141,36 @@ class LocalAgentConnection extends AgentConnection {
   getArtifactsByType(type) { return [...this.artifactCache.values()].filter((artifact) => artifact.type === type); }
   disconnect() { this.pendingPermissions.forEach((pending) => pending.resolve({ outcome: 'cancelled' })); this.pendingPermissions.clear(); this.client?.destroy?.(); return super.disconnect(); }
 }
-class CloudAgentConnection extends AgentConnection { constructor(agentId, config = {}) { super(agentId, { ...config, transport: 'cloud', cwd: config.cwd || '/workspace' }); } }
+class CloudAgentConnection extends AgentConnection {
+  constructor(agentId, config = {}) {
+    const client = config.client || (config.endpoint ? new CloudHttpClient(config) : undefined);
+    super(agentId, { ...config, client, transport: 'cloud', cwd: config.cwd || '/workspace' });
+    this._isStreaming = false;
+  }
+  async createSession(params = {}) { const response = await this.client.createSession(params.cwd || this.cwd, params); this.activeSessionId = response.sessionId; return response; }
+  async loadSession(params = {}) { if (!params.sessionId) throw new Error('sessionId is required for loadSession'); this.activeSessionId = params.sessionId; return this.client.loadSession(params.sessionId, params.cwd || this.cwd, params); }
+  async prompt(sessionId, params = {}) {
+    const content = typeof params.content === 'string' ? [{ type: 'text', text: params.content }] : params.content;
+    return this.client.prompt(sessionId, { ...params, ...(content ? { prompt: content } : {}), _meta: params._meta, planMode: params.planMode });
+  }
+  async *promptStream(sessionId, params = {}) {
+    this._isStreaming = true; const updates = []; let wake; let complete = false;
+    const listener = (update) => { if (update?.sessionId !== this.activeSessionId) return; if (wake) { const resolve = wake; wake = undefined; resolve(update); } else updates.push(update); };
+    this.client.on?.('sessionUpdate', listener);
+    try {
+      const pending = this.prompt(sessionId, params);
+      pending.finally(() => { complete = true; if (wake) { const resolve = wake; wake = undefined; resolve(null); } });
+      while (!complete || updates.length) {
+        const next = updates.shift() || (await new Promise((resolve) => { wake = resolve; if (complete) { wake = undefined; resolve(null); } }));
+        if (next) yield next;
+      }
+      await pending;
+    } finally { this._isStreaming = false; this.client.off?.('sessionUpdate', listener); }
+  }
+  async setSessionConfigOption(sessionId, configId, value) { return this.client.extMethod?.('session/set_config_option', { sessionId, configId, value }); }
+  async reportTelemetry(eventName, payload) { return this.client.extMethod?.('reportTelemetry', { eventName, payload }); }
+  async rollback(request) { try { return await this.client.extMethod('_codebuddy.ai/session/rollback', request); } catch (error) { return { applied: false, error: String(error) }; } }
+  extMethod(method, params) { return this.client.extMethod?.(method, params); }
+}
 
 module.exports = { AgentConnection, CloudAgentConnection, LocalAgentConnection };

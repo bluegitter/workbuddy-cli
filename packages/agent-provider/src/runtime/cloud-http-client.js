@@ -28,6 +28,7 @@ class CloudHttpClient {
   async setSessionMode(params) { return this.request('session/set_mode', params); }
   async setSessionModel(params) { return this.request('session/set_model', params); }
   async cancel(params) { await this.transport.send({ jsonrpc: '2.0', method: 'session/cancel', params }); }
+  async extMethod(method, params) { return this.request(method, params); }
   async request(method, params) { const id = this.nextId++; const response = await this.transport.send({ jsonrpc: '2.0', id, method, params }); if (response?.error) { const error = new Error(response.error.message || 'Cloud request failed'); error.code = response.error.code; throw error; } return response?.result ?? response; }
   setState(state) { const previous = this.state; this.state = state; this.emit('stateChange', { previous, current: state }); if (state === 'connecting' || state === 'connected' || state === 'disconnected') this.emit(state); }
   handleMessage(message) { if (message?.method === 'session/update') this.emit('sessionUpdate', message.params); else if (message?.method === 'request/permission') this.emit('permissionRequest', message.params); else if (message?.method === 'extNotification') this.emit('extNotification', message.params); }
