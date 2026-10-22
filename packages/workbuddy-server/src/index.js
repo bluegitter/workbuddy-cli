@@ -46,4 +46,9 @@ module.exports = Object.freeze({
   ...require("./runtime/identity-service"),
   ...require("./runtime/idle-capability"),
   ...require("./runtime/automation-schedule"),
+  ...require("./runtime/automation-dedupe"),
+  ...require("./runtime/automation-owner"),
+  ...require("./runtime/automation-tool-policy"),
+  ...require("./runtime/automation-retry"),
+  ...require("./runtime/automation-error"),
 });

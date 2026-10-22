@@ -236,6 +236,13 @@ const {
   parseRRule,
   computeNextRunAt,
   isWithinMissedRunWindow,
+  getAutomationRunIdentity,
+  findEquivalentActiveAutomation,
+  decideAutomationOwner,
+  isReadOnlyAutomationToolName,
+  isRetryBlockingToolName,
+  classifyTransientPromptRetryReason,
+  sanitizeErrorForNotification,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -345,6 +352,14 @@ async function main() {
   const onceAt = Date.parse('2026-01-02T10:00:00Z');
   assert.strictEqual(computeNextRunAt({ id: 'a1', scheduleType: 'once', scheduledAt: '2026-01-02T10:00:00Z' }, onceAt - 1000), onceAt);
   assert.strictEqual(isWithinMissedRunWindow(onceAt, onceAt + 60_000), true);
+  const automationFixture = { id: 'a1', status: 'ACTIVE', prompt: 'hello  world', scheduleType: 'once', scheduledAt: '2026-01-02', cwds: ['/tmp/automation-1'] };
+  assert.strictEqual(getAutomationRunIdentity(automationFixture), getAutomationRunIdentity({ ...automationFixture, id: 'a2', prompt: ' hello world ' }));
+  assert.strictEqual(findEquivalentActiveAutomation(automationFixture, [{ ...automationFixture, id: 'a2', created_at: 1 }]).id, 'a2');
+  assert.strictEqual(decideAutomationOwner({ userIds: ['u1', 'u1', 'u1'] }, 'u2', 'runtime_claim').ownerUserId, 'u1');
+  assert.strictEqual(isReadOnlyAutomationToolName('read_file'), true);
+  assert.strictEqual(isRetryBlockingToolName('read_file'), false);
+  assert.strictEqual(classifyTransientPromptRetryReason('HTTP 503 gateway timeout'), 'server-5xx');
+  assert.strictEqual(sanitizeErrorForNotification('Error at /Users/example/project/file.js\ntrace'), 'Error at <path>');
   assert.deepStrictEqual(mergeMarketplaceManifests(
     { plugins: [{ source: './a', name: 'A' }] },
     [{ plugins: [{ source: './a', name: 'A2' }, { source: './b', name: 'B' }] }],
