@@ -8,7 +8,7 @@ const { createDecoder, encode } = require('../packages/agent-client-protocol/src
 const { parseFrontmatter } = require('../packages/plugin-core/src');
 const { CommandPolicy } = require('../packages/sandbox-cli/src');
 const { CredentialStore } = require('../packages/authentication/src');
-const { EventBuffer } = require('../packages/telemetry/src');
+const { EventBuffer, LogSampler, StructuredLogger } = require('../packages/telemetry/src');
 const { PathPolicy } = require('../packages/enterprise-policy/src');
 const { AgentViewModel } = require('../packages/agent-ui/src');
 const { WindowState, resolveAppConfig } = require('../packages/workbuddy-app/src');
@@ -70,6 +70,16 @@ async function main() {
   buffer.push('agent.start', { session: 's1' });
   await buffer.flush();
   assert.strictEqual(events[0].event, 'agent.start');
+  let now = 0;
+  const sampler = new LogSampler({ windowMs: 1000, maxPerWindow: 1, now: () => now });
+  const records = [];
+  const logger = new StructuredLogger({ scope: 'test', sink: (record) => records.push(record), sampler });
+  assert.strictEqual(logger.info('same'), true);
+  assert.strictEqual(logger.info('same'), false);
+  now = 1001;
+  assert.strictEqual(logger.info('same'), true);
+  assert.strictEqual(records[1].data.at(-1).suppressed, 1);
+  assert.ok(logger.format(records[0]).includes('[test]'));
   const view = new AgentViewModel('s1');
   view.apply({ type: 'assistant', content: 'hello' });
   view.apply({ type: 'tool_start', toolUseId: 't1', name: 'read' });
