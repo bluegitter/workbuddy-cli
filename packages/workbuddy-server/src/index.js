@@ -44,4 +44,5 @@ module.exports = Object.freeze({
   ...require("./runtime/deeplink-mock-repo"),
   ...require("./runtime/local-memory-files"),
   ...require("./runtime/identity-service"),
+  ...require("./runtime/idle-capability"),
 });

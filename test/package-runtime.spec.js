@@ -231,6 +231,8 @@ const {
   writeSoulBody,
   writeMemoryBody,
   createWorkbuddyIdentityService,
+  WorkbuddyIdleCapabilityService,
+  computeIdleCandidates,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -330,6 +332,12 @@ async function main() {
   const identityService = createWorkbuddyIdentityService({ configDir: memoryDir });
   assert.deepStrictEqual(await identityService.updateAiName('CodeBuddy'), { success: true });
   assert.deepStrictEqual(await identityService.updateMemoryBody('Updated memory'), { success: true });
+  const idle = new WorkbuddyIdleCapabilityService({ homeDir: path.join(root, 'idle') });
+  await idle.recordUsage({ type: 'skill', id: 'reports' });
+  await idle.recordActiveDay();
+  assert.deepStrictEqual(computeIdleCandidates({ skills: {}, mcps: {}, dismissedIdle: {} }, '2026-01-05', { skills: ['reports'], skillInstalledAt: { reports: Date.parse('2026-01-01T00:00:00Z') } }), []);
+  await idle.dismissGlobal();
+  assert.strictEqual(await idle.getIdleCardData({ skills: ['reports'] }), null);
   assert.deepStrictEqual(mergeMarketplaceManifests(
     { plugins: [{ source: './a', name: 'A' }] },
     [{ plugins: [{ source: './a', name: 'A2' }, { source: './b', name: 'B' }] }],
