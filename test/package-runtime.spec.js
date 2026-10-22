@@ -211,6 +211,8 @@ const {
   isTencentDocsClipboardOrigin,
   isTencentDocsUrl,
   buildAgentCliRuntimeEnv,
+  readAgentCliBundledRuntimeConfigAsync,
+  readAgentCliAppConfigValue,
   compareVersionsDesc,
   resolveAgentCliExecutablePath,
   resolveAgentCliRuntimeDirs,
@@ -482,6 +484,11 @@ async function main() {
   assert.strictEqual(compareVersionsDesc('2.10.0', '2.9.0') < 0, true);
   assert.deepStrictEqual(resolveAgentCliExecutablePath({ bundledCliPaths: [], monorepoCliPath: '/missing', envCliPath: '/ok', exists: (file) => file === '/ok' }), { path: '/ok', source: 'env' });
   assert.deepStrictEqual(resolveAgentCliRuntimeDirs({ homeDir: '/home/test', processEnv: {} }), { configDir: '/home/test/.workbuddy', userDataDir: '/home/test/.workbuddy/app' });
+  const cliConfigDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wb-cli-config-'));
+  fs.writeFileSync(path.join(cliConfigDir, 'app-config.json'), JSON.stringify({ bundledRuntime: { enabled: false, tools: { node: false } }, channel: 'stable' }));
+  assert.strictEqual(readAgentCliAppConfigValue('channel', { userDataDir: cliConfigDir }), 'stable');
+  assert.strictEqual((await readAgentCliBundledRuntimeConfigAsync(cliConfigDir)).enabled, false);
+  fs.rmSync(cliConfigDir, { recursive: true, force: true });
   assert.strictEqual(buildProjectQuery('p 1'), '?project_id=p%201');
   assert.strictEqual(buildRegistryQuery({ scope: 'project', mcpOnly: true }), 'scope=project&mcp_only=true');
   assert.strictEqual(mapProjectConnector({ connector_name: 'docs', connect_status: 1 }).isConnected, true);

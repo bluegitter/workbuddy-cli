@@ -139,6 +139,22 @@ function readAgentCliBundledRuntimeConfig(userDataDir) {
   return DEFAULT_AGENT_CLI_BUNDLED_RUNTIME_CONFIG;
 }
 
+async function readAgentCliBundledRuntimeConfigAsync(userDataDir) {
+  try {
+    const runtime = JSON.parse(await fsp.readFile(path.join(userDataDir, 'app-config.json'), 'utf8')).bundledRuntime;
+    if (runtime && typeof runtime === 'object') return { enabled: runtime.enabled !== false, tools: { node: runtime.tools?.node !== false, python: runtime.tools?.python !== false, gitBash: runtime.tools?.gitBash !== false } };
+  } catch {}
+  return DEFAULT_AGENT_CLI_BUNDLED_RUNTIME_CONFIG;
+}
+
+function readAgentCliAppConfigValue(key, { userDataDir } = {}) {
+  try { return JSON.parse(fs.readFileSync(path.join(userDataDir, 'app-config.json'), 'utf8'))?.[key] ?? null; } catch { return null; }
+}
+
+async function readAgentCliAppConfigValueAsync(key, { userDataDir } = {}) {
+  try { return JSON.parse(await fsp.readFile(path.join(userDataDir, 'app-config.json'), 'utf8'))?.[key] ?? null; } catch { return null; }
+}
+
 function listAgentCliEnabledPluginDirs(configDir) {
   try {
     const enabled = JSON.parse(fs.readFileSync(path.join(configDir, 'settings.json'), 'utf8')).enabledPlugins || {};
@@ -153,7 +169,7 @@ module.exports = {
   DEFAULT_AGENT_CLI_BUNDLED_RUNTIME_CONFIG, PASSTHROUGH_ENV_KEYS,
   buildAgentCliRuntimeEnv, compareVersionsDesc, copyProcessEnv, listAgentCliEnabledPluginDirs,
   listAgentCliManagedBinDirs, listAgentCliManagedBinDirsAsync, normalizeAgentCliBuiltinSkillsDir,
-  prependDirsToEnvPath, readAgentCliBundledRuntimeConfig, resolveAgentCliConfigDir,
+  prependDirsToEnvPath, readAgentCliBundledRuntimeConfig, readAgentCliBundledRuntimeConfigAsync, readAgentCliAppConfigValue, readAgentCliAppConfigValueAsync, resolveAgentCliConfigDir,
   resolveAgentCliConnectorBin, resolveAgentCliExecutablePath, resolveAgentCliRuntimeDirs,
   resolveAgentCliUserDataDir, resolveDisabledManagedRuntimeTypes, stringValues,
 };
