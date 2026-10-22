@@ -131,4 +131,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-client-state"),
   ...require("./runtime/connector-oauth-provider"),
   ...require("./runtime/connector-health-scheduler"),
+  ...require("./runtime/connector-reconnect-policy"),
 });

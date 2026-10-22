@@ -341,6 +341,12 @@ const {
   classifyPreflightState,
   createConnectorOAuthProvider,
   ConnectorHealthScheduler,
+  isNetworkTransientError,
+  isIOADeviceUnauthorized,
+  isAuthMessage,
+  computeReconnectDelay,
+  classifyRefreshFailure,
+  classifyExhaustedReconnect,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1537,6 +1543,17 @@ async function main() {
   assert.deepStrictEqual(await health.waitForReconnect('docs', new Map(), 20), { ok: false, reason: 'no-inflight' });
   healthEntry.status = 'connected';
   health.startBackoffProbe('docs', 0); health.stopBackoffProbe('docs');
+  assert.strictEqual(isNetworkTransientError('fetch failed: ECONNRESET'), true);
+  assert.strictEqual(isNetworkTransientError('business connection field rejected'), false);
+  assert.strictEqual(isIOADeviceUnauthorized('401 Unauthorized Device'), true);
+  assert.strictEqual(isAuthMessage('401 Unauthorized'), true);
+  assert.strictEqual(isAuthMessage('401 Unauthorized Device'), false);
+  assert.strictEqual(isAuthMessage('{"error":"invalid_token"}'), true);
+  assert.strictEqual(computeReconnectDelay(1, true), 5000);
+  assert.deepStrictEqual(classifyRefreshFailure(new Error('invalid_grant')), { ok: false, kind: 'auth', error: 'invalid_grant' });
+  assert.deepStrictEqual(classifyRefreshFailure(new Error('socket hang up')), { ok: false, kind: 'transient', error: 'socket hang up' });
+  assert.strictEqual(classifyExhaustedReconnect({ sawTransportTrouble: false, finalError: '401 Unauthorized' }), 'auth');
+  assert.strictEqual(classifyExhaustedReconnect({ sawTransportTrouble: true, finalError: '401 Unauthorized' }), 'transport');
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
