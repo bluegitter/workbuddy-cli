@@ -249,7 +249,7 @@ const {
   readStates,
   writeStates,
 } = require('../packages/workbuddy-server/src');
-const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3 } = require('../packages/authentication/src');
+const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore } = require('../packages/authentication/src');
 const {
   ArtifactIndex,
   AutomationScheduler,
@@ -444,6 +444,13 @@ async function main() {
   assert.deepStrictEqual(readOAuthV3(oauthOptions).mcpOAuth['server-1'].accessToken, 'access');
   assert.strictEqual(readOAuthV3(oauthOptions).mcpClientInfo['server-1'].client_secret, 'secret');
   fs.rmSync(oauthRoot, { recursive: true, force: true });
+  const storeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-oauth-store-'));
+  const oauthStore = new ConnectorOAuthStore('user-1', { homeDir: storeRoot, backupBaseDir: path.join(storeRoot, 'backup') });
+  assert.strictEqual(oauthStore.saveTokens('connector:github', 'https://mcp.test', { access_token: 'access-2', refresh_token: 'refresh-2', expires_in: 3600, token_type: 'Bearer' }, { Authorization: 'x' }), true);
+  assert.strictEqual(oauthStore.loadTokens('connector:github', 'https://mcp.test', { Authorization: 'x' }).access_token, 'access-2');
+  assert.strictEqual(oauthStore.peekTokens('connector:github', 'https://mcp.test', { Authorization: 'x' }).refresh_token, 'refresh-2');
+  assert.strictEqual(new ConnectorOAuthStore('default', { homeDir: storeRoot }).write({}), false);
+  fs.rmSync(storeRoot, { recursive: true, force: true });
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
