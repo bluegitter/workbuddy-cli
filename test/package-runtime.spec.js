@@ -179,6 +179,8 @@ const {
   appendStateTransitionEntry,
   SessionMetaWriter,
   withSessionEnabledPluginSetting,
+  isDaemonStdioFrame,
+  createDaemonStdioFrameReader,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1035,6 +1037,16 @@ async function main() {
   await metaWriter.record({ conversationId: 'c1', userId: 'u1', workDir: '/tmp', title: 'Renamed' });
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(root, 'session-meta', 'sessions.json'), 'utf8')).sessions[0].title, 'Renamed');
   assert.deepStrictEqual(withSessionEnabledPluginSetting({ enabledPlugins: { old: true } }, 'new', false).enabledPlugins, { old: true, new: false });
+  assert.strictEqual(isDaemonStdioFrame({ type: 'rpc-request', id: '1', channel: 'ping' }), true);
+  assert.strictEqual(isDaemonStdioFrame({ type: 'rpc-request', id: '1' }), false);
+  const frameInput = new (require('stream').Readable)({ read() {} });
+  const frames = [];
+  const reader = createDaemonStdioFrameReader(frameInput, { onFrame: (frame) => frames.push(frame) });
+  frameInput.push('{"type":"ready"}\n{"type":"rpc-response","id":"1"}\n');
+  frameInput.push(null);
+  await new Promise((resolve) => setImmediate(resolve));
+  reader.dispose();
+  assert.strictEqual(frames.length, 2);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }

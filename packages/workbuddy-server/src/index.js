@@ -48,6 +48,7 @@ module.exports = Object.freeze({
   ...require("./runtime/no-response-watchdog"),
   ...require("./runtime/session-meta-writer"),
   ...require("./runtime/session-runtime-config"),
+  ...require("./runtime/stdio-framing"),
   ...require("./runtime/interaction-registries"),
   ...require("./runtime/document-paths"),
   ...require("./runtime/document-prompt"),
