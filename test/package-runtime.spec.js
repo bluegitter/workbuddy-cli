@@ -348,6 +348,8 @@ const {
   classifyRefreshFailure,
   classifyExhaustedReconnect,
   ConnectorTokenRefreshService,
+  buildQqMailConfirmationInstruction,
+  markQqMailConfirmationRequired,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1577,6 +1579,11 @@ async function main() {
   const authFailureService = new ConnectorTokenRefreshService({ oauthStore: { loadTokens: () => ({ refresh_token: 'r', expires_in: 1 }), loadClientInfo: () => null }, auth: { discoverAuthorizationServerMetadata: async () => { throw new Error('invalid_grant'); } }, invalidateCredentials: () => refreshEvents.push('invalidated') });
   assert.deepStrictEqual(await authFailureService.refreshIfNeeded('docs', 'https://mcp'), { ok: false, kind: 'auth', error: 'invalid_grant' });
   assert.strictEqual(refreshEvents.includes('invalidated'), true);
+  const confirmationText = buildQqMailConfirmationInstruction({ token: 'confirm-token', expiresAt: '2099-01-01T00:00:00Z', originalName: 'SendMessage', originalText: '{"error":{"code":42801}}' });
+  assert.strictEqual(confirmationText.includes('AskUserQuestion'), true);
+  const confirmation = markQqMailConfirmationRequired('connector:qq-mail', 'SendMessage', { content: [{ type: 'text', text: JSON.stringify({ error: { code: 42801, details: { confirmation_token: 'confirm-token', expires_at: '2099-01-01T00:00:00Z' }, _hints: { suggested_action: 'confirm_with_token' } } }) }] });
+  assert.strictEqual(confirmation.isError, true);
+  assert.strictEqual(markQqMailConfirmationRequired('connector:docs', 'SendMessage', { content: [{ type: 'text', text: '{}' }] }), null);
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
