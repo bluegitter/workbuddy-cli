@@ -21,4 +21,5 @@ module.exports = Object.freeze({
   ...require("./runtime/file-authentication-storage"),
   ...require("./runtime/custom-token-authentication"),
   ...require("./runtime/oauth-cipher"),
+  ...require("./runtime/connector-master-key-store"),
 });

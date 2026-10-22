@@ -247,7 +247,7 @@ const {
   coercePlainMap,
   extractNonSensitiveFields,
 } = require('../packages/workbuddy-server/src');
-const { OAuthCipher, createHeader, isCipherEnvelope } = require('../packages/authentication/src');
+const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore } = require('../packages/authentication/src');
 const {
   ArtifactIndex,
   AutomationScheduler,
@@ -414,6 +414,15 @@ async function main() {
   assert.strictEqual(isCipherEnvelope(envelope), true);
   assert.strictEqual(cipher.decrypt(envelope, { serverKey: 'connector-a', fieldName: 'accessToken' }), 'secret-token');
   assert.throws(() => cipher.decrypt(envelope, { serverKey: 'connector-b', fieldName: 'accessToken' }));
+  const keyRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-master-key-'));
+  const keyStore = new ConnectorOAuthMasterKeyStore({ userId: 'user-1', primaryDir: path.join(keyRoot, 'primary'), backupBaseDir: path.join(keyRoot, 'backup') });
+  assert.strictEqual(keyStore.getExisting(), undefined);
+  const createdKey = keyStore.getOrCreate();
+  assert.strictEqual(createdKey.key.length, 32);
+  assert.deepStrictEqual(keyStore.getExisting().key, createdKey.key);
+  fs.unlinkSync(keyStore.getPrimaryPath());
+  assert.deepStrictEqual(keyStore.getExisting().key, createdKey.key);
+  fs.rmSync(keyRoot, { recursive: true, force: true });
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
