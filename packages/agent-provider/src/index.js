@@ -32,4 +32,6 @@ module.exports = Object.freeze({
   ...require("./runtime/local-provider"),
   ...require("./runtime/local-filesystem"),
   ...require("./runtime/api-types"),
+  ...require("./runtime/lru-cache"),
+  ...require("./runtime/concurrency"),
 });

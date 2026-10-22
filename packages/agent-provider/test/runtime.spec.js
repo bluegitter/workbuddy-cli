@@ -23,6 +23,8 @@ const {
   mapWithConcurrency,
   partitionToolCalls,
   runAgentLoop,
+  LRUCache,
+  runWithConcurrencySettled,
 } = require('../src');
 
 async function main() {
@@ -275,6 +277,11 @@ async function main() {
   );
   assert.strictEqual(require('../src').extractUserMessageText({ type: 'user', message: { content: ' hello ' } }), 'hello');
   assert.strictEqual(require('../src').extractUserMessageText({ type: 'user', isSynthetic: true, message: { content: 'skip' } }), undefined);
+  const lru = new LRUCache(2);
+  lru.set('a', 1); lru.set('b', 2); assert.strictEqual(lru.get('a'), 1); lru.set('c', 3);
+  assert.strictEqual(lru.has('b'), false); assert.deepStrictEqual(lru.keys(), ['a', 'c']);
+  const settled = await runWithConcurrencySettled([async () => 'ok', async () => { throw new Error('bad'); }], 1);
+  assert.deepStrictEqual(settled.map((item) => item.status), ['fulfilled', 'rejected']);
   console.log('agent runtime tests passed');
 }
 
