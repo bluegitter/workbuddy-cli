@@ -39,7 +39,14 @@ const {
   resolveAppConfig,
   withDisplayStatus,
 } = require('../packages/workbuddy-app/src');
-const { assertRecord, cloneSerializable } = require('../packages/workbuddy-core/src');
+const {
+  CancellationTokenSource,
+  DeferredPromise,
+  assertRecord,
+  cloneSerializable,
+  raceCancellationError,
+  retry,
+} = require('../packages/workbuddy-core/src');
 const {
   CLI_STATIC_MANAGED_ENV,
   buildCliProcessEnv,
@@ -181,6 +188,15 @@ async function main() {
   assert.deepStrictEqual(queueStore.get('s1').runtime, { activated: true, paused: false, pauseReason: undefined, inflightItemId: undefined, pendingItemCount: 1, sendingItemCount: 1, updatedAt: 123 });
   assert.strictEqual(cloneSerializable({ a: 1 }).a, 1);
   assert.strictEqual(assertRecord({ ok: true }).ok, true);
+  const cancellation = new CancellationTokenSource();
+  const cancelledPromise = raceCancellationError(new Promise((resolve) => setTimeout(resolve, 50)), cancellation.token);
+  cancellation.cancel();
+  await assert.rejects(cancelledPromise, /Cancelled/);
+  let attempts = 0;
+  assert.strictEqual(await retry(async () => { attempts += 1; if (attempts < 2) throw new Error('retry'); return 'ok'; }, 1, 3), 'ok');
+  const deferred = new DeferredPromise();
+  deferred.complete('done');
+  assert.strictEqual(await deferred.promise, 'done');
 
   const serverEvents = [];
   const sessions = new SessionStore({ clock: (() => { let now = 100; return () => ++now; })() });

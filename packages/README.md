@@ -22,6 +22,6 @@ cover the same behavior. `scripts/check-packages.js` validates source syntax;
 | `telemetry` | Bounded event buffer, log sampling and structured logger | Logger/trace compiled entries |
 | `enterprise-policy` | Workspace path policy and destructive-operation sentinel audit | File protection compiled entries |
 | `workbuddy-server` | HTTP, sessions/tasks, automation, MCP, Connector/Expert manifests, version compatibility and POI consent | Daemon/MCP compiled entries |
-| `workbuddy-core` | Invariants and serialization | Common/contracts compiled entries |
+| `workbuddy-core` | Invariants, serialization and cancellation/async utilities | Common/contracts compiled entries |
 | `agent-ui` | Session, Todo and Agent Team runtime view models | Renderer bundle |
 | `workbuddy-app` | App config, window state, conversation status and queue snapshots | Electron/Preload entries |

@@ -8,4 +8,5 @@ module.exports = Object.freeze({
   artifactRoot: __dirname + "/compiled",
   ...require("./runtime/invariant"),
   ...require("./runtime/serialization"),
+  ...require("./runtime/async-utils"),
 });
