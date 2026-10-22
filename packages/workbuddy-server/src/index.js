@@ -57,6 +57,7 @@ module.exports = Object.freeze({
   ...require("./runtime/hosted-cli-auth-lifecycle"),
   ...require("./runtime/acp-client-facade"),
   ...require("./runtime/poi-map-gate"),
+  ...require("./runtime/prewarm-utils"),
   ...require("./runtime/interaction-registries"),
   ...require("./runtime/document-paths"),
   ...require("./runtime/document-prompt"),

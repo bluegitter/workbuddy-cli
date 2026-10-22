@@ -197,6 +197,10 @@ const {
   getHostedCliSessionOwnerKey,
   createWorkbuddyAgentAcpClient,
   isPoiMapEnabled,
+  resolvePrewarmIpcPath,
+  isWhitelistedSessionEnvKey,
+  managedEnvMismatchKeys,
+  validateActivateReadyResponse,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1088,6 +1092,10 @@ async function main() {
   const acpFacade = createWorkbuddyAgentAcpClient({ ClientClass: FakeAcpClient, endpoint: 'http://127.0.0.1:1' });
   assert.strictEqual(await acpFacade.connection.prompt('ok'), 'ok');
   assert.strictEqual(isPoiMapEnabled({ configuration: { getValue: () => ({ productFeatures: { PoiMap: true } }) } }), true);
+  assert.strictEqual(resolvePrewarmIpcPath('abc', 'linux'), '/tmp/codebuddy-prewarm-abc.sock');
+  assert.strictEqual(isWhitelistedSessionEnvKey('SERVICE_TOKEN'), true);
+  assert.deepStrictEqual(managedEnvMismatchKeys({ A: '1' }, { A: '2', B: '3' }), ['A', 'B']);
+  assert.throws(() => validateActivateReadyResponse({ ok: false }, { expectedPid: 1, expectedSessionId: 's' }), /invalid prewarm/);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
