@@ -8,6 +8,7 @@ const {
   LocalAgentConnection,
   CloudAgentConnection,
   AgentClient,
+  AcpJsonRpcClient,
   HookEvent,
   HookRegistry,
   InterruptionController,
@@ -83,6 +84,19 @@ async function main() {
   assert.strictEqual(client.getBackendType(), 'local');
   assert.deepStrictEqual(await client.sessions.list(), { agents: [], pagination: { total: 0 } });
   assert.deepStrictEqual(await client.sessions.initializeWorkspace({ cwd: '/tmp' }), { success: true, cwd: '/tmp' });
+  const channelMessages = [];
+  const channelListeners = new Map();
+  const channel = { sendNotification: (sessionId, message) => { channelMessages.push({ sessionId, message: JSON.parse(message) }); return true; }, on: (event, listener) => channelListeners.set(event, listener) };
+  const acp = new AcpJsonRpcClient(channel, { timeoutMs: 1000 });
+  const pendingAcp = acp.newSession({ cwd: '/tmp' });
+  const request = channelMessages[0].message;
+  channelListeners.get('message')({ jsonrpc: '2.0', id: request.id, result: { sessionId: 's-acp' } });
+  assert.deepStrictEqual(await pendingAcp, { sessionId: 's-acp' });
+  let update;
+  acp.onSessionUpdate((value) => { update = value.notification; });
+  channelListeners.get('message')({ jsonrpc: '2.0', method: 'session/update', params: { sessionId: 's-acp', update: { sessionUpdate: 'agent_message_chunk' } } });
+  assert.strictEqual(update.sessionId, 's-acp');
+  acp.destroy();
   let turn = 0;
   await runAgentLoop(session, {
     tools,
