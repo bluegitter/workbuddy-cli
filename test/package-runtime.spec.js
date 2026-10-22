@@ -162,6 +162,11 @@ const {
   isLocalTencentDocsEnginePreviewUrl,
   isTencentDocsClipboardOrigin,
   isTencentDocsUrl,
+  buildAgentCliRuntimeEnv,
+  compareVersionsDesc,
+  resolveAgentCliExecutablePath,
+  resolveAgentCliRuntimeDirs,
+  resolveDisabledManagedRuntimeTypes,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -279,6 +284,13 @@ async function main() {
   assert.strictEqual(isTencentDocsUrl('https://evil.example/docs.qq.com'), false);
   assert.strictEqual(isLocalTencentDocsEnginePreviewUrl('http://127.0.0.1:4321/static/doc/pc.html'), true);
   assert.strictEqual(isTencentDocsClipboardOrigin('http://127.0.0.1:4321', 'http://127.0.0.1:4321'), true);
+  const cliEnv = buildAgentCliRuntimeEnv({ configDir: '/tmp/wb', gatewaySecretEnv: { CODEBUDDY_GATEWAY_PASSWORD: 'secret' }, managedNodeBinDirs: ['/tmp/node'], managedPythonBinDirs: ['/tmp/python'], cliConnectorBin: '/tmp/connector', pathDelimiter: ':', processEnv: { PATH: '/usr/bin' } });
+  assert.strictEqual(cliEnv.WORKBUDDY_CONFIG_DIR, '/tmp/wb');
+  assert.strictEqual(cliEnv.PATH, '/tmp/node:/usr/bin');
+  assert.strictEqual(resolveDisabledManagedRuntimeTypes({ enabled: true, tools: { node: false } }, ['node', 'python']).join(','), 'node');
+  assert.strictEqual(compareVersionsDesc('2.10.0', '2.9.0') < 0, true);
+  assert.deepStrictEqual(resolveAgentCliExecutablePath({ bundledCliPaths: [], monorepoCliPath: '/missing', envCliPath: '/ok', exists: (file) => file === '/ok' }), { path: '/ok', source: 'env' });
+  assert.deepStrictEqual(resolveAgentCliRuntimeDirs({ homeDir: '/home/test', processEnv: {} }), { configDir: '/home/test/.workbuddy', userDataDir: '/home/test/.workbuddy/app' });
   assert.strictEqual(unwrap({ code: 0, data: 'ok' }, 'demo'), 'ok');
   assert.throws(() => unwrap({ code: 7, msg: 'bad', requestId: 'r1' }, 'demo'), (error) => error.code === 7 && error.requestId === 'r1');
   const wrappedRequests = [];

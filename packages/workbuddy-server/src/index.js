@@ -37,4 +37,5 @@ module.exports = Object.freeze({
   ...require("./runtime/ima-files-api"),
   ...require("./runtime/ima-upload-service"),
   ...require("./runtime/tencent-docs"),
+  ...require("./runtime/agent-cli-runtime"),
 });
