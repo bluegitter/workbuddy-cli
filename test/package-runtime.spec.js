@@ -230,6 +230,7 @@ const {
   extractMediaPathsFromCommand,
   extractImageToolLocalPaths,
   extractPreviewUrlLocalMediaPath,
+  createWorkbuddySessionPersistence,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1200,6 +1201,15 @@ async function main() {
   assert.deepStrictEqual(extractMediaPathsFromCommand('python render.py /tmp/out.png', '/tmp'), ['/tmp/out.png']);
   assert.deepStrictEqual(extractImageToolLocalPaths({ type: 'image_gen_tool_result', images: [{ localPath: '/tmp/a.png' }] }), ['/tmp/a.png']);
   assert.strictEqual(extractPreviewUrlLocalMediaPath('file:///tmp/a.png'), '/tmp/a.png');
+  const persistence = createWorkbuddySessionPersistence({
+    celljs: { name: 'cell' },
+    createRecordStore: (_celljs, options) => ({ kind: 'record', user: options.getCurrentUserId() }),
+    createUsageStore: () => ({ kind: 'usage-store' }),
+    usageServiceFactory: (options) => ({ kind: 'usage-service', ...options }),
+    getCurrentUserId: () => 'user-1',
+  });
+  assert.deepStrictEqual(persistence.recordStore, { kind: 'record', user: 'user-1' });
+  assert.strictEqual(persistence.usageCacheService.store.kind, 'usage-store');
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
