@@ -37,4 +37,5 @@ module.exports = Object.freeze({
   ...require("./runtime/backend-contracts"),
   ...require("./runtime/agent-filesystem"),
   ...require("./runtime/cos-upload-service"),
+  ...require("./runtime/oauth-repository-service"),
 });

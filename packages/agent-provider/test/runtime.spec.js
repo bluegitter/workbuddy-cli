@@ -31,6 +31,7 @@ const {
   resolveAgentUri,
   createAgentFilesystem,
   CosUploadService,
+  OAuthRepositoryService,
 } = require('../src');
 
 async function main() {
@@ -301,6 +302,11 @@ async function main() {
   const cos = new CosUploadService({ now: () => 1, random: () => 0.5, uploadConcurrency: 2, presignedUrlProvider: async (keys) => ({ expire: 60, items: keys.map((key) => ({ object_key: key, upload_url: `https://upload/${key}`, download_url: `https://download/${key}` })) }), fetch: async (url) => { uploaded.push(url); return { ok: true }; } });
   const batch = await cos.uploadFiles([{ name: 'a.txt', type: 'text/plain' }, { name: 'b.txt', type: 'text/plain' }]);
   assert.strictEqual(batch.success, true); assert.strictEqual(batch.urls.length, 2); assert.strictEqual(uploaded.length, 2);
+  const oauthCalls = [];
+  const oauth = new OAuthRepositoryService({ http: { get: async (url) => { oauthCalls.push(url); return { data: { branches: [{ name: 'main' }] } }; } } });
+  assert.deepStrictEqual(await oauth.getBranches('github', { owner: 'org', repo: 'repo' }), [{ name: 'main' }]);
+  assert(oauthCalls[0].includes('owner=org') && oauthCalls[0].includes('repo=repo'));
+  assert.throws(() => oauth.buildBranchQueryParams('github', {}), /requires owner/);
   console.log('agent runtime tests passed');
 }
 
