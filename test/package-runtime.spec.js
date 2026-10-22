@@ -334,6 +334,11 @@ const {
   connectStepWithTimeout,
   connectWithFallback,
   createScopedFetch,
+  createConnectingEntry,
+  snapshotClientEntry,
+  snapshotClientEntries,
+  createToolEntry,
+  classifyPreflightState,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1480,6 +1485,16 @@ async function main() {
   assert.strictEqual(fallbackAttempts, 2);
   const scopedFetch = createScopedFetch({ fetchFn: async (_input, init) => ({ headers: init.headers }), requestHeaders: { Base: 'yes' }, resolveHeaders: () => ({ hasScopedHeaders: true, headers: { Scoped: 'yes' } }), configId: 'demo' });
   assert.deepStrictEqual((await scopedFetch('https://mcp')).headers, { Scoped: 'yes' });
+  const connecting = createConnectingEntry('connector:docs', { id: 'client' }, { url: 'https://mcp' });
+  assert.strictEqual(connecting.status, 'connecting');
+  assert.strictEqual(connecting.serverConfig.url, 'https://mcp');
+  assert.strictEqual(classifyPreflightState(connecting), 'recovering');
+  assert.strictEqual(classifyPreflightState({ status: 'unauthorized', needsAuth: true }), 'auth');
+  assert.strictEqual(classifyPreflightState({ status: 'connected' }), 'ready');
+  assert.strictEqual(classifyPreflightState(undefined), 'missing');
+  assert.strictEqual(createToolEntry('custom-mcp:docs', { name: 'search', description: 'Search' }).name, 'docs_search');
+  assert.strictEqual(snapshotClientEntry(connecting).transport, null);
+  assert.strictEqual(snapshotClientEntries(new Map([['connector:docs', connecting]])).size, 1);
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
