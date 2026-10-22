@@ -133,6 +133,7 @@ const {
   throwIfUploadAborted,
   ImaFilesApi,
   ImaKnowledgeBaseApi,
+  ImaUploadService,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -288,6 +289,8 @@ async function main() {
   const filesApi = new ImaFilesApi({ post: async (endpoint, body) => endpoint.includes('search_knowledge') ? { searched_knowledge_list: [], is_end: true } : endpoint.includes('preview') ? { results: { m1: { ret_code: 0, url: 'https://preview' } } } : { knowledge_list: [], current_path: [], is_end: true } }, { fetchFn: async () => ({ ok: true, status: 200, headers: new Headers({ 'content-type': 'text/plain' }), text: async () => 'content', arrayBuffer: async () => new TextEncoder().encode('blob').buffer }) });
   assert.strictEqual((await filesApi.getViewUrl('m1')).url, 'https://preview'); assert.strictEqual((await filesApi.getContent('https://content')).content, 'content');
   const kbApi = new ImaKnowledgeBaseApi({ post: async () => ({ results: [] }) }); assert.deepStrictEqual((await kbApi.list()).groups, []);
+  const uploadEvents = []; const uploadService = new ImaUploadService({ createMedia: async () => ({ media_id: 'media-1', cos_credential: { key: 'cred' } }), addKnowledge: async () => ({}) }, { stat: async () => ({ size: 4 }), readFile: async () => Buffer.from('data'), uploadToCos: async (_cred, _buffer, _type, progress) => progress({ percent: 100, loaded: 4, total: 4 }) });
+  assert.deepStrictEqual(await uploadService.uploadByPath({ filePath: '/tmp/a.txt', kbId: 'kb-1', onProgress: (event) => uploadEvents.push(event) }), { fileId: 'media-1', kbId: 'kb-1', folderId: null, name: 'a.txt', size: 4 }); assert.strictEqual(uploadEvents.at(-1).percent, 100);
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
