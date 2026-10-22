@@ -21,7 +21,7 @@ const {
   gatewaySecretHeaders,
   getGatewaySecret,
 } = require('../packages/authentication/src');
-const { EventBuffer, LogSampler, StructuredLogger } = require('../packages/telemetry/src');
+const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const {
   AgentViewModel,
@@ -186,6 +186,14 @@ async function main() {
   assert.strictEqual(logger.info('same'), true);
   assert.strictEqual(records[1].data.at(-1).suppressed, 1);
   assert.ok(logger.format(records[0]).includes('[test]'));
+  const startupSpans = buildStartupSpans([
+    { proc: 'main', id: 'E1', key: 'begin', phase: 'main', absEpoch: 100 },
+    { proc: 'main', id: 'E8', key: 'interactive', phase: 'main', absEpoch: 125 },
+  ], { startupType: 'cold', flowType: 'desktop', totalMs: 25, totalMarks: 2 }, 'galileo', 'trace-1');
+  assert.strictEqual(startupSpans.length, 4);
+  const metricCalls = [];
+  exportStartupMetric({ getAppVersion: () => '1.0', recordDuration: (...args) => metricCalls.push(args) }, { startupType: 'cold', flowType: 'desktop', totalMs: 10, firstInteractiveMs: 8, phases: { main: 10 } });
+  assert.strictEqual(metricCalls.length, 4);
   const view = new AgentViewModel('s1');
   view.apply({ type: 'assistant', content: 'hello' });
   view.apply({ type: 'tool_start', toolUseId: 't1', name: 'read' });

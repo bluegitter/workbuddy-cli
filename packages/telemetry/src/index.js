@@ -9,4 +9,5 @@ module.exports = Object.freeze({
   ...require("./runtime/event-buffer"),
   ...require("./runtime/log-sampler"),
   ...require("./runtime/structured-logger"),
+  ...require("./runtime/startup-perf-exporters"),
 });
