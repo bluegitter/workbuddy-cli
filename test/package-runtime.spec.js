@@ -108,6 +108,10 @@ const {
   computeLocalPreviewGlobalPadId,
   detectDocumentFileType,
   normalizeLocalFilePathInput,
+  resolveDocArtifactSource,
+  collectMentionedLocalOfficePaths,
+  collectMentionedLocalOfficeFileNames,
+  createMenuLocaleStore,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -230,6 +234,10 @@ async function main() {
   assert.strictEqual(computeLocalPreviewGlobalPadId('/tmp/a.doc').length, 32);
   assert.strictEqual(detectDocumentFileType('/tmp/a.xlsx'), 'spreadsheet');
   assert.strictEqual(normalizeLocalFilePathInput('file:///tmp/a%20b.doc'), '/tmp/a b.doc');
+  assert.strictEqual(resolveDocArtifactSource('.xlsx'), 'excel');
+  assert.deepStrictEqual(collectMentionedLocalOfficePaths('请查看 "/tmp/report.xlsx"'), ['/tmp/report.xlsx']);
+  assert.deepStrictEqual(collectMentionedLocalOfficeFileNames('附件 report.xlsx 和 report.xlsx'), ['report.xlsx']);
+  const localeStore = createMenuLocaleStore({ LANG: 'zh-Hans-CN' }); localeStore.set('en-US'); assert.strictEqual(localeStore.get(), 'en-US');
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
