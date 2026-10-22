@@ -112,6 +112,11 @@ const {
   collectMentionedLocalOfficePaths,
   collectMentionedLocalOfficeFileNames,
   createMenuLocaleStore,
+  ImaApiError,
+  ImaErrorCode,
+  buildLocalDocumentSaveChoices,
+  buildLocalDocumentDirtyCloseChoices,
+  getLocalDocumentDialogButtonIds,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -238,6 +243,12 @@ async function main() {
   assert.deepStrictEqual(collectMentionedLocalOfficePaths('请查看 "/tmp/report.xlsx"'), ['/tmp/report.xlsx']);
   assert.deepStrictEqual(collectMentionedLocalOfficeFileNames('附件 report.xlsx 和 report.xlsx'), ['report.xlsx']);
   const localeStore = createMenuLocaleStore({ LANG: 'zh-Hans-CN' }); localeStore.set('en-US'); assert.strictEqual(localeStore.get(), 'en-US');
+  const imaError = ImaApiError.fromResponse(429, { message: 'slow', traceId: 'trace-ima' });
+  assert.strictEqual(imaError.errorCode, ImaErrorCode.RATE_LIMITED); assert.strictEqual(imaError.retriable(), true); assert.strictEqual(imaError.toJSON().traceId, 'trace-ima');
+  const saveChoices = buildLocalDocumentSaveChoices({ labels: { cancelButton: 'Cancel', saveButton: 'Save', saveAsButton: 'Save As' }, canSaveOriginal: false, isDarwin: false });
+  assert.deepStrictEqual(saveChoices.map((choice) => choice.action), ['saveAs', 'cancel']);
+  assert.deepStrictEqual(getLocalDocumentDialogButtonIds({ choices: saveChoices, defaultAction: 'saveAs', cancelAction: 'cancel' }), { defaultId: 0, cancelId: 1 });
+  assert.deepStrictEqual(buildLocalDocumentDirtyCloseChoices({ labels: { cancelButton: 'Cancel', saveButton: 'Save', saveAsButton: 'Save As', discardButton: 'Discard' }, canSaveOriginal: true, isDarwin: true }).map((choice) => choice.action), ['cancel', 'save', 'saveAs', 'discard']);
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);

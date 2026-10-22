@@ -27,4 +27,6 @@ module.exports = Object.freeze({
   ...require("./runtime/interaction-registries"),
   ...require("./runtime/document-paths"),
   ...require("./runtime/document-prompt"),
+  ...require("./runtime/ima-errors"),
+  ...require("./runtime/document-save-choices"),
 });
