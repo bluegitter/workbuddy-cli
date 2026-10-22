@@ -31,7 +31,14 @@ const {
   hasUnsettledTeamRuntime,
   parseTeammateMessage,
 } = require('../packages/agent-ui/src');
-const { WindowState, resolveAppConfig } = require('../packages/workbuddy-app/src');
+const {
+  QueueSnapshotStore,
+  WindowState,
+  deriveDisplayStatus,
+  deriveRunState,
+  resolveAppConfig,
+  withDisplayStatus,
+} = require('../packages/workbuddy-app/src');
 const { assertRecord, cloneSerializable } = require('../packages/workbuddy-core/src');
 const {
   CLI_STATIC_MANAGED_ENV,
@@ -164,6 +171,14 @@ async function main() {
   assert.strictEqual(formatTeammateContent('{"type":"shutdown_response","approve":true}'), 'Shutdown accepted');
   assert.strictEqual(new WindowState().show().visible, true);
   assert.strictEqual(resolveAppConfig(root, { WORKBUDDY_CONFIG_DIR: '/tmp/config' }).config, '/tmp/config');
+  assert.strictEqual(deriveDisplayStatus('working', {}), 'working');
+  assert.strictEqual(deriveDisplayStatus('pending', { messageQueueRuntime: { pendingItemCount: 1 } }), 'working');
+  assert.strictEqual(deriveRunState('completed', { messageQueueRuntime: { pendingItemCount: 1 } }), 'idle');
+  assert.strictEqual(deriveRunState('working', {}), 'busy');
+  assert.deepStrictEqual(withDisplayStatus({ protocolStatus: 'working', status: 'pending' }), { protocolStatus: 'working', status: 'working' });
+  const queueStore = new QueueSnapshotStore(() => 123);
+  queueStore.upsert({ sessionId: 's1', items: [{ status: 'pending' }, { status: 'sending' }], runtime: { activated: true } });
+  assert.deepStrictEqual(queueStore.get('s1').runtime, { activated: true, paused: false, pauseReason: undefined, inflightItemId: undefined, pendingItemCount: 1, sendingItemCount: 1, updatedAt: 123 });
   assert.strictEqual(cloneSerializable({ a: 1 }).a, 1);
   assert.strictEqual(assertRecord({ ok: true }).ok, true);
 

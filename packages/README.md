@@ -24,4 +24,4 @@ cover the same behavior. `scripts/check-packages.js` validates source syntax;
 | `workbuddy-server` | HTTP, sessions/tasks, automation, MCP, Connector/Expert manifests, version compatibility and POI consent | Daemon/MCP compiled entries |
 | `workbuddy-core` | Invariants and serialization | Common/contracts compiled entries |
 | `agent-ui` | Session, Todo and Agent Team runtime view models | Renderer bundle |
-| `workbuddy-app` | App config and window state | Electron/Preload entries |
+| `workbuddy-app` | App config, window state, conversation status and queue snapshots | Electron/Preload entries |

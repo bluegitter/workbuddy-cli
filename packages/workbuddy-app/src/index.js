@@ -10,4 +10,6 @@ module.exports = Object.freeze({
   preloadEntry: require.resolve("./source/preload.js"),
   ...require("./runtime/app-config"),
   ...require("./runtime/window-state"),
+  ...require("./runtime/conversation-state"),
+  ...require("./runtime/queue-snapshot"),
 });
