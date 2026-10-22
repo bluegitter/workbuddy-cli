@@ -33,6 +33,7 @@ const {
   isPersonalAccount,
   ProductEnvService,
   DefaultAuthenticationStorage,
+  FileAuthenticationStorage,
 } = require('../packages/authentication/src');
 const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger, formatLocalIsoTimestamp, formatLine, buildLifecycleLine, buildStartupPerfFields } = require('../packages/telemetry/src');
 const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValueList } = require('../packages/telemetry/src');
@@ -307,6 +308,15 @@ async function main() {
   assert.deepStrictEqual(await defaultAuthStorage.restore(), { account: { uid: 'u1' } });
   await defaultAuthStorage.clean();
   assert.strictEqual(storedSessions.length, 3);
+  const authFile = path.join(root, 'auth', 'session.info');
+  const fileStorage = new FileAuthenticationStorage({ filePath: authFile });
+  await fileStorage.store({ account: { uid: 'u2' }, auth: { accessToken: 'token' } });
+  assert.strictEqual((await fileStorage.restore()).account.uid, 'u2');
+  const logoutToken = await fileStorage.beginLogout();
+  assert.strictEqual((await fileStorage.restore()), undefined);
+  assert.strictEqual(await fileStorage.clean({ logoutToken: 'stale-token' }), false);
+  assert.strictEqual(await fileStorage.clean({ logoutToken }), true);
+  await fileStorage.dispose();
   credentials.set('workbuddy', { token: 'test' });
   assert.strictEqual(credentials.get('workbuddy').token, 'test');
   assert.strictEqual(fs.statSync(path.join(root, 'credentials.json')).mode & 0o777, 0o600);

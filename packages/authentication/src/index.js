@@ -18,4 +18,5 @@ module.exports = Object.freeze({
   ...require("./runtime/account-utils"),
   ...require("./runtime/product-env"),
   ...require("./runtime/default-authentication-storage"),
+  ...require("./runtime/file-authentication-storage"),
 });
