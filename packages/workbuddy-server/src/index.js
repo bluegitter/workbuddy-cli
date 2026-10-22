@@ -38,4 +38,5 @@ module.exports = Object.freeze({
   ...require("./runtime/ima-upload-service"),
   ...require("./runtime/tencent-docs"),
   ...require("./runtime/agent-cli-runtime"),
+  ...require("./runtime/connector-mapping"),
 });

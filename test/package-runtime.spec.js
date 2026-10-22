@@ -175,6 +175,11 @@ const {
   resolveAgentCliExecutablePath,
   resolveAgentCliRuntimeDirs,
   resolveDisabledManagedRuntimeTypes,
+  buildProjectQuery,
+  buildRegistryQuery,
+  mapProjectConnector,
+  mapUserConnector,
+  unwrapData,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -335,6 +340,11 @@ async function main() {
   assert.strictEqual(compareVersionsDesc('2.10.0', '2.9.0') < 0, true);
   assert.deepStrictEqual(resolveAgentCliExecutablePath({ bundledCliPaths: [], monorepoCliPath: '/missing', envCliPath: '/ok', exists: (file) => file === '/ok' }), { path: '/ok', source: 'env' });
   assert.deepStrictEqual(resolveAgentCliRuntimeDirs({ homeDir: '/home/test', processEnv: {} }), { configDir: '/home/test/.workbuddy', userDataDir: '/home/test/.workbuddy/app' });
+  assert.strictEqual(buildProjectQuery('p 1'), '?project_id=p%201');
+  assert.strictEqual(buildRegistryQuery({ scope: 'project', mcpOnly: true }), 'scope=project&mcp_only=true');
+  assert.strictEqual(mapProjectConnector({ connector_name: 'docs', connect_status: 1 }).isConnected, true);
+  assert.strictEqual(mapUserConnector({ name: 'docs', repos: 'a,b', connect_status: 1 }).repos.length, 2);
+  assert.strictEqual(unwrapData({ code: 0, data: { ok: true } }, 'connector').ok, true);
   assert.strictEqual(unwrap({ code: 0, data: 'ok' }, 'demo'), 'ok');
   assert.throws(() => unwrap({ code: 7, msg: 'bad', requestId: 'r1' }, 'demo'), (error) => error.code === 7 && error.requestId === 'r1');
   const wrappedRequests = [];
