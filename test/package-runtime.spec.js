@@ -181,6 +181,7 @@ const {
   withSessionEnabledPluginSetting,
   isDaemonStdioFrame,
   createDaemonStdioFrameReader,
+  createStdioParentRpcClient,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1047,6 +1048,12 @@ async function main() {
   await new Promise((resolve) => setImmediate(resolve));
   reader.dispose();
   assert.strictEqual(frames.length, 2);
+  const rpcOutput = { frames: [], write(text) { this.frames.push(JSON.parse(text)); } };
+  const parentRpc = createStdioParentRpcClient({ output: rpcOutput });
+  const pendingRpc = parentRpc.invoke('demo', 1);
+  assert.strictEqual(rpcOutput.frames[0].channel, 'demo');
+  parentRpc.handleFrame({ type: 'rpc-response', id: rpcOutput.frames[0].id, result: 'ok' });
+  assert.strictEqual(await pendingRpc, 'ok');
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
