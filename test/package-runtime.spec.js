@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { createDecoder, encode } = require('../packages/agent-client-protocol/src');
+const { createDecoder, encode, ndJsonStream } = require('../packages/agent-client-protocol/src');
 const { ProtocolConnection } = require('../packages/agent-client-protocol/src');
 const { parseFrontmatter } = require('../packages/plugin-core/src');
 const {
@@ -175,6 +175,14 @@ async function main() {
   await assert.rejects(() => connection.request('slow', {}, { timeoutMs: 1 }), /timed out/);
   connection.close();
   await assert.rejects(() => connection.request('after-close'), /closed/);
+  const inputController = new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode('{"id":1}')); controller.enqueue(new TextEncoder().encode('\n{"id":2}')); controller.close(); } });
+  const written = [];
+  const stream = ndJsonStream({ getWriter: () => ({ write: async (value) => written.push(Buffer.from(value).toString('utf8')), releaseLock() {} }) }, inputController);
+  const decoded = [];
+  for await (const item of stream.readable) decoded.push(item.id);
+  assert.deepStrictEqual(decoded, [1, 2]);
+  await stream.writable.getWriter().write({ method: 'ping' });
+  assert.strictEqual(written[0], '{"method":"ping"}\n');
   assert.deepStrictEqual(parseFrontmatter('---\nname: reports\nuser-invocable: false\n---\nDo it'), {
     attributes: { name: 'reports', 'user-invocable': 'false' }, body: 'Do it',
   });

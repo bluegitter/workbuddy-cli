@@ -10,4 +10,5 @@ module.exports = Object.freeze({
   rendererEntry: require.resolve("./source/acp-renderer.js"),
   ...require("./runtime/connection"),
   ...require("./runtime/ndjson"),
+  ...require("./runtime/stream"),
 });
