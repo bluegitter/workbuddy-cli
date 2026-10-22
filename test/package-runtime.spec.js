@@ -172,6 +172,12 @@ const {
   createLegacyAuthSessionMigrator,
   getLegacyWorkbuddyIdeVscdbPath,
   parseLegacyWorkbuddyIdeAuthSession,
+  applyProductExperimentOverlay,
+  collectJsonChangedPaths,
+  hasRemoteProductPayload,
+  hostedCliRotationKeyOfNormalized,
+  normalizeJsonValue,
+  redactProductSnapshotLogValue,
 } = require('../packages/authentication/src');
 
 async function main() {
@@ -239,6 +245,14 @@ async function main() {
   assert.strictEqual(resolveOneidAppType(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'enterprise-doc');
   assert.ok(resolveModeTools('ask').includes('AskUserQuestion'));
   assert.strictEqual(resolveResponseLocaleIsZh('en-US', 'zh-CN'), false);
+  assert.strictEqual(hasRemoteProductPayload({ mergeStrategy: 'smart', enabled: false }), true);
+  assert.strictEqual(hasRemoteProductPayload({ mergeStrategy: 'smart', empty: '' }), false);
+  assert.deepStrictEqual(applyProductExperimentOverlay({ models: [{ id: 'a', label: 'A', flags: { x: false } }], productFeatures: { a: false, b: false } }, { models: [{ id: 'a', flags: { x: true } }], productFeatures: { a: true } }), { models: [{ id: 'a', label: 'A', flags: { x: true } }], productFeatures: { a: true, b: false } });
+  assert.strictEqual(redactProductSnapshotLogValue('api_key', 'secret'), '<redacted>');
+  assert.strictEqual(redactProductSnapshotLogValue('download_url', 'https://cdn.test/a?sign=1&x=2#frag'), 'https://cdn.test/a');
+  assert.strictEqual(hostedCliRotationKeyOfNormalized({ download_url: 'https://cdn.test/a?sign=1&q-ak=2&x=3' }), '{"download_url":"https://cdn.test/a?x=3"}');
+  assert.deepStrictEqual(collectJsonChangedPaths({ a: 1, nested: { x: true } }, { a: 2, nested: { x: true, y: 1 } }), ['$.a', '$.nested.y']);
+  assert.deepStrictEqual(normalizeJsonValue({ b: undefined, a: 1 }), { a: 1 });
   assert.strictEqual(resolveIsMainFramePreload({ processIsMainFrame: false, isTopWindow: true }), false);
   assert.strictEqual(readLocalFilePath('workbuddy://open?localFilePath=%2Ftmp%2Fa.txt'), '/tmp/a.txt');
   assert.strictEqual(toFileResourceUri('/tmp/a b.txt'), 'file:///tmp/a%20b.txt');
