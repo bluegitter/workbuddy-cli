@@ -301,6 +301,18 @@ const {
   isAllowedLoopbackHost,
   validateOrigin,
   isValidProxyBearer,
+  formatUndiciFetchErrorForLog,
+  isHttpBusinessError,
+  buildBusinessErrorResult,
+  isTransportErrorByCode,
+  isReconnectRipple,
+  isMcpSessionLost,
+  buildRippleFailureMessage,
+  inferTransportCloseKind,
+  shouldDedupeArdotCreateDesignCall,
+  buildConnectorCallToolRequest,
+  stableStringifyConnectorToolArgs,
+  buildArdotCreateDesignDedupeKey,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1393,6 +1405,20 @@ async function main() {
   assert.deepStrictEqual(validateOrigin('not-a-url'), { allowed: false, reason: 'malformed origin' });
   assert.strictEqual(isValidProxyBearer('Bearer secret', 'secret'), true);
   assert.strictEqual(isValidProxyBearer('Bearer wrong', 'secret'), false);
+  const businessError = Object.assign(new Error('Error POSTing to endpoint: {"code":40001}'), { code: 400 });
+  assert.strictEqual(isHttpBusinessError(businessError), true);
+  assert.deepStrictEqual(buildBusinessErrorResult(businessError), { content: [{ type: 'text', text: '{"code":40001}' }], isError: true });
+  const networkError = Object.assign(new Error('fetch failed'), { code: 'ECONNRESET', cause: Object.assign(new Error('socket'), { code: 'UND_ERR_SOCKET' }) });
+  assert.strictEqual(isTransportErrorByCode(networkError), true);
+  assert.strictEqual(formatUndiciFetchErrorForLog(networkError).includes('cause[0]'), true);
+  assert.strictEqual(isReconnectRipple(Object.assign(new Error('Connection closed'), { code: -32000 })), true);
+  assert.strictEqual(isMcpSessionLost(Object.assign(new Error('not found'), { code: 404 }), 'session-1'), true);
+  assert.strictEqual(buildRippleFailureMessage('connector:docs', { reason: 'entry-lost' }), 'Connector "connector:docs" was removed during call.');
+  assert.strictEqual(inferTransportCloseKind(new Error('SSE stream disconnected: terminated')), 'sse-body-terminated');
+  assert.strictEqual(shouldDedupeArdotCreateDesignCall('custom-mcp:ardot', 'ardot_create_design', 'create_design'), true);
+  assert.deepStrictEqual(buildConnectorCallToolRequest('custom-mcp:ardot', 'create_design', { z: 1 }, { workbuddySessionId: 's1' }), { name: 'create_design', arguments: { z: 1 }, _meta: { 'workbuddy.ai/sessionId': 's1' } });
+  assert.strictEqual(stableStringifyConnectorToolArgs({ b: 2, a: 1 }), '{"a":1,"b":2}');
+  assert.strictEqual(buildArdotCreateDesignDedupeKey('custom-mcp:ardot', 'create_design', { b: 2, a: 1 }).endsWith('{"a":1,"b":2}'), true);
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
