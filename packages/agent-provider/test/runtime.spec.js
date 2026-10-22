@@ -32,9 +32,41 @@ const {
   createAgentFilesystem,
   CosUploadService,
   OAuthRepositoryService,
+  normalizeProjectInvitationRole,
+  normalizeProjectInvitationStatus,
+  normalizeOptionalProjectInvitationStatus,
+  getBackendErrorPayload,
+  normalizeProjectInvitationDetail,
+  normalizeAcceptProjectInvitationResult,
 } = require('../src');
 
 async function main() {
+  assert.strictEqual(normalizeProjectInvitationRole('admin'), 'admin');
+  assert.strictEqual(normalizeProjectInvitationRole('unknown'), 'viewer');
+  assert.strictEqual(normalizeProjectInvitationStatus('approved'), 'approved');
+  assert.strictEqual(normalizeProjectInvitationStatus(''), 'pending');
+  assert.strictEqual(normalizeOptionalProjectInvitationStatus('  '), undefined);
+  assert.deepStrictEqual(normalizeProjectInvitationDetail({
+    invite_id: 'invite-1',
+    project: { project_id: 'project-1', member_count: '3', description: 'Demo' },
+    role: 'editor',
+    inviter: { user_id: 'user-1', nickname: 'Inviter', avatar_url: 'avatar' },
+    status: 'pending',
+    expires_at: '2026-01-01T00:00:00Z',
+  }), {
+    inviteId: 'invite-1',
+    project: { projectId: 'project-1', name: '', memberCount: 3, description: 'Demo' },
+    role: 'editor',
+    inviter: { userId: 'user-1', name: 'Inviter', email: undefined, avatar: 'avatar' },
+    status: 'pending',
+    expiresAt: '2026-01-01T00:00:00Z',
+  });
+  assert.deepStrictEqual(normalizeAcceptProjectInvitationResult({ project_id: 'project-1', joinStatus: 'joined', member_count: 4 }), {
+    result: 'joined', projectId: 'project-1', role: 'viewer', memberCount: 4, status: undefined,
+  });
+  assert.deepStrictEqual(getBackendErrorPayload({ response: { status: 403, data: { msg: 'Forbidden', code: 17234 } } }), {
+    error: 'Forbidden', statusCode: 403, errorCode: '17234',
+  });
   const events = [];
   const tools = new ToolRegistry([
     { name: 'read', isConcurrencySafe: () => true, execute: async ({ value }) => value },

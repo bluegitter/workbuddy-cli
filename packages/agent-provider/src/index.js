@@ -38,4 +38,5 @@ module.exports = Object.freeze({
   ...require("./runtime/agent-filesystem"),
   ...require("./runtime/cos-upload-service"),
   ...require("./runtime/oauth-repository-service"),
+  ...require("./runtime/backend-api-utils"),
 });
