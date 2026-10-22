@@ -68,6 +68,14 @@ const {
   cloneSerializable,
   raceCancellationError,
   retry,
+  getLiteralValue,
+  getObjectShape,
+  getParseErrorMessage,
+  getSchemaDescription,
+  isSchemaOptional,
+  mergeCapabilities,
+  normalizeObjectSchema,
+  safeParse,
 } = require('../packages/workbuddy-core/src');
 const {
   calculateContextUsage,
@@ -250,6 +258,15 @@ async function main() {
   assert.strictEqual(resolveOneidAppType(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'enterprise-doc');
   assert.ok(resolveModeTools('ask').includes('AskUserQuestion'));
   assert.strictEqual(resolveResponseLocaleIsZh('en-US', 'zh-CN'), false);
+  const fakeSchema = { shape: { name: {} }, description: 'demo', safeParse: (value) => ({ success: typeof value === 'string', data: value }), isOptional: () => true, _def: { value: 'literal' } };
+  assert.deepStrictEqual(getObjectShape(fakeSchema), { name: {} });
+  assert.strictEqual(getSchemaDescription(fakeSchema), 'demo');
+  assert.strictEqual(isSchemaOptional(fakeSchema), true);
+  assert.strictEqual(getLiteralValue(fakeSchema), 'literal');
+  assert.strictEqual(safeParse(fakeSchema, 'ok').success, true);
+  assert.strictEqual(normalizeObjectSchema(fakeSchema), fakeSchema);
+  assert.deepStrictEqual(mergeCapabilities({ roots: { list: true }, stale: true }, { roots: { read: true }, stale: undefined, added: false }), { roots: { list: true, read: true }, stale: true, added: false });
+  assert.strictEqual(getParseErrorMessage({ issues: [{ message: 'invalid' }] }), 'invalid');
   assert.strictEqual(hasRemoteProductPayload({ mergeStrategy: 'smart', enabled: false }), true);
   assert.strictEqual(hasRemoteProductPayload({ mergeStrategy: 'smart', empty: '' }), false);
   assert.deepStrictEqual(applyProductExperimentOverlay({ models: [{ id: 'a', label: 'A', flags: { x: false } }], productFeatures: { a: false, b: false } }, { models: [{ id: 'a', flags: { x: true } }], productFeatures: { a: true } }), { models: [{ id: 'a', label: 'A', flags: { x: true } }], productFeatures: { a: true, b: false } });

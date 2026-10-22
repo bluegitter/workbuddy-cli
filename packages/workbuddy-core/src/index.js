@@ -9,4 +9,5 @@ module.exports = Object.freeze({
   ...require("./runtime/invariant"),
   ...require("./runtime/serialization"),
   ...require("./runtime/async-utils"),
+  ...require("./runtime/schema-helpers"),
 });
