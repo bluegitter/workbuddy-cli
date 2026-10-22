@@ -204,6 +204,8 @@ const {
   CliPrewarmPool,
   SidecarManager,
   createWorkbuddySidecarManager,
+  parseToolUsage,
+  createToolUsageBridge,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1122,6 +1124,21 @@ async function main() {
   await manager.shutdown();
   assert.strictEqual(manager.disposed, true);
   assert(manager instanceof SidecarManager);
+  assert.deepStrictEqual(parseToolUsage('Skill', { skill: 'PDF' }), { observation: { type: 'skill', id: 'pdf' } });
+  assert.deepStrictEqual(parseToolUsage('mcp__docs__search', {}), { observation: { type: 'mcp', id: 'docs' } });
+  assert.deepStrictEqual(parseToolUsage('DeferExecuteTool', { toolName: 'Agent', params: { subagent_type: 'reviewer' } }), { observation: { type: 'subagent', id: 'reviewer' } });
+  const usageEvents = [];
+  const usageBridge = createToolUsageBridge({ getFacade: () => ({ recordUsage: async (value) => usageEvents.push(['usage', value]), recordActiveDay: async () => usageEvents.push(['day']) }) });
+  usageBridge.observe({ status: 'completed', toolCallId: 'tool-1', toolName: 'Skill', rawInput: { skill: 'Docs' } });
+  usageBridge.observe({ status: 'completed', toolCallId: 'tool-1', toolName: 'Skill', rawInput: { skill: 'Docs' } });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.strictEqual(usageEvents.length, 2);
+  const poiRegistry = new PoiQuestionRegistry(1000);
+  const answer = poiRegistry.ask('session-1', 'request-1', {});
+  assert.strictEqual(poiRegistry.answer('session-2', 'request-1', 'wrong'), false);
+  assert.strictEqual(poiRegistry.answer('session-1', 'request-1', 'picked'), true);
+  assert.strictEqual(await answer, 'picked');
+  assert.strictEqual(poiRegistry.pendingCount, 0);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
