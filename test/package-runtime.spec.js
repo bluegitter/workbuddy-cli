@@ -14,9 +14,23 @@ const { AgentViewModel } = require('../packages/agent-ui/src');
 const { WindowState, resolveAppConfig } = require('../packages/workbuddy-app/src');
 const { assertRecord, cloneSerializable } = require('../packages/workbuddy-core/src');
 const {
+  CLI_STATIC_MANAGED_ENV,
+  buildCliProcessEnv,
+  configureWorkbuddyRuntimeContext,
+  getWorkbuddyRuntimeConfigDir,
+  getWorkbuddyRuntimeLogsDir,
+  initMainStartupContext,
+  buildStartupContextEnv,
+  initStartupContextFromEnv,
+} = require('../packages/runtime/src');
+const {
   ArtifactIndex,
   AutomationScheduler,
+  buildConnectorConfig,
+  connectorEntries,
   McpRegistry,
+  mergeExpertManifests,
+  readExpertMcpDeclaration,
   SessionStore,
 } = require('../packages/workbuddy-server/src');
 
@@ -86,6 +100,51 @@ async function main() {
   assert.strictEqual(artifacts.list('session-1').length, 1);
   assert.strictEqual(artifacts.remove('artifact-1'), true);
   assert.strictEqual(artifacts.get('artifact-1'), undefined);
+
+  configureWorkbuddyRuntimeContext({ configDir: root, appName: 'TestBuddy' });
+  assert.strictEqual(getWorkbuddyRuntimeConfigDir(), root);
+  assert.strictEqual(getWorkbuddyRuntimeLogsDir('agent'), path.join(root, 'logs', 'agent'));
+  const mainStartup = initMainStartupContext();
+  assert.strictEqual(mainStartup.proc, 'main');
+  assert.strictEqual(buildStartupContextEnv().WORKBUDDY_STARTUP_PID, String(process.pid));
+  const childStartup = initStartupContextFromEnv('daemon', {
+    WORKBUDDY_STARTUP_PID: '1234', WORKBUDDY_STARTUP_DATE: '2026-10-22', WORKBUDDY_STARTUP_TIME: '120304',
+  });
+  assert.deepStrictEqual(childStartup, {
+    pid: 1234, date: '2026-10-22', time: '120304', proc: 'daemon', timeOrigin: childStartup.timeOrigin,
+  });
+  const childEnv = buildCliProcessEnv({ ...CLI_STATIC_MANAGED_ENV, CUSTOM_MANAGED: 'yes' }, {
+    PATH: '/bin', NODE_OPTIONS: '--inspect', CODEBUDDY_TEST: 'leak', HTTP_PROXY: 'http://proxy',
+  });
+  assert.strictEqual(childEnv.PATH, '/bin');
+  assert.strictEqual(childEnv.NODE_OPTIONS, undefined);
+  assert.strictEqual(childEnv.CODEBUDDY_TEST, undefined);
+  assert.strictEqual(childEnv.CUSTOM_MANAGED, 'yes');
+  assert.strictEqual(childEnv.SERVER__PORT, '0');
+
+  const expertManifest = mergeExpertManifests(
+    { version: '1', categories: [{ id: 'writing', name: 'Writing' }], experts: [{ id: 'editor', name: 'Editor' }] },
+    [{ version: '2', categories: [{ id: 'writing', name: 'Content' }], experts: [{ id: 'editor', name: 'Senior Editor' }, { id: 'analyst' }] }],
+  );
+  assert.strictEqual(expertManifest.version, '2');
+  assert.deepStrictEqual(expertManifest.statistics, { totalExperts: 2, totalCategories: 1 });
+  assert.strictEqual(expertManifest.experts[0].name, 'Senior Editor');
+  assert.deepStrictEqual(readExpertMcpDeclaration(
+    { dependencies: { mcpServers: ['search.json', 'docs.json'] } },
+    { 'search.json': { mcpServers: { search: { url: 'https://search' } } }, 'docs.json': { docs: { command: 'docs' } } },
+  ), { search: { url: 'https://search' }, docs: { command: 'docs' } });
+
+  const connectors = connectorEntries({ connectors: [
+    { source: 'search', name: 'Search', type: 'mcp', auth_mode: 'oauth' },
+    { source: 'writer', name: 'Writer', type: 'skill-only' },
+  ] }, { bySource: {
+    search: { mcpServers: { search: { url: 'https://example.test/mcp' } }, skills: ['search-skill'] },
+    writer: { skills: ['writer-skill'] },
+  } });
+  assert.strictEqual(connectors[0].url, 'https://example.test/mcp');
+  assert.strictEqual(connectors[0].authMode, 'oauth');
+  assert.deepStrictEqual(connectors[1].skills, ['writer-skill']);
+  assert.strictEqual(buildConnectorConfig({}, {}), undefined);
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
