@@ -111,4 +111,7 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-token-refresher"),
   ...require("./runtime/connector-caches"),
   ...require("./runtime/mcp-custom-defaults"),
+  ...require("./runtime/runtime-progress-notifier"),
+  ...require("./runtime/connector-node-runtime-env"),
+  ...require("./runtime/connector-managed-npx-resolver"),
 });

@@ -261,6 +261,17 @@ const {
   createBuiltinArdotMcpServer,
   createBuiltinNetdriveMcpServer,
   isValidNetdriveDevMcpServer,
+  IPC_CHANNEL,
+  createRuntimeProgressNotifier,
+  classifyBinaryError,
+  DEFAULT_NPM_REGISTRIES,
+  CLI_CONNECTOR_PACKAGES_DIR,
+  applyNodeRuntimeEnv,
+  prepareNodeRuntimeEnv,
+  stripDebugNodeOptions,
+  parseNpxPackageSpec,
+  getManagedNpmCliPath,
+  getStableNpxPackageDir,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1185,6 +1196,34 @@ async function main() {
   assert.deepStrictEqual(checkCompatibility({ currentVersion: '4.31.0', maxWorkbuddyVersion: '4.30.0' }), { kind: 'connectorRetired' });
   assert.strictEqual(checkCompatibility({ currentVersion: '4.30.0-beta.1', minWorkbuddyVersion: '4.30.0' }).kind, 'needsUpgrade');
   assert.strictEqual(checkCompatibility({ currentVersion: 'invalid', minWorkbuddyVersion: '4.30.0' }), null);
+  assert.strictEqual(DEFAULT_NPM_REGISTRIES.length, 3);
+  assert.ok(CLI_CONNECTOR_PACKAGES_DIR.endsWith(path.join('binaries', 'node', 'cli-connector-packages')));
+  const progressEvents = [];
+  let progressNow = 0;
+  const progress = createRuntimeProgressNotifier('op-1', 'node', '*', { now: () => progressNow, send: (channel, payload) => progressEvents.push([channel, payload]) });
+  progress.onProgress({ progress: 10 });
+  progress.onProgress({ progress: 11 });
+  progressNow = 600;
+  progress.onProgress({ progress: 11 });
+  progress.complete();
+  assert.strictEqual(progressEvents[0][0], IPC_CHANNEL);
+  assert.strictEqual(progressEvents[0][1].progress, 10);
+  assert.strictEqual(progressEvents.at(-1)[1].status, 'complete');
+  assert.deepStrictEqual(classifyBinaryError(new Error('boom')), { code: 'generic', message: 'boom' });
+  const runtimeEnv = { PATH: '/usr/bin', HTTPS_PROXY: 'http://proxy', NODE_OPTIONS: '--inspect=9229', NODE_DEBUG: '1' };
+  stripDebugNodeOptions(runtimeEnv);
+  assert.strictEqual(runtimeEnv.NODE_OPTIONS, undefined);
+  assert.strictEqual(runtimeEnv.NODE_DEBUG, undefined);
+  applyNodeRuntimeEnv(runtimeEnv, { nodeInfo: { version: '20.12.0' }, nodeBinDir: '/node/bin', npmGlobalBin: '/npm/bin', registry: DEFAULT_NPM_REGISTRIES[0] });
+  assert.ok(runtimeEnv.PATH.startsWith(path.join(CLI_CONNECTOR_PACKAGES_DIR, 'bin')));
+  assert.strictEqual(runtimeEnv.npm_config_registry, DEFAULT_NPM_REGISTRIES[0]);
+  assert.ok(runtimeEnv.NODE_OPTIONS.includes('--use-system-ca'));
+  const prepared = await prepareNodeRuntimeEnv({ isInstallingType: () => false, ensure: async () => ({ type: 'node', version: '22.1.0', source: 'managed', executablePath: '/tmp/node/bin/node' }) }, { versionRange: '>=20' }, { info() {} }, { silent: true });
+  assert.strictEqual(prepared.nodeInfo.source, 'managed');
+  assert.deepStrictEqual(parseNpxPackageSpec(['--yes', '@scope/server@1.2.3', '--flag']), { packageSpec: '@scope/server@1.2.3', packageName: '@scope/server', serverArgs: ['--flag'] });
+  assert.strictEqual(parseNpxPackageSpec(['--yes']), undefined);
+  assert.ok(getManagedNpmCliPath({ nodeInfo: { executablePath: '/tmp/node/bin/node' } }).endsWith(path.join('node_modules', 'npm', 'bin', 'npm-cli.js')));
+  assert.strictEqual(getStableNpxPackageDir('demo@1').length, path.join(CLI_CONNECTOR_PACKAGES_DIR, 'mcp-npx-packages').length + 13);
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
