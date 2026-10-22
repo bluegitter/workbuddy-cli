@@ -339,6 +339,7 @@ const {
   snapshotClientEntries,
   createToolEntry,
   classifyPreflightState,
+  createConnectorOAuthProvider,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1495,6 +1496,32 @@ async function main() {
   assert.strictEqual(createToolEntry('custom-mcp:docs', { name: 'search', description: 'Search' }).name, 'docs_search');
   assert.strictEqual(snapshotClientEntry(connecting).transport, null);
   assert.strictEqual(snapshotClientEntries(new Map([['connector:docs', connecting]])).size, 1);
+  const oauthStoreCalls = [];
+  let storedTokens;
+  let storedClientInfo;
+  const provider = createConnectorOAuthProvider({
+    configId: 'connector:docs', serverUrl: 'https://mcp.example', callbackPort: 1234, oauthBaseUrl: 'workbuddy://workbuddy/mcp',
+    oauthStore: {
+      loadTokens: () => storedTokens,
+      saveTokens: (_id, _url, value) => { storedTokens = value; oauthStoreCalls.push('saveTokens'); },
+      loadClientInfo: () => storedClientInfo,
+      saveClientInfo: (_id, _url, value) => { storedClientInfo = value; oauthStoreCalls.push('saveClientInfo'); },
+      deleteAll: () => oauthStoreCalls.push('deleteAll'), deleteClientInfo: () => oauthStoreCalls.push('deleteClientInfo'), clearAccessTokenOnly: () => oauthStoreCalls.push('clearAccessTokenOnly'),
+    },
+    hostCapabilities: { openExternal: async (url) => { oauthStoreCalls.push(`open:${url}`); } },
+    callbacks: { authorizationStarted: () => oauthStoreCalls.push('authorizationStarted') },
+  });
+  assert.strictEqual(provider.redirectUrl, 'workbuddy://workbuddy/mcp/connector%3Adocs/oauth/callback');
+  assert.strictEqual(provider.clientMetadata.client_name, 'WorkBuddy Connector (connector:docs)');
+  const providerState = provider.state(); assert.strictEqual(providerState.length > 20, true);
+  provider.saveClientInformation({ client_id: 'client-1' });
+  provider.saveTokens({ access_token: 'token-1' });
+  assert.deepStrictEqual(provider.tokens(), { access_token: 'token-1' });
+  assert.deepStrictEqual(provider.clientInformation(), { client_id: 'client-1' });
+  const verifier = provider.codeVerifier(); assert.strictEqual(provider.codeVerifier(), verifier);
+  await provider.redirectToAuthorization(new URL('https://auth.example/start'));
+  provider.invalidateCredentials('tokens'); assert.strictEqual(provider.tokens(), undefined);
+  provider.invalidateCredentials('all'); assert.strictEqual(oauthStoreCalls.includes('deleteAll'), true);
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);
