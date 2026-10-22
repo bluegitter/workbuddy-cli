@@ -72,7 +72,7 @@ function extractNonSensitiveFields(source = {}) {
 
 function isCipherEnvelope(value) {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value)
-    && typeof value.ciphertext === 'string' && typeof value.iv === 'string');
+    && typeof value.iv === 'string' && typeof value.tag === 'string' && typeof value.ct === 'string');
 }
 
 module.exports = Object.freeze({

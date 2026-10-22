@@ -247,6 +247,7 @@ const {
   coercePlainMap,
   extractNonSensitiveFields,
 } = require('../packages/workbuddy-server/src');
+const { OAuthCipher, createHeader, isCipherEnvelope } = require('../packages/authentication/src');
 const {
   ArtifactIndex,
   AutomationScheduler,
@@ -406,6 +407,13 @@ async function main() {
   assert.deepStrictEqual(coerceStringArrayMap({ a: ['x', 1], b: [], c: 'bad' }), { a: ['x'] });
   assert.deepStrictEqual(coercePlainMap({ cfg: { Authorization: 'Bearer token', invalid: 1 }, bad: null }), { cfg: { Authorization: 'Bearer token' } });
   assert.deepStrictEqual(extractNonSensitiveFields({ enabled: ['a', 1], userDisabled: ['a'], disabledToolsOverrides: { a: ['read', 1] }, secret: 'drop' }), { enabled: ['a'], userDisabled: { a: true }, disabledToolsOverrides: { a: ['read'] }, headerOverridesBearerStripped: undefined, staleManagedAuthHeadersPurged: undefined, accountIdentityKey: undefined, everConnected: undefined, mcpSecurityMigrated: undefined, cSideAutoBoundDefaultDisabledMigrated: undefined });
+  const masterKey = Buffer.alloc(32, 7);
+  const cipherHeader = createHeader('user-1', masterKey);
+  const cipher = new OAuthCipher({ userId: 'user-1', masterKey, header: cipherHeader });
+  const envelope = cipher.encrypt('secret-token', { serverKey: 'connector-a', fieldName: 'accessToken' });
+  assert.strictEqual(isCipherEnvelope(envelope), true);
+  assert.strictEqual(cipher.decrypt(envelope, { serverKey: 'connector-a', fieldName: 'accessToken' }), 'secret-token');
+  assert.throws(() => cipher.decrypt(envelope, { serverKey: 'connector-b', fieldName: 'accessToken' }));
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));
