@@ -27,6 +27,7 @@ const {
   controlSocketPath,
   dataSocketPath,
   sidecarRuntimeDir,
+  createChildProcessSession,
 } = require('../packages/runtime/src');
 const {
   ArtifactIndex,
@@ -167,6 +168,13 @@ async function main() {
   assert.deepStrictEqual(await waiter.promise, { pid: 42, port: 4321 });
   assert.deepStrictEqual(ready.accept({ protocolVersion: 1, sessionId: 'ready-1', token: 'token', pid: 42, port: 4321 }), { pid: 42, port: 4321 });
   assert.throws(() => ready.accept({ protocolVersion: 2, sessionId: 'ready-1', token: 'token', pid: 42, port: 4321 }), /protocol version/);
+  const childSession = createChildProcessSession({ command: process.execPath, args: ['-e', "process.stdout.write('ready');"] });
+  let childOutput = '';
+  childSession.onData((chunk) => { childOutput += chunk.toString(); });
+  await new Promise((resolve, reject) => {
+    childSession.onExit((event) => { try { assert.strictEqual(event.exitCode, 0); resolve(); } catch (error) { reject(error); } });
+  });
+  assert.strictEqual(childOutput, 'ready');
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }

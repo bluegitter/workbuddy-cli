@@ -13,4 +13,5 @@ module.exports = Object.freeze({
   ...require("./runtime/sidecar-protocol"),
   ...require("./runtime/ring-buffer"),
   ...require("./runtime/session-ready-registry"),
+  ...require("./runtime/session-process"),
 });
