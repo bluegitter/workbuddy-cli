@@ -18687,6 +18687,7 @@ function HomeSlot({ onClose }) {
 		enabled: !!htmlTemplate
 	});
 	if (!config || !htmlTemplate) return null;
+	return null; /* patched: hide ops promo slots */
 	return /* @__PURE__ */ (0, import_jsx_runtime$149.jsx)("div", {
 		className: "wb-slot wb-slot--home",
 		style: {
@@ -18737,6 +18738,7 @@ function HomeGrowthSlot({ onClose }) {
 		enabled: !!htmlTemplate
 	});
 	if (dismissed || !config || !htmlTemplate) return null;
+	return null; /* patched: hide ops promo slots */
 	return /* @__PURE__ */ (0, import_jsx_runtime$148.jsxs)("div", {
 		className: "wb-slot wb-slot--home-growth wb-slot--closable-wrapper",
 		style: slotFontScaleStyle,
@@ -18881,6 +18883,7 @@ function AvatarTopSlot({ onClose, checkinData, onCheckinClaim, initialView = "co
 		push
 	]);
 	if (dismissed || !config || !htmlTemplate) return null;
+	return null; /* patched: hide ops promo slots */
 	return /* @__PURE__ */ (0, import_jsx_runtime$147.jsxs)("div", {
 		className: "daily-checkin daily-checkin--bubble wb-slot--closable-wrapper",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime$147.jsx)("div", {
@@ -19045,6 +19048,7 @@ function MenuSigninSlot({ checkinData, onCheckinClaim, onNavigate, onReopenBubbl
 		push
 	]);
 	if (!config || !htmlTemplate) return null;
+	return null; /* patched: hide ops promo slots */
 	return /* @__PURE__ */ (0, import_jsx_runtime$146.jsx)("div", {
 		ref: containerRef,
 		className: "wb-slot wb-slot--menu-signin",
@@ -19095,6 +19099,7 @@ function MenuGrowthSlot() {
 		enabled: !!htmlTemplate
 	});
 	if (!config || !htmlTemplate) return null;
+	return null; /* patched: hide ops promo slots */
 	const handleClick = () => {
 		if (extra?.jumpUrl) openExternal(extra.jumpUrl);
 	};
