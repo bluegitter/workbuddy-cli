@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { createDecoder, encode, ndJsonStream, RequestError, RpcConnection } = require('../packages/agent-client-protocol/src');
+const { createDecoder, encode, ndJsonStream, RequestError, RpcConnection, AGENT_METHODS, ClientSideConnection, PROTOCOL_VERSION } = require('../packages/agent-client-protocol/src');
 const { ProtocolConnection } = require('../packages/agent-client-protocol/src');
 const { parseFrontmatter } = require('../packages/plugin-core/src');
 const {
@@ -234,6 +234,13 @@ async function main() {
   assert.deepStrictEqual(rpcWrites[0], { jsonrpc: '2.0', id: 1, result: 2 });
   const rpcOutbound = new RpcConnection(async () => ({}), async () => {}, { readable: new ReadableStream({ start(controller) { controller.close(); } }), writable: { getWriter: () => ({ write: async (message) => { setTimeout(() => rpcOutbound.handleResponse({ jsonrpc: '2.0', id: message.id, result: 'ok' }), 0); }, releaseLock() {} }) } });
   assert.strictEqual(await rpcOutbound.sendRequest('ping', {}), 'ok');
+  assert.strictEqual(PROTOCOL_VERSION, 1);
+  assert.strictEqual(AGENT_METHODS.session_prompt, 'session/prompt');
+  const facadeWrites = [];
+  const facade = new ClientSideConnection(() => ({ sessionUpdate() {} }), { readable: new ReadableStream({ start(controller) { setTimeout(() => controller.close(), 20); } }), writable: { getWriter: () => ({ write: async (message) => { facadeWrites.push(message); setTimeout(() => facade.connection.handleResponse({ id: message.id, result: { sessionId: 's1' } }), 0); }, releaseLock() {} }) } });
+  assert.deepStrictEqual(await facade.newSession({ cwd: '/tmp' }), { sessionId: 's1' });
+  assert.strictEqual(facadeWrites[0].method, 'session/new');
+  await facade.cancel({ sessionId: 's1' });
   assert.deepStrictEqual(parseFrontmatter('---\nname: reports\nuser-invocable: false\n---\nDo it'), {
     attributes: { name: 'reports', 'user-invocable': 'false' }, body: 'Do it',
   });
