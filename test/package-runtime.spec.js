@@ -21,7 +21,7 @@ const {
   gatewaySecretHeaders,
   getGatewaySecret,
 } = require('../packages/authentication/src');
-const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric } = require('../packages/telemetry/src');
+const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const {
   AgentViewModel,
@@ -194,6 +194,12 @@ async function main() {
   const metricCalls = [];
   exportStartupMetric({ getAppVersion: () => '1.0', recordDuration: (...args) => metricCalls.push(args) }, { startupType: 'cold', flowType: 'desktop', totalMs: 10, firstInteractiveMs: 8, phases: { main: 10 } });
   assert.strictEqual(metricCalls.length, 4);
+  const perfLogger = new WorkbuddyPerfLogger(PerfFlow.STARTUP, { logDirectory: root, startupContext: { pid: 1, date: '2026-10-22', time: '120304', proc: 'main', timeOrigin: 0 } });
+  perfLogger.startPhase('bootstrap');
+  perfLogger.endPhase('bootstrap');
+  perfLogger.flush();
+  assert.strictEqual(perfLogger.getSummary().totalMarks, 2);
+  assert.ok(fs.existsSync(perfLogger.getLogFilePath()));
   const view = new AgentViewModel('s1');
   view.apply({ type: 'assistant', content: 'hello' });
   view.apply({ type: 'tool_start', toolUseId: 't1', name: 'read' });
