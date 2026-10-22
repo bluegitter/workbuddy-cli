@@ -256,6 +256,11 @@ const {
   JsonFileCache,
   TtlMemoCache,
   safeReadJsonFile,
+  buildBuiltinArdotMcpUrl,
+  isValidArdotDevMcpServer,
+  createBuiltinArdotMcpServer,
+  createBuiltinNetdriveMcpServer,
+  isValidNetdriveDevMcpServer,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -532,6 +537,12 @@ async function main() {
   ttlCache.invalidate();
   assert.deepStrictEqual(ttlCache.get(), { value: 2 });
   fs.rmSync(cacheRoot, { recursive: true, force: true });
+  assert.strictEqual(buildBuiltinArdotMcpUrl(50552), 'http://127.0.0.1:50552/api/v1/mcp');
+  assert.strictEqual(isValidArdotDevMcpServer({ dev: true, url: 'http://127.0.0.1:1' }), true);
+  assert.strictEqual(Boolean(isValidArdotDevMcpServer({ dev: true, command: 'node', args: ['cli.cjs'], env: { MCP_APP_EMBED_URL: 'https://ardot.test' } })), true);
+  assert.deepStrictEqual(createBuiltinArdotMcpServer('/tmp/cli.cjs', 'http://127.0.0.1:1'), { url: 'http://127.0.0.1:1', disabled: false, managedBy: 'workbuddy-builtin' });
+  assert.strictEqual(isValidNetdriveDevMcpServer({ dev: true, url: 'http://127.0.0.1:2' }), true);
+  assert.strictEqual(createBuiltinNetdriveMcpServer({ 'X-Genie-User-ID': 'u1', Authorization: 'Bearer t', Empty: '' }, 'https://netdrive.test').headers.Empty, undefined);
   const messages = [];
   const decode = createDecoder((message) => messages.push(message));
   decode(encode({ id: 1, value: 'a' }).slice(0, 8));

@@ -107,4 +107,5 @@ module.exports = Object.freeze({
   ...require("./runtime/mcp-oauth-migration"),
   ...require("./runtime/connector-token-refresher"),
   ...require("./runtime/connector-caches"),
+  ...require("./runtime/mcp-custom-defaults"),
 });
