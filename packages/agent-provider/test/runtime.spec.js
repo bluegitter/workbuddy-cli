@@ -160,6 +160,20 @@ async function main() {
   await localAcpConnection.prompt('new-local', { prompt: 'hi' });
   assert.strictEqual(localAcpEvents[0][0], 'initialize');
   assert.deepStrictEqual(localAcpEvents[2][1], { sessionId: 'new-local', prompt: 'hi' });
+  const fsRequests = [];
+  const fsListeners = new Set();
+  const fsClient = {
+    onExtNotification: (listener) => { fsListeners.add(listener); return () => fsListeners.delete(listener); },
+    sendRequest: async (_sessionId, method, params) => { fsRequests.push({ method, params }); return method === 'fs/read' ? { data: params.format === 'text' ? 'hello' : Buffer.from('hello').toString('base64') } : { data: true }; },
+  };
+  const filesystem = new (require('../src').LocalFilesystem)(fsClient, 'session-1');
+  assert.strictEqual(await filesystem.read('/tmp/a', { format: 'text' }), 'hello');
+  assert.strictEqual(await filesystem.exists('/tmp/a'), true);
+  const watch = await filesystem.watchDir('/tmp', () => {}, { recursive: true });
+  assert.strictEqual(fsRequests.at(-1).method, 'fs/watchDir');
+  await watch.stop();
+  fsListeners.forEach((listener) => listener('fs-event', { watchId: 'watch-missing' }));
+  filesystem.destroy();
   let turn = 0;
   await runAgentLoop(session, {
     tools,

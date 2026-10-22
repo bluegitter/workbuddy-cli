@@ -2,6 +2,7 @@
 
 const { AcpJsonRpcClient } = require('./acp-json-rpc-client');
 const { LocalAgentConnection } = require('./provider-connections');
+const { LocalFilesystem } = require('./local-filesystem');
 
 const EMPTY_PAGE = Object.freeze({ page: 1, size: 0, total: 0, totalPages: 0, hasNext: false, hasPrev: false });
 
@@ -21,6 +22,7 @@ class LocalAgentProvider {
     this.storage = options.storage || globalThis.localStorage || new MemoryStorage();
     this.connections = new Map();
     this.sessionCwdMap = new Map();
+    this.filesystemCache = new Map();
     this.connectionFactory = options.connectionFactory || ((cwd, config) => new LocalAgentConnection(cwd, config));
     this.sharedAcpClient = options.sharedAcpClient || new AcpJsonRpcClient(this.channel, {
       timeoutMs: options.acpConfig?.timeoutMs ?? 30000,
@@ -154,6 +156,25 @@ class LocalAgentProvider {
   async getIdentityName() { try { return await this.sharedAcpClient.sendBroadcastRequest('getIdentityName', {}); } catch { return {}; } }
   async getSkillSecurityAppKey() { return (await this.getProductConfiguration()).skillSecurityAppKey; }
   async openWorkspace(params) { return this.sharedAcpClient.openWorkspace(params); }
+  async getFilesystem(agentId) {
+    const cached = this.filesystemCache.get(agentId);
+    if (cached) return cached;
+    const filesystem = new LocalFilesystem(this.sharedAcpClient, agentId, { debug: this.options.debug });
+    this.filesystemCache.set(agentId, filesystem);
+    return filesystem;
+  }
+  hasConnection(cwd) { return this.connections.has(cwd); }
+  disconnectAll() {
+    for (const connection of this.connections.values()) connection.disconnect?.();
+    for (const filesystem of this.filesystemCache.values()) filesystem.destroy();
+    this.connections.clear(); this.filesystemCache.clear(); this.sessionCwdMap.clear();
+  }
+  on(event, handler) { this.channel.on?.(event, handler); return this; }
+  off(event, handler) { this.channel.off?.(event, handler); return this; }
+  async getMcpServers() { try { return (await this.sharedAcpClient.sendBroadcastRequest('getMcpServers', {}))?.servers || []; } catch { return []; } }
+  async toggleMcpServer(serverName, enabled) { return this.sharedAcpClient.sendBroadcastRequest('toggleMcpServer', { serverName, enabled }); }
+  async reconnectMcpServer(serverName, forceHttpCallback) { return this.sharedAcpClient.sendBroadcastRequest('reconnectMcpServer', { serverName, forceHttpCallback }); }
+  async deleteMcpServer(serverName) { return this.sharedAcpClient.sendBroadcastRequest('deleteMcpServer', { serverName }); }
   async pickFile(params) {
     try { const data = await this.backend('backend:pick-file', params, 30000); return { files: data?.filePaths || [], canceled: data?.canceled ?? false, error: data?.error }; }
     catch (error) { return { files: [], canceled: true, error: error.message }; }

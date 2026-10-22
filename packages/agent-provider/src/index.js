@@ -30,4 +30,5 @@ module.exports = Object.freeze({
   ...require("./runtime/cloud-http-client"),
   ...require("./runtime/cloud-provider"),
   ...require("./runtime/local-provider"),
+  ...require("./runtime/local-filesystem"),
 });
