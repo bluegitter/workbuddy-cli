@@ -21,4 +21,5 @@ module.exports = Object.freeze({
   ...require("./runtime/client-info-provider"),
   ...require("./runtime/channel-branding"),
   ...require("./runtime/proxy-env"),
+  ...require("./runtime/project-resources"),
 });

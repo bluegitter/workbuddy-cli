@@ -90,6 +90,8 @@ const {
   toSafeAssetSegments,
   parseElectronProxyRules,
   getProxyEnvFromProcess,
+  ProjectResourceManager,
+  updateSkillFrontmatterDisable,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -176,6 +178,16 @@ async function main() {
   assert.strictEqual(resolveChannelBranding({ channels: { beta: { welcomeLogo: 'assets/logo.png' } } }, { env: { WORKBUDDY_USER_CHANNEL: 'beta' }, resolveAsset: () => '/tmp/logo.png' }).welcomeLogoUrl, 'local-file:///tmp/logo.png');
   assert.strictEqual(parseElectronProxyRules('DIRECT; PROXY proxy.example:8080'), 'http://proxy.example:8080/');
   assert.strictEqual(getProxyEnvFromProcess({ HTTP_PROXY: 'http://proxy', NO_PROXY: 'localhost' }).NODE_OPTIONS, '--use-system-ca');
+  assert.strictEqual(updateSkillFrontmatterDisable('---\nname: demo\n---\nbody', true), '---\nname: demo\ndisable: true\n---\nbody');
+  const projectManager = new ProjectResourceManager({
+    configDir: root,
+    loader: { installProjectSkills: async () => ({ skillDir: path.join(root, 'skills') }) },
+    getToken: () => 'token-1', getUserId: () => 'user-1', getEndpoint: () => 'https://api.example/',
+  });
+  const projectEnv = await projectManager.registerSession('session-project', 'project-1', { mcpServers: [{ serverName: 'connector', gatewayUrl: 'https://mcp.example', connectorName: 'Demo' }] });
+  assert.strictEqual(projectEnv.CODEBUDDY_SESSION_SKILL_DIRS, path.join(root, 'skills'));
+  assert.strictEqual(projectManager.getMcpServersForSession('session-project').connector.headers.Authorization, 'Bearer token-1');
+  assert.strictEqual(projectManager.getMcpServersForSession('session-project').connector.headers['x-project-id'], 'project-1');
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
