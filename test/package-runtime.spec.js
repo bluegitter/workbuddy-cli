@@ -151,6 +151,14 @@ const {
   syncRenameConversation,
   parseLineWithLazyLoad,
   estimateItemPayloadBytes,
+  resolveAgentTeamsEnv,
+  createAgentTeamsEnvResolver,
+  buildAgentCliRuntimeArgs,
+  writeAgentCliSystemPromptFile,
+  cleanupAgentCliSystemPromptFile,
+  resolveCliSettingsLanguage,
+  parseCliJsonResponse,
+  buildSessionReplayRequestHeaders,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -962,6 +970,18 @@ async function main() {
   const lazyItem = parseLineWithLazyLoad(lazyLine);
   assert.strictEqual(lazyItem._lazyLoad, true);
   assert.strictEqual(estimateItemPayloadBytes(lazyItem, lazyLine), 512);
+  assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
+  assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
+  const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });
+  teams.recordSessionExpertType('s1', 'team');
+  assert.strictEqual(teams.resolveForSession('s1'), '1');
+  assert.deepStrictEqual(buildAgentCliRuntimeArgs({ runtimeConfig: { permissionMode: 'invalid', model: 'sonnet' }, cwd: '/tmp/project', language: 'English' }).slice(0, 4), ['--permission-mode', 'bypassPermissions', '--allowedTools', 'present_files']);
+  const promptPath = writeAgentCliSystemPromptFile('runtime-test', 'hello');
+  assert.strictEqual(fs.readFileSync(promptPath, 'utf8'), 'hello');
+  cleanupAgentCliSystemPromptFile(promptPath);
+  assert.strictEqual(resolveCliSettingsLanguage({ readAppConfigValue: () => 'zh-CN' }), '简体中文');
+  assert.deepStrictEqual(buildSessionReplayRequestHeaders({ 'X-Test': 'yes' }), { 'X-CodeBuddy-Request': '1', 'X-Test': 'yes' });
+  assert.deepStrictEqual(await parseCliJsonResponse({ text: async () => '{"data":{"items":[1]}}' }), { data: { items: [1] }, bytes: 22 });
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
