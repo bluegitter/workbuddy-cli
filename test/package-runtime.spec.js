@@ -280,6 +280,7 @@ const {
   withExtraHeaders,
   IOA_OAUTH_NAME_PREFIX,
   IoaServerSideAuth,
+  ConnectorUiAdapter,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1280,6 +1281,25 @@ async function main() {
   assert.strictEqual(decoratedIoa.headers.Authorization, 'Bearer ioa-token');
   assert.strictEqual(decoratedIoa._workbuddyManagedAuth, 'server-side');
   assert.strictEqual(ioaCalls[0][0], 'GET');
+  let oauthListener;
+  const adapter = new ConnectorUiAdapter({
+    autoRegister: false,
+    connectorService: {
+      connect: async () => ({ success: false, error: 'auth' }),
+      getStates: async () => ({ docs: { status: 'unauthorized', needsAuth: true } }),
+      cancelConnect: async () => ({ success: true }),
+    },
+    mcpProxy: { onOAuthCompleted: (listener) => { oauthListener = listener; } },
+    toProxyConfigId: (id) => `connector:${id}`,
+    toRawConfigId: (id) => id.replace(/^connector:/, ''),
+  });
+  adapter.registerOAuthListener();
+  assert.deepStrictEqual(await adapter.connect('docs', { userInitiated: true }), { success: true });
+  assert.strictEqual(adapter.pendingOAuth.has('connector:docs'), true);
+  assert.strictEqual((await adapter.getStates()).docs.status, 'connecting');
+  await adapter.cancelConnect('docs');
+  assert.strictEqual(adapter.pendingOAuth.size, 0);
+  assert.strictEqual(typeof oauthListener, 'function');
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);

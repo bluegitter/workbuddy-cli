@@ -117,4 +117,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-mcp-metric"),
   ...require("./runtime/connector-mcp-transport"),
   ...require("./runtime/ioa-server-side-auth"),
+  ...require("./runtime/connector-ui-adapter"),
 });
