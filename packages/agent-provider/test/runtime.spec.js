@@ -30,6 +30,7 @@ const {
   getPackageName,
   resolveAgentUri,
   createAgentFilesystem,
+  CosUploadService,
 } = require('../src');
 
 async function main() {
@@ -296,6 +297,10 @@ async function main() {
   const wrappedFs = createAgentFilesystem({ read: async (value) => { fsCalls.push(value); return value; } });
   assert.strictEqual(await wrappedFs.read('agent:///workspace/a.txt'), '/workspace/a.txt');
   assert.deepStrictEqual(fsCalls, ['/workspace/a.txt']);
+  const uploaded = [];
+  const cos = new CosUploadService({ now: () => 1, random: () => 0.5, uploadConcurrency: 2, presignedUrlProvider: async (keys) => ({ expire: 60, items: keys.map((key) => ({ object_key: key, upload_url: `https://upload/${key}`, download_url: `https://download/${key}` })) }), fetch: async (url) => { uploaded.push(url); return { ok: true }; } });
+  const batch = await cos.uploadFiles([{ name: 'a.txt', type: 'text/plain' }, { name: 'b.txt', type: 'text/plain' }]);
+  assert.strictEqual(batch.success, true); assert.strictEqual(batch.urls.length, 2); assert.strictEqual(uploaded.length, 2);
   console.log('agent runtime tests passed');
 }
 

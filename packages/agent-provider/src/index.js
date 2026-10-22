@@ -36,4 +36,5 @@ module.exports = Object.freeze({
   ...require("./runtime/concurrency"),
   ...require("./runtime/backend-contracts"),
   ...require("./runtime/agent-filesystem"),
+  ...require("./runtime/cos-upload-service"),
 });
