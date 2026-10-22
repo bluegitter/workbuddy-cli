@@ -50,6 +50,7 @@ module.exports = Object.freeze({
   ...require("./runtime/session-runtime-config"),
   ...require("./runtime/stdio-framing"),
   ...require("./runtime/stdio-rpc"),
+  ...require("./runtime/sidecar-utils"),
   ...require("./runtime/interaction-registries"),
   ...require("./runtime/document-paths"),
   ...require("./runtime/document-prompt"),

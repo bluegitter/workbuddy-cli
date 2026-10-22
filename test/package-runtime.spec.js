@@ -182,6 +182,9 @@ const {
   isDaemonStdioFrame,
   createDaemonStdioFrameReader,
   createStdioParentRpcClient,
+  isHostedCliRuntimeSessionId,
+  extractHttpEndpoint,
+  formatSidecarLogArgs,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1054,6 +1057,9 @@ async function main() {
   assert.strictEqual(rpcOutput.frames[0].channel, 'demo');
   parentRpc.handleFrame({ type: 'rpc-response', id: rpcOutput.frames[0].id, result: 'ok' });
   assert.strictEqual(await pendingRpc, 'ok');
+  assert.strictEqual(isHostedCliRuntimeSessionId('__workbuddy_cli_host__-1'), true);
+  assert.strictEqual(extractHttpEndpoint('http://127.0.0.1:1/api/v1/acp'), 'http://127.0.0.1:1');
+  assert.strictEqual(formatSidecarLogArgs(['x', { value: 1 }]), 'x {"value":1}');
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
