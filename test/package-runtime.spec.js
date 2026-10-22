@@ -214,6 +214,10 @@ const {
   Bm25Index,
   RecallIndex,
   RateLimiter,
+  acquireMutex,
+  withTimeout,
+  resolveMemoryDirs,
+  acquireFileLock,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1163,6 +1167,11 @@ async function main() {
   assert.strictEqual(recallIndex.search([1, 0], 'cloud', 1)[0].id, 'a');
   const limiter = new RateLimiter({ minIntervalMs: 0 });
   assert.strictEqual(await limiter.schedule(async () => 'ok'), 'ok');
+  assert.deepStrictEqual(resolveMemoryDirs('/tmp/home'), { primaryDir: '/tmp/home/.workbuddy/memory', legacyDir: '/tmp/home/.workbuddy/memery' });
+  const release = await acquireMutex('test-memory'); release();
+  await assert.rejects(() => withTimeout(() => new Promise(() => {}), 5, 'test-timeout'), (error) => error.name === 'TimeoutError');
+  const lockPath = path.join(root, 'memory.lock');
+  const lock = await acquireFileLock(lockPath, { maxRetries: 0 }); assert(lock); await lock.release();
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }

@@ -55,6 +55,7 @@ module.exports = Object.freeze({
   ...require("./runtime/tool-usage-bridge"),
   ...require("./runtime/audit-acp-adapter"),
   ...require("./runtime/intent-recall-core"),
+  ...require("./runtime/memory-utils"),
   ...require("./runtime/codebuddy-backend-utils"),
   ...require("./runtime/traceparent"),
   ...require("./runtime/service-handlers"),
