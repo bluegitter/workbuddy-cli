@@ -73,6 +73,7 @@ const {
   buildConnectorConfig,
   checkCompatibility,
   connectorEntries,
+  ExpertCacheManager,
   McpRegistry,
   mergeExpertManifests,
   PoiConsentRegistry,
@@ -299,6 +300,16 @@ async function main() {
   assert.deepStrictEqual(routing.listTools().map((tool) => tool.name), ['search']);
   assert.deepStrictEqual(routing.listTools({ projectId: 'p1' }).map((tool) => tool.name), ['search', 'files']);
   assert.strictEqual(routing.toolServerMap().search, 'docs');
+  const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
+  const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
+  await expertCache.saveManifest(cachedManifest, 'source-1');
+  assert.deepStrictEqual(await expertCache.getManifest(), cachedManifest);
+  assert.strictEqual(await expertCache.isCompatible('source-1'), true);
+  assert.strictEqual(await expertCache.isCompatible('source-2'), false);
+  assert.strictEqual(await expertCache.getCachedVersion(), '2');
+  assert.strictEqual((await expertCache.getCachedHash()).length, 64);
+  await expertCache.clear();
+  assert.strictEqual(await expertCache.getManifest(), null);
 
   const ring = new RingBuffer(5);
   ring.write(Buffer.from('abc'));

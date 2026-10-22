@@ -16,4 +16,5 @@ module.exports = Object.freeze({
   ...require("./runtime/version-compatibility"),
   ...require("./runtime/poi-consent-registry"),
   ...require("./runtime/tool-routing"),
+  ...require("./runtime/expert-cache"),
 });
