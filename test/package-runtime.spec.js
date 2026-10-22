@@ -177,6 +177,8 @@ const {
   ALL_MEDIA_EXTS,
   NoResponseWatchdog,
   appendStateTransitionEntry,
+  SessionMetaWriter,
+  withSessionEnabledPluginSetting,
 } = require('../packages/workbuddy-server/src');
 const {
   ArtifactIndex,
@@ -1028,6 +1030,11 @@ async function main() {
   const transitionLog = [];
   appendStateTransitionEntry(transitionLog, { signal: 'working', fromRunState: 'running', fromTaskStatus: 'working', toRunState: 'running', toTaskStatus: 'working' });
   assert.strictEqual(transitionLog.length, 0);
+  const metaWriter = new SessionMetaWriter(path.join(root, 'session-meta'));
+  await metaWriter.record({ conversationId: 'c1', userId: 'u1', workDir: '/tmp', title: 'First' });
+  await metaWriter.record({ conversationId: 'c1', userId: 'u1', workDir: '/tmp', title: 'Renamed' });
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(root, 'session-meta', 'sessions.json'), 'utf8')).sessions[0].title, 'Renamed');
+  assert.deepStrictEqual(withSessionEnabledPluginSetting({ enabledPlugins: { old: true } }, 'new', false).enabledPlugins, { old: true, new: false });
   fs.rmSync(root, { recursive: true, force: true });
   console.log('package runtime tests passed');
 }
