@@ -122,6 +122,10 @@ const {
   ImaBackendClient,
   getDefaultPathPrefix,
   ImaAuthApi,
+  buildFilters,
+  inferMimeByExt,
+  mapRawKnowledgeItem,
+  ImaAuthEventEmitter,
 } = require('../packages/workbuddy-server/src');
 const {
   createLegacyAuthSessionMigrator,
@@ -267,6 +271,10 @@ async function main() {
   assert.strictEqual(imaRequests[0].url, 'https://api.example/console/agent-gateway/ima/openapi/test');
   const authApi = new ImaAuthApi({}, { productManager: { getEndpoint: () => 'https://api.example' }, authenticationManager: { currentSessionSubject: { getValue: () => ({ account: { uid: 'u1' }, auth: { accessToken: 'a1' } }) } }, connectorName: 'ima', fetchFn: async (url) => ({ ok: true, status: 200, json: async () => ({ code: 0, data: { status: 'connected', extra: { user_id: 'u1' } } }), text: async () => '' }) });
   assert.deepStrictEqual((await authApi.status()).userId, 'u1');
+  assert.strictEqual(buildFilters({ mediaStates: [1], tags: ['important'] }).length, 2);
+  assert.strictEqual(inferMimeByExt('DOCX'), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  assert.strictEqual(mapRawKnowledgeItem({ media_id: 'm1', file_size: '42' }).fileSize, 42);
+  const authEvents = []; const authEmitter = new ImaAuthEventEmitter(); authEmitter.on((value) => authEvents.push(value)); authEmitter.emit(true); authEmitter.emit(true); authEmitter.emit(false); assert.deepStrictEqual(authEvents, [true, false]);
 
   const policy = new CommandPolicy({ cwd: root, writableRoots: ['workspace'], deniedCommands: [/rm\s+-rf/] });
   assert.strictEqual(policy.check('echo ok', 'workspace/a.txt').allowed, true);
