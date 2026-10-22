@@ -65,6 +65,15 @@ const {
   isAllowedGuestWebviewRedirect,
   isVisibleOnAnyDisplay,
   stripFrameEmbeddingHeaders,
+  parseDeepLink,
+  getDeepLinkPath,
+  mapDeepLinkToRoute,
+  readSkillInstallIntent,
+  readExpertInstallIntent,
+  readSwitchModelIntent,
+  getOpenUrlFromCommandLine,
+  createPendingOpenUrlQueue,
+  createPendingFileQueue,
 } = require('../packages/workbuddy-app/src');
 const {
   CancellationTokenSource,
@@ -317,6 +326,19 @@ async function main() {
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });
+  const callbackUrl = parseDeepLink('workbuddy://agents/callback/tdocs-app?state=s1#done');
+  assert.strictEqual(getDeepLinkPath(callbackUrl), '/agents/callback/tdocs-app');
+  assert.strictEqual(mapDeepLinkToRoute(callbackUrl), '/callback?state=s1&name=tdocs-app');
+  assert.strictEqual(mapDeepLinkToRoute('workbuddy://task/run?prompt=hello#draft'), '/task/run?prompt=hello#draft');
+  assert.deepStrictEqual(readSkillInstallIntent('workbuddy://codebuddy-ide/skill/install?skillname=reports&downloadurl=https%3A%2F%2Fexample.test%2Fskill&source=market'), { skillName: 'reports', downloadUrl: 'https://example.test/skill', channelType: 'market' });
+  assert.deepStrictEqual(readExpertInstallIntent('workbuddy://codebuddy-ide/expert/install?expertname=writer&sharecode=abc'), { expertName: 'writer', shareCode: 'abc' });
+  assert.strictEqual(readSwitchModelIntent('workbuddy://switch-model?modelId=sonnet'), 'sonnet');
+  assert.strictEqual(getOpenUrlFromCommandLine(['--x', 'file:///tmp/a', 'workbuddy://home'], (value) => value.startsWith('workbuddy:')), 'workbuddy://home');
+  const openQueue = createPendingOpenUrlQueue();
+  assert.strictEqual(openQueue.enqueue('workbuddy://home'), true); assert.strictEqual(openQueue.enqueue('workbuddy://home'), false);
+  assert.deepStrictEqual(openQueue.markReady(), [{ url: 'workbuddy://home' }]); assert.strictEqual(openQueue.isReady(), true);
+  const fileQueue = createPendingFileQueue(); fileQueue.enqueue('/tmp/a'); fileQueue.enqueue('/tmp/a'); fileQueue.enqueue('/tmp/b');
+  assert.deepStrictEqual(fileQueue.consume(), ['/tmp/a', '/tmp/b']);
   assert.strictEqual(isAllowedGuestWebviewRedirect('https://docs.qq.com/oauth/callback'), true);
   assert.strictEqual(getGuestInPlaceNavigationReason('https://docs.qq.com/doc/1?a=1', 'https://docs.qq.com/doc/1?a=2'), 'same-document');
   assert.ok(validateBootstrapInfo({ pendingLocalStorageMigration: { sourceSessionPath: '/tmp/session', preparedAt: 1, entries: { a: 'b' } } }).pendingLocalStorageMigration);
