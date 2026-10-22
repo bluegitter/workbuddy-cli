@@ -29,3 +29,11 @@
 - Context Builder 已迁移到独立 `context` 包；`agent-provider` 保留兼容导出。
 
 `agent-provider/test/runtime.spec.js` 覆盖只读工具并发分组、Agent 循环以及 Plan 模式阻止写工具等关键行为。
+
+### Session activity bridge
+
+`packages/agent-provider/src/runtime/session-activity.js` 对齐 Claude Code
+`src/bridge/sessionRunner.ts` 的纯解析边界：将 assistant 的 `tool_use`、文本块
+和 result subtype 映射为 `tool_start`/`text`/`result`/`error` 活动，并过滤合成、
+重放及工具结果 user 消息。子进程生命周期和 stdin/stdout 管理仍留在 runtime
+sidecar，避免把协议解析重新塞回单一大文件。

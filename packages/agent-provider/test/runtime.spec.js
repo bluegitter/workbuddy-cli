@@ -105,6 +105,28 @@ async function main() {
   assert.strictEqual(childResult.session.parentSessionId, parent.id);
   assert.strictEqual(childResult.session.project.id, 'project');
   assert.strictEqual(childResult.session.status, 'completed');
+
+  assert.strictEqual(require('../src').safeFilenameId('../session:a'), '___session_a');
+  assert.strictEqual(require('../src').toolSummary('Read', { file_path: '/tmp/a.js' }), 'Reading /tmp/a.js');
+  assert.deepStrictEqual(
+    require('../src').extractActivities(JSON.stringify({
+      type: 'assistant',
+      message: { content: [
+        { type: 'tool_use', name: 'Bash', input: { command: 'npm test' } },
+        { type: 'text', text: 'working' },
+      ] },
+    }), { timestamp: 123 }),
+    [
+      { type: 'tool_start', summary: 'Running npm test', timestamp: 123 },
+      { type: 'text', summary: 'working', timestamp: 123 },
+    ],
+  );
+  assert.deepStrictEqual(
+    require('../src').extractActivities(JSON.stringify({ type: 'result', subtype: 'failure', errors: ['boom'] }), { timestamp: 123 }),
+    [{ type: 'error', summary: 'boom', timestamp: 123 }],
+  );
+  assert.strictEqual(require('../src').extractUserMessageText({ type: 'user', message: { content: ' hello ' } }), 'hello');
+  assert.strictEqual(require('../src').extractUserMessageText({ type: 'user', isSynthetic: true, message: { content: 'skip' } }), undefined);
   console.log('agent runtime tests passed');
 }
 

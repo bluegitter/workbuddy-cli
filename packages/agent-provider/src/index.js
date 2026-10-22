@@ -17,6 +17,7 @@ module.exports = Object.freeze({
   ...require("./runtime/messages"),
   ...require("./runtime/permission-controller"),
   ...require("./runtime/session-manager"),
+  ...require("./runtime/session-activity"),
   ...require("./runtime/subagent-runner"),
   ...require("./runtime/tool-execution"),
   ...require("./runtime/tool-orchestration"),

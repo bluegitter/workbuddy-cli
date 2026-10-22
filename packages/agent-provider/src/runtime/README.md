@@ -19,3 +19,8 @@ AgentSession
 permission mode. Parent cancellation propagates to the child. Host-specific
 ACP transport, Sidecar process management, MCP discovery, and Sandbox binaries
 remain in their own packages.
+
+`session-activity` keeps the child `stream-json` boundary readable and
+testable. It maps assistant tool/text blocks and result messages to activity
+records, while filtering synthetic and tool-result user messages. Process
+lifecycle and stdin/stdout management remain in the runtime sidecar package.
