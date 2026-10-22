@@ -313,6 +313,18 @@ const {
   buildConnectorCallToolRequest,
   stableStringifyConnectorToolArgs,
   buildArdotCreateDesignDedupeKey,
+  parseTimeoutMs,
+  isStdioServerConfig,
+  getConnectTimeout,
+  isManagedAuthConfig,
+  sanitizeRuntimeDirName,
+  getWorkbuddyConfigDir,
+  ensureDirectory,
+  resolveStdioCwd,
+  resolveTransportOrder,
+  shouldSkipFallback,
+  captureResourceMetadataUrl,
+  resolveServiceProxyUrl,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -1419,6 +1431,24 @@ async function main() {
   assert.deepStrictEqual(buildConnectorCallToolRequest('custom-mcp:ardot', 'create_design', { z: 1 }, { workbuddySessionId: 's1' }), { name: 'create_design', arguments: { z: 1 }, _meta: { 'workbuddy.ai/sessionId': 's1' } });
   assert.strictEqual(stableStringifyConnectorToolArgs({ b: 2, a: 1 }), '{"a":1,"b":2}');
   assert.strictEqual(buildArdotCreateDesignDedupeKey('custom-mcp:ardot', 'create_design', { b: 2, a: 1 }).endsWith('{"a":1,"b":2}'), true);
+  assert.strictEqual(parseTimeoutMs(30), 30000);
+  assert.strictEqual(parseTimeoutMs(5000), 5000);
+  assert.strictEqual(isStdioServerConfig({ command: 'node' }), true);
+  assert.strictEqual(getConnectTimeout({ timeout: 30 }), 120000);
+  assert.strictEqual(getConnectTimeout({ url: 'https://mcp', timeout: 30 }), 60000);
+  assert.strictEqual(isManagedAuthConfig({ _workbuddyManagedAuth: 'server-side' }), true);
+  assert.ok(sanitizeRuntimeDirName('connector:中文').includes('-'));
+  assert.strictEqual(getWorkbuddyConfigDir({ WORKBUDDY_CONFIG_DIR: ' /tmp/wb ' }, '/home'), '/tmp/wb');
+  const cwdRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-mcp-cwd-'));
+  assert.strictEqual(ensureDirectory(path.join(cwdRoot, 'nested'), 'demo').endsWith(path.join('nested')), true);
+  assert.throws(() => { const file = path.join(cwdRoot, 'file'); fs.writeFileSync(file, 'x'); ensureDirectory(file, 'demo'); }, /not a directory/);
+  assert.ok(resolveStdioCwd('connector:demo', {}, { configDir: cwdRoot }).startsWith(path.join(cwdRoot, 'logs')));
+  assert.deepStrictEqual(resolveTransportOrder({ type: 'sse' }), { order: 'sse-first', source: 'type' });
+  assert.deepStrictEqual(resolveTransportOrder({ transportType: 'sse' }), { order: 'sse-first', source: 'transportType' });
+  assert.strictEqual(shouldSkipFallback(new Error('HTTP 401 unauthorized')), true);
+  assert.strictEqual(captureResourceMetadataUrl({ _resourceMetadataUrl: new URL('https://mcp/.well-known') }), 'https://mcp/.well-known');
+  assert.strictEqual(resolveServiceProxyUrl('http://127.0.0.1:123/'), 'http://127.0.0.1:123/internal/hooks/services/invoke');
+  fs.rmSync(cwdRoot, { recursive: true, force: true });
   const consent = new PoiConsentRegistry();
   const firstConsent = consent.waitWithFirst('mcp:docs', 1000);
   const secondConsent = consent.waitWithFirst('mcp:docs', 1000);

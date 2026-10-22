@@ -125,4 +125,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-proxy-utils"),
   ...require("./runtime/connector-proxy-security"),
   ...require("./runtime/connector-mcp-error-utils"),
+  ...require("./runtime/connector-mcp-config"),
 });
