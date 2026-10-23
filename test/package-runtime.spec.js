@@ -391,6 +391,7 @@ const {
   calculateMcpConfigHash,
   listMcpServers,
   buildDesiredConnectorConfigs,
+  planConnectorSync,
   normalizePersistentState,
   buildEnabledPluginIndex,
   discoverPluginMcpConfigs,
@@ -1896,6 +1897,19 @@ async function main() {
   assert.deepStrictEqual(Object.keys(desired), ['connector:official', 'custom-mcp:custom', 'custom-mcp:plugin']);
   assert.strictEqual(desired['connector:official'].timeout, 2000);
   assert.deepStrictEqual(desired['custom-mcp:custom'].disabledTools, ['write']);
+  const syncPlan = planConnectorSync(new Map([
+    ['keep', { url: 'https://keep' }],
+    ['change', { url: 'https://old' }],
+    ['remove', { url: 'https://remove' }],
+  ]), {
+    keep: { url: 'https://keep' },
+    change: { url: 'https://new' },
+    add: { url: 'https://add' },
+  });
+  assert.deepStrictEqual(syncPlan.removed, ['remove']);
+  assert.deepStrictEqual(syncPlan.added.map(({ id }) => id), ['add']);
+  assert.deepStrictEqual(syncPlan.reconnect.map(({ id }) => id), ['change']);
+  assert.deepStrictEqual(syncPlan.unchanged.map(({ id }) => id), ['keep']);
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, true);
   fs.rmSync(facadeRoot, { recursive: true, force: true });
   proxyServer.stop();

@@ -148,4 +148,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-auth-coordinator"),
   ...require("./runtime/mcp-server-listing"),
   ...require("./runtime/connector-desired-configs"),
+  ...require("./runtime/connector-sync"),
 });

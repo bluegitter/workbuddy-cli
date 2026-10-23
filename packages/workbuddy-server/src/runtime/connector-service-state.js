@@ -1,5 +1,7 @@
 'use strict';
 
+const { planConnectorSync } = require('./connector-sync');
+
 /**
  * ConnectorService's stateful coordination boundary. Authentication and MCP
  * transport implementations are injected; this module owns ordering and
@@ -49,13 +51,13 @@ class ConnectorServiceState {
   }
 
   async sync(desiredConfigs = {}) {
-    const desired = new Map(Object.entries(desiredConfigs || {}));
-    const activeIds = new Set(this.activeConfigs.keys());
-    for (const configId of activeIds) if (!desired.has(configId)) await this.disconnect(configId, { reason: 'sync' });
-    for (const [configId, config] of desired) {
-      const previous = this.activeConfigs.get(configId);
-      if (!previous || !sameConnectorConfig(previous, config)) await this.connect(configId, config, { reason: 'sync' });
+    const plan = planConnectorSync(this.activeConfigs, desiredConfigs, sameConnectorConfig);
+    for (const configId of plan.removed) await this.disconnect(configId, { reason: 'sync' });
+    for (const { id, config } of plan.reconnect) {
+      await this.disconnect(id, { reason: 'sync', changed: true });
+      await this.connect(id, config, { reason: 'sync' });
     }
+    for (const { id, config } of plan.added) await this.connect(id, config, { reason: 'sync' });
     return this.snapshot();
   }
 
