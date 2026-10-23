@@ -144,4 +144,5 @@ module.exports = Object.freeze({
   ...require("./runtime/marketplace-cache"),
   ...require("./runtime/marketplace-download"),
   ...require("./runtime/connector-marketplace-service"),
+  ...require("./runtime/connector-service"),
 });

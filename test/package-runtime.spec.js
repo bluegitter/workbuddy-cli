@@ -401,6 +401,7 @@ const {
   downloadBufferWithHeaders,
   fetchRemoteEtag,
   ConnectorMarketplaceService,
+  ConnectorService,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1832,6 +1833,21 @@ async function main() {
   assert.strictEqual(synced.manifest.name, 'demo');
   assert.strictEqual(marketplaceServiceCache.readMeta().etag, 'etag-service');
   fs.rmSync(serviceRoot, { recursive: true, force: true });
+  const facadeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-connector-service-'));
+  const connectorFacade = new ConnectorService({
+    manifest: { connectors: [{ source: 'docs' }] },
+    connectorMcpConfigPath: path.join(facadeRoot, 'connectors', 'mcp.json'),
+    readConnectorMcpConfig: () => ({ mcpServers: { docs: { url: 'https://docs' } } }),
+    toProxyConfigId: (id) => `connector:${id}`,
+    connect: async () => ({ success: true }),
+    disconnect: async () => {},
+  });
+  assert.strictEqual((await connectorFacade.init()).persistentState.enabled.length, 0);
+  assert.strictEqual((await connectorFacade.connect('docs', { url: 'https://docs' })).success, true);
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, undefined);
+  await connectorFacade.disconnect('docs');
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, true);
+  fs.rmSync(facadeRoot, { recursive: true, force: true });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
