@@ -223,6 +223,7 @@ async function main() {
     off: (event, listener) => removedChannelListeners.push({ event, listener }),
   };
   const acp = new AcpJsonRpcClient(channel, { timeoutMs: 1000 });
+  assert.doesNotThrow(() => channelListeners.get('message')('{malformed-json'));
   const pendingAcp = acp.newSession({ cwd: '/tmp' });
   const request = channelMessages[0].message;
   channelListeners.get('message')({ jsonrpc: '2.0', id: request.id, result: { sessionId: 's-acp' } });

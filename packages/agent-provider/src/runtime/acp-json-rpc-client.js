@@ -34,7 +34,13 @@ class AcpJsonRpcClient {
     });
   }
   setupMessageListener() {
-    const listener = (data) => this.handleMessage(typeof data === 'string' ? JSON.parse(data) : data);
+    const listener = (data) => {
+      try {
+        this.handleMessage(typeof data === 'string' ? JSON.parse(data) : data);
+      } catch (error) {
+        if (this.debug) console.debug?.('[AcpJsonRpcClient] ignored malformed message', error);
+      }
+    };
     for (const event of ['message', 'acp-rpc-response']) {
       this.channel.on?.(event, listener);
       this.eventHandlers.push({ event, listener });
