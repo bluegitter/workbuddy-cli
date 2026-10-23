@@ -88,6 +88,12 @@ const {
   normalizeModerationResult,
   probeShareText,
   checkShareTextsModeration,
+  buildSessionDetailRestorePlan,
+  hasSessionDetailPreviewContent,
+  shouldOpenDetailPanelInNarrowOverviewMode,
+  resolvePersistedSidebarView,
+  resolveSessionSwitchTargetPanelOpen,
+  resolveDetailPanelOpenForSessionSave,
 } = require('../packages/agent-ui/src');
 const {
   QueueSnapshotStore,
@@ -1375,6 +1381,13 @@ async function main() {
   assert.strictEqual(moderationResult.reason, 'blocked');
   assert.strictEqual(moderationResult.blockedText, 'blocked');
   assert.strictEqual(moderationCalls[0].scene, 'nickname');
+  assert.deepStrictEqual(buildSessionDetailRestorePlan({ cachedPanelOpen: true, cachedNarrowMode: true }), { panelOpen: true, narrowMode: true, previewRestore: { kind: 'none' } });
+  assert.deepStrictEqual(buildSessionDetailRestorePlan({ cachedPanelOpen: true, browserUrl: 'https://example.com' }).previewRestore, { kind: 'browser-preview' });
+  assert.strictEqual(hasSessionDetailPreviewContent({ selectedArtifactId: 'a' }), true);
+  assert.strictEqual(shouldOpenDetailPanelInNarrowOverviewMode({ sidebarView: 'fileTree' }), false);
+  assert.strictEqual(resolvePersistedSidebarView('artifacts', false), 'overview');
+  assert.strictEqual(resolveSessionSwitchTargetPanelOpen({ sessionId: 's1', open: true }, 's1'), true);
+  assert.strictEqual(resolveDetailPanelOpenForSessionSave('s1', { sessionId: 's1', open: false }, true), false);
   const classified = classifyDesktopOpenUrl('workbuddy://task?action=start&prompt=hello', {
     isTaskDeepLink: () => true,
   });

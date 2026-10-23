@@ -34,6 +34,14 @@ import {
 	normalizeModerationResult as normalizeModerationResultRuntime,
 	probeShareText as probeShareTextRuntime,
 } from "../runtime/share-moderation.js";
+import {
+	buildSessionDetailRestorePlan as buildSessionDetailRestorePlanRuntime,
+	hasSessionDetailPreviewContent as hasSessionDetailPreviewContentRuntime,
+	shouldOpenDetailPanelInNarrowOverviewMode as shouldOpenDetailPanelInNarrowOverviewModeRuntime,
+	resolvePersistedSidebarView as resolvePersistedSidebarViewRuntime,
+	resolveSessionSwitchTargetPanelOpen as resolveSessionSwitchTargetPanelOpenRuntime,
+	resolveDetailPanelOpenForSessionSave as resolveDetailPanelOpenForSessionSaveRuntime,
+} from "../runtime/session-detail-state.js";
 import { n as init_ArtifactFileIconTypes, t as getArtifactFileIconKind } from "./ArtifactFileIconTypes-mWPconF_.js";
 import { n as useI18n, r as useTranslation$1, t as init_useI18n } from "./useI18n-DDytAo7_.js";
 import { A as init_route_matchers, S as useRouterContextSafe, _ as RouterProvider, b as resetRouterToHome, j as matchShellRoute, t as init_router } from "./router-DJX2y4GM.js";
@@ -763,6 +771,7 @@ init_tracing();
 * - carryOverPreview（欢迎页 webview 接力）→ 强制保持面板展开
 */
 function buildSessionDetailRestorePlan(input) {
+	return buildSessionDetailRestorePlanRuntime(input);
 	const panelOpen = input.carryOverPreview || (input.cachedPanelOpen ?? false);
 	const cachedNarrowMode = panelOpen && (input.cachedPanelNarrowMode ?? false);
 	if (!panelOpen) return {
@@ -800,6 +809,7 @@ function buildSessionDetailRestorePlan(input) {
 }
 /** 当前会话是否存在应恢复的右侧主区预览（产物 / 文件变更 / 浏览器）。 */
 function hasSessionDetailPreviewContent(snapshot) {
+	return hasSessionDetailPreviewContentRuntime(snapshot);
 	return !!(snapshot.selectedArtifactId || snapshot.selectedFilePath || snapshot.browserUrl);
 }
 /**
@@ -808,6 +818,7 @@ function hasSessionDetailPreviewContent(snapshot) {
 * 平分布局，右侧主区空白（用户看到的「状态不完整」）。
 */
 function shouldOpenDetailPanelInNarrowOverviewMode(input) {
+	return shouldOpenDetailPanelInNarrowOverviewModeRuntime(input);
 	if (input.selectedFilePath || input.browserUrl) return false;
 	if (input.sidebarView === "preview") return true;
 	if (input.sidebarView === "fileTree" || input.sidebarView === "changes" || input.sidebarView === "mcpApps") return false;
@@ -818,11 +829,13 @@ function shouldOpenDetailPanelInNarrowOverviewMode(input) {
 * 持久化 / 恢复时归一化为 overview，避免切回触发 artifacts 视图的自动选中首条产物。
 */
 function resolvePersistedSidebarView(sidebarView, hasPreviewContent) {
+	return resolvePersistedSidebarViewRuntime(sidebarView, hasPreviewContent);
 	if (!hasPreviewContent && sidebarView === "artifacts") return "overview";
 	return sidebarView;
 }
 /** 解析会话切换目标面板态；避免 `target?.id === currentId` 在双方皆为 undefined 时误判。 */
 function resolveSessionSwitchTargetPanelOpen(target, currentSessionId) {
+	return resolveSessionSwitchTargetPanelOpenRuntime(target, currentSessionId);
 	if (!target || !currentSessionId || target.sessionId !== currentSessionId) return;
 	return target.open;
 }
@@ -831,6 +844,7 @@ function resolveSessionSwitchTargetPanelOpen(target, currentSessionId) {
 * 优先读 sessionSwitchTarget（用户关面板后 flush 未完成时 ref 可能仍为 true）。
 */
 function resolveDetailPanelOpenForSessionSave(sessionId, sessionSwitchTarget, showDetailPanel) {
+	return resolveDetailPanelOpenForSessionSaveRuntime(sessionId, sessionSwitchTarget, showDetailPanel);
 	if (sessionSwitchTarget?.sessionId === sessionId) return sessionSwitchTarget.open;
 	return showDetailPanel;
 }

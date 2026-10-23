@@ -13,4 +13,5 @@ module.exports = Object.freeze({
   ...require("./runtime/share-artifacts"),
   ...require("./runtime/deep-link-coordinator"),
   ...require("./runtime/share-moderation"),
+  ...require("./runtime/session-detail-state"),
 });
