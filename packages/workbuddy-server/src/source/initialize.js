@@ -14,6 +14,7 @@ const edgeSyncApiRuntime = require("../runtime/edge-sync-api.js");
 const edgeSyncChannelRuntime = require("../runtime/edge-sync-channel.js");
 const edgeSyncBasicHandlersRuntime = require("../runtime/edge-sync-basic-handlers.js");
 const edgeSyncArtifactsRuntime = require("../runtime/edge-sync-artifacts.js");
+const { EdgeSyncMappingStore: EdgeSyncMappingStoreRuntime } = require("../runtime/edge-sync-mapping-store.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
@@ -222215,7 +222216,7 @@ function rebindBlockArray(blocks, ctx) {
 *   - edge_sync_artifact_cache(file_path PK, mtime_ms, size, file_hash, download_url,
 *                              smh_path, content_type, expires_at, uploaded_at)
 */
-var EdgeSyncMappingStore = class {
+var LegacyEdgeSyncMappingStore = class {
 	db;
 	dbPath;
 	constructor(configDir) {
@@ -222444,6 +222445,7 @@ var EdgeSyncMappingStore = class {
 		this.db = void 0;
 	}
 };
+var EdgeSyncMappingStore = EdgeSyncMappingStoreRuntime;
 //#endregion
 //#region ../../packages/workbuddy-server/src/edge-sync/edge-sync-network-recovery.ts
 var RETRY_DELAYS_MS = [
