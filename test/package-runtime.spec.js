@@ -400,6 +400,7 @@ const {
   normalizeEtag,
   downloadBufferWithHeaders,
   fetchRemoteEtag,
+  ConnectorMarketplaceService,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1817,6 +1818,20 @@ async function main() {
   const fakeHeadResponse = { statusCode: 200, headers: { etag: '"head-1"' }, resume() {} };
   const fakeHeadRequest = (_url, _options, callback) => { queueMicrotask(() => callback(fakeHeadResponse)); return { on() { return this; }, setTimeout() {}, end() {} }; };
   assert.strictEqual(await fetchRemoteEtag('https://market.example/archive.zip', { request: fakeHeadRequest }), 'head-1');
+  const serviceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-market-service-'));
+  const marketplaceServiceCache = new MarketplaceCache({ baseDir: path.join(serviceRoot, 'current'), metaPath: path.join(serviceRoot, 'meta.json'), lockPath: path.join(serviceRoot, 'lock'), pid: 999999, now: () => 1000 });
+  const marketplaceService = new ConnectorMarketplaceService({
+    cache: marketplaceServiceCache,
+    tempDirectory: serviceRoot,
+    randomSuffix: () => 'test',
+    download: async () => ({ buffer: Buffer.from('archive'), etag: 'etag-service' }),
+    extract: async (_buffer, target) => { fs.writeFileSync(path.join(target, 'marketplace.json'), JSON.stringify({ name: 'demo' })); },
+  });
+  const synced = await marketplaceService.downloadAndReplace('https://market.example/archive.zip', 'demo');
+  assert.strictEqual(synced.replaced, true);
+  assert.strictEqual(synced.manifest.name, 'demo');
+  assert.strictEqual(marketplaceServiceCache.readMeta().etag, 'etag-service');
+  fs.rmSync(serviceRoot, { recursive: true, force: true });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
