@@ -221677,6 +221677,11 @@ async function handleGetSkills(ctx, cmd) {
 * 出参: { requestId, conversationId, sessionId, messages, nextCursor, hasMore }
 */
 async function handleGetPage(ctx, cmd) {
+	return edgeSyncJsonlRuntime.handleGetPage(ctx, cmd, {
+		edgeLog,
+		convertItem: require_session_notification_adapter.convertJsonlItemToSessionNotification,
+		rebindImages: rebindImageBlobRefs
+	});
 	const { sessionId, commandId } = cmd;
 	const limitTurns = Math.min(cmd.limit || 3, 10);
 	const direction = cmd.direction || "around";

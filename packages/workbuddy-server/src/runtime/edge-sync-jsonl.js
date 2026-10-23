@@ -264,6 +264,71 @@ async function readJsonlPageByParentChain(jsonlPath, lastMessageId, limitTurns, 
   }
 }
 
+async function handleGetPage(ctx, cmd, options = {}) {
+  const fsPromises = require('fs').promises;
+  const edgeLog = options.edgeLog || (() => {});
+  const convertItem = options.convertItem;
+  const rebindImages = options.rebindImages || (() => {});
+  const { sessionId, commandId } = cmd;
+  const limitTurns = Math.min(cmd.limit || 3, 10);
+  const direction = cmd.direction || 'around';
+  const cursorMessageId = cmd.cursor?.messageId;
+  const cursorBytes = cmd.cursor?.bytes;
+  const conversationId = ctx.getConversationId(sessionId) || '';
+  const startTs = Date.now();
+  const empty = (extra = {}) => ({ requestId: commandId, conversationId, sessionId, messages: [], prevCursor: null, nextCursor: null, hasMore: false, ...extra });
+  ctx.logger.info(`[EdgeSync] GET_PAGE: sid=${sessionId} direction=${direction} limit=${limitTurns}`);
+  const jsonlPath = await ctx.deps.getSessionJsonlPath?.(sessionId);
+  if (!jsonlPath || !require('fs').existsSync(jsonlPath)) return empty();
+  try {
+    let pageResult;
+    let pathTaken = 'FIRST_SCREEN';
+    if (direction === 'before' && (cursorMessageId || typeof cursorBytes === 'number')) {
+      let startBytePos;
+      if (typeof cursorBytes === 'number' && cursorBytes >= 0) {
+        if (cursorMessageId) {
+          const peekedId = await peekIdAtBytePos(jsonlPath, cursorBytes);
+          if (peekedId === cursorMessageId) { startBytePos = cursorBytes; pathTaken = 'BYTES_HIT'; }
+          else pathTaken = 'BYTES_MISS';
+        } else { startBytePos = cursorBytes; pathTaken = 'BYTES_ONLY'; }
+      }
+      if (startBytePos === undefined && cursorMessageId) {
+        const located = await findBytePosByMessageId(jsonlPath, cursorMessageId);
+        if (located.bytePos < 0) return empty({ error: 'messageId_not_found' });
+        startBytePos = located.bytePos;
+        if (pathTaken !== 'BYTES_MISS') pathTaken = 'MSGID';
+      }
+      pageResult = await readActiveChainPage(jsonlPath, limitTurns, startBytePos, { edgeLog });
+    } else pageResult = await readActiveChainPage(jsonlPath, limitTurns, undefined, { edgeLog });
+    const notifications = pageResult.items.flatMap((item, index) => convertItem(item, sessionId, pageResult.itemByteOffsets[index])).map((params) => ({ jsonrpc: '2.0', method: 'session/update', params }));
+    rebindImages(notifications, ctx);
+    let inflightAppended = 0;
+    let interruptionAppended = 0;
+    if (pathTaken === 'FIRST_SCREEN') {
+      const inflight = ctx.getInflightChunks(sessionId);
+      for (const event of inflight) notifications.push({ jsonrpc: '2.0', method: 'session/update', params: event.payload });
+      inflightAppended = inflight.length;
+      const interruptions = ctx.getPendingInterruptionEvents(sessionId);
+      for (const event of interruptions) notifications.push({ jsonrpc: '2.0', method: 'session/update', params: event.payload });
+      interruptionAppended = interruptions.length;
+    }
+    const buildCursor = (index) => {
+      if (index < 0 || index >= pageResult.items.length) return null;
+      const item = pageResult.items[index];
+      const cursor = {};
+      if (typeof item?.id === 'string') cursor.messageId = item.id;
+      if (typeof pageResult.itemByteOffsets[index] === 'number' && pageResult.itemByteOffsets[index] >= 0) cursor.bytes = pageResult.itemByteOffsets[index];
+      return Object.keys(cursor).length > 0 ? cursor : null;
+    };
+    const prevCursor = pageResult.hasMore && pageResult.items.length > 0 ? buildCursor(0) : null;
+    edgeLog('GET_PAGE_RESULT', `pathTaken=${pathTaken} items=${pageResult.items.length} notifications=${notifications.length} inflight=${inflightAppended} interruption=${interruptionAppended} elapsed=${Date.now() - startTs}ms`);
+    return { requestId: commandId, conversationId, sessionId, messages: notifications, prevCursor, hasMore: pageResult.hasMore };
+  } catch (error) {
+    ctx.logger.error(`[EdgeSync] GET_PAGE failed: sid=${sessionId} elapsed=${Date.now() - startTs}ms err=${error?.message || String(error)}`);
+    return empty();
+  }
+}
+
 function estimateItemPayloadBytes(item, line) { return item && typeof item === 'object' && item._lazyLoad === true ? 512 : line.length; }
 function parseLineWithLazyLoad(line) {
   if (line.length <= LARGE_LINE_THRESHOLD) return JSON.parse(line);
@@ -277,4 +342,4 @@ function isLikelyUserMessageLine(line) { const head = line.length > 200 ? line.s
 function isLikelyCustomItemLine(line) { for (const type of CUSTOM_ITEM_TYPES) if (line.includes(`"type":"${type}"`)) return true; return false; }
 function checkPrevLineTombstone(prevLine) { if (!prevLine || !prevLine.includes(TOMBSTONE_MARK)) return { isTombstone: false }; return { isTombstone: true, forkPoint: prevLine.match(RE_TOMBSTONE_PARENT)?.[1] }; }
 
-module.exports = Object.freeze({ CHUNK_SIZE, MAX_ITEMS, MAX_BYTES, LARGE_LINE_THRESHOLD, LAZY_LOAD_TYPES, CUSTOM_ITEM_TYPES, ID_REGEX, estimateItemPayloadBytes, parseLineWithLazyLoad, computeLineByteStarts, isLikelyUserMessageLine, isLikelyCustomItemLine, checkPrevLineTombstone, iterateChunksBackward, findBytePosByMessageId, peekIdAtBytePos, extendToLineEnd, findLastMessageIdFromFile, readIdAtBytePos, readActiveChainPage, readJsonlPageByParentChain });
+module.exports = Object.freeze({ CHUNK_SIZE, MAX_ITEMS, MAX_BYTES, LARGE_LINE_THRESHOLD, LAZY_LOAD_TYPES, CUSTOM_ITEM_TYPES, ID_REGEX, estimateItemPayloadBytes, parseLineWithLazyLoad, computeLineByteStarts, isLikelyUserMessageLine, isLikelyCustomItemLine, checkPrevLineTombstone, iterateChunksBackward, findBytePosByMessageId, peekIdAtBytePos, extendToLineEnd, findLastMessageIdFromFile, readIdAtBytePos, readActiveChainPage, readJsonlPageByParentChain, handleGetPage });

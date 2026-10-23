@@ -237,6 +237,7 @@ const {
   findLastMessageIdFromFile,
   readIdAtBytePos,
   readActiveChainPage,
+  handleGetPage,
   buildDeviceOnlinePayload,
   createInitialTaskState,
   reduceTaskStatus,
@@ -2444,6 +2445,17 @@ async function main() {
   const page = await readActiveChainPage(jsonlPath, 1);
   assert.deepStrictEqual(page.items.map((item) => item.id), ['m1', 'm2']);
   assert.strictEqual(page.turnsCollected, 1);
+  const pageResponse = await handleGetPage({
+    deps: { getSessionJsonlPath: async () => jsonlPath },
+    getConversationId: () => 'c1',
+    getInflightChunks: () => [],
+    getPendingInterruptionEvents: () => [],
+    logger: { info() {}, error() {} },
+  }, { sessionId: 's1', commandId: 'get-page-1', limit: 1 }, {
+    convertItem: (item) => ({ sessionId: 's1', update: { sessionUpdate: 'message', messageId: item.id } }),
+  });
+  assert.strictEqual(pageResponse.messages.length, 2);
+  assert.strictEqual(pageResponse.prevCursor.messageId, 'm1');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });
