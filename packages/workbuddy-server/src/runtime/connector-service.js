@@ -4,6 +4,7 @@ const { ConnectorMarketplaceService } = require('./connector-marketplace-service
 const { mergeConnectorMcpServers, writeConnectorMcpConfig } = require('./connector-mcp-config-writer');
 const { ConnectorServiceState } = require('./connector-service-state');
 const { disableConnectorSkills } = require('./connector-skill-state');
+const { ConnectorAuthCoordinator } = require('./connector-auth-coordinator');
 
 /**
  * Readable composition root for connector operations. The concrete auth/MCP
@@ -25,6 +26,14 @@ class ConnectorService {
       onStateChanged: options.onStateChanged,
       logger: this.logger,
     });
+    this.auth = options.authCoordinator || new ConnectorAuthCoordinator({
+      tokenRefreshService: options.tokenRefreshService,
+      serverSideOauthRefresher: options.serverSideOauthRefresher,
+      ioaAuth: options.ioaAuth,
+      resolveConnectorName: options.resolveConnectorName,
+      isServerSideAuth: options.isServerSideAuth,
+      logger: this.logger,
+    });
     this.marketplace = options.marketplace || (options.marketplaceCache ? new ConnectorMarketplaceService({ cache: options.marketplaceCache, ...options.marketplaceOptions }) : undefined);
   }
 
@@ -34,14 +43,20 @@ class ConnectorService {
   }
 
   async connect(configId, config, options) {
-    const result = await this.state.connect(configId, config, options);
+    const authResult = await this.auth.prepareConnect(configId, config, options);
+    if (!authResult.success) return authResult;
+    const result = await this.state.connect(configId, authResult.config, options);
     if (result.success && !this.state.persistentState.enabled.includes(configId)) this.state.persistentState.enabled.push(configId);
-    if (result.success) this.writeConnectorMcpConfig();
+    if (result.success) {
+      await this.auth.connected(configId, authResult.config, options);
+      this.writeConnectorMcpConfig();
+    }
     return result;
   }
 
   async disconnect(configId, options) {
     const result = await this.state.disconnect(configId, options);
+    this.auth.disconnected(configId);
     this.state.persistentState.enabled = this.state.persistentState.enabled.filter((id) => id !== configId);
     this.writeConnectorMcpConfig();
     if (this.connectorSkillsRoot) disableConnectorSkills(`${this.connectorSkillsRoot}/connector-${configId}`, { logger: this.logger });

@@ -387,6 +387,7 @@ const {
   normalizeToolResult,
   escapeHtml,
   ConnectorServiceState,
+  ConnectorAuthCoordinator,
   normalizePersistentState,
   buildEnabledPluginIndex,
   discoverPluginMcpConfigs,
@@ -1834,6 +1835,22 @@ async function main() {
   assert.strictEqual(marketplaceServiceCache.readMeta().etag, 'etag-service');
   fs.rmSync(serviceRoot, { recursive: true, force: true });
   const facadeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-connector-service-'));
+  const coordinatorEvents = [];
+  const authCoordinator = new ConnectorAuthCoordinator({
+    ioaAuth: {
+      handleConnect: async (_id, config) => ({ handled: false, serverConfig: { ...config, headers: { Authorization: 'Bearer refreshed' } } }),
+      abortPendingAuth: (id) => coordinatorEvents.push(`abort:${id}`),
+    },
+    tokenRefreshService: {
+      refreshIfNeeded: async (id, url, headers) => { coordinatorEvents.push(`refresh:${id}:${url}:${headers.Authorization}`); return { ok: true, refreshed: true }; },
+    },
+    serverSideOauthRefresher: {
+      schedule: (id, name, options) => coordinatorEvents.push(`schedule:${id}:${name}:${options.initialAccessToken}`),
+      stop: (id) => coordinatorEvents.push(`stop:${id}`),
+    },
+    resolveConnectorName: () => 'docs-oauth',
+    isServerSideAuth: () => true,
+  });
   const connectorFacade = new ConnectorService({
     manifest: { connectors: [{ source: 'docs' }] },
     connectorMcpConfigPath: path.join(facadeRoot, 'connectors', 'mcp.json'),
@@ -1841,11 +1858,14 @@ async function main() {
     toProxyConfigId: (id) => `connector:${id}`,
     connect: async () => ({ success: true }),
     disconnect: async () => {},
+    authCoordinator,
   });
   assert.strictEqual((await connectorFacade.init()).persistentState.enabled.length, 0);
   assert.strictEqual((await connectorFacade.connect('docs', { url: 'https://docs' })).success, true);
+  assert.deepStrictEqual(coordinatorEvents.slice(0, 2), ['refresh:docs:https://docs:Bearer refreshed', 'schedule:docs:docs-oauth:refreshed']);
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, undefined);
   await connectorFacade.disconnect('docs');
+  assert.deepStrictEqual(coordinatorEvents.slice(-1), ['stop:docs']);
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, true);
   fs.rmSync(facadeRoot, { recursive: true, force: true });
   proxyServer.stop();
