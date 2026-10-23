@@ -17,6 +17,12 @@ const sessionPathsRuntime = require("../runtime/session-paths.js");
 const sessionRuntimeConfigRuntime = require("../runtime/session-runtime-config.js");
 const sessionNotificationRuntime = require("../runtime/session-notification-adapter.js");
 const sessionReplayRuntime = require("../runtime/session-replay.js");
+const taskStatusRuntime = require("../runtime/task-status.js");
+const agentTeamsEnvRuntime = require("../runtime/agent-teams-env.js");
+const sidecarUtilsRuntime = require("../runtime/sidecar-utils.js");
+const stdioFramingRuntime = require("../runtime/stdio-framing.js");
+const agentCliArgsRuntime = require("../runtime/agent-cli-args.js");
+const agentCliProcessRuntime = require("../runtime/agent-cli-process.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -9118,15 +9124,7 @@ function resolveSidecarScopedLogger() {
 	return sidecarScopedLogger;
 }
 function formatSidecarLogArgs(args) {
-	return args.map((arg) => {
-		if (typeof arg === "string") return arg;
-		if (arg instanceof Error) return arg.stack ?? arg.message;
-		try {
-			return JSON.stringify(arg);
-		} catch {
-			return String(arg);
-		}
-	}).join(" ");
+	return sidecarUtilsRuntime.formatSidecarLogArgs(args);
 }
 var sidecarLog$1 = {
 	info: (...args) => resolveSidecarScopedLogger().info(formatSidecarLogArgs(args)),
@@ -9134,22 +9132,15 @@ var sidecarLog$1 = {
 	error: (...args) => resolveSidecarScopedLogger().error(formatSidecarLogArgs(args))
 };
 function isExpectedSidecarShutdownLine(line) {
-	return line === "[Sidecar] Shutting down..." || /^\[Sidecar\] Killing session .+ \(pid=\d+\)$/.test(line);
+	return sidecarUtilsRuntime.isExpectedSidecarShutdownLine(line);
 }
 function isHostedCliRuntimeSessionId(sessionId) {
-	return sessionId === HOST_RUNTIME_SESSION_ID || Boolean(sessionId?.startsWith(`${HOST_RUNTIME_SESSION_ID}-`));
+	return sidecarUtilsRuntime.isHostedCliRuntimeSessionId(sessionId);
 }
 var USE_SYSTEM_CA_NODE_OPTION$2 = "--use-system-ca";
 var CODEBUDDY_QIMEI36_ENV_KEY$1 = "CODEBUDDY_QIMEI36";
 function buildSidecarProcessEnv(cliEnv, hostEnv = process.env, overrides = {}) {
-	return {
-		...hostEnv,
-		...cliEnv.CODEBUDDY_CONFIG_DIR ? { CODEBUDDY_CONFIG_DIR: cliEnv.CODEBUDDY_CONFIG_DIR } : {},
-		...cliEnv.WORKBUDDY_CONFIG_DIR ? { WORKBUDDY_CONFIG_DIR: cliEnv.WORKBUDDY_CONFIG_DIR } : {},
-		...overrides,
-		ELECTRON_RUN_AS_NODE: "1",
-		NODE_OPTIONS: ""
-	};
+	return sidecarUtilsRuntime.buildSidecarProcessEnv(cliEnv, hostEnv, overrides);
 }
 function defaultResolveBundledAsset$1() {}
 function defaultGetBootstrapProductConfigEnv$1() {
@@ -9184,7 +9175,7 @@ function withWorkbuddySidecarDefaults(dependencies = {}) {
 	};
 }
 function getHostedCliCwd(sessionId) {
-	return path.join((0, os.tmpdir)(), "workbuddy-host-cli", sessionId);
+	return sidecarUtilsRuntime.getHostedCliCwd(sessionId);
 }
 function getProxyEnvFromProcess$2() {
 	const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
@@ -10030,34 +10021,10 @@ function createWorkbuddySidecarManager(dependencies = {}) {
 * listener or a timeout.
 */
 function waitForControlPathFree(target, timeoutMs) {
-	const deadline = Date.now() + timeoutMs;
-	return new Promise((resolve) => {
-		const probe = () => {
-			if (Date.now() >= deadline) {
-				resolve(false);
-				return;
-			}
-			const socket = net.createConnection(target);
-			let settled = false;
-			const finalize = (result) => {
-				if (settled) return;
-				settled = true;
-				socket.destroy();
-				if (result === "free") resolve(true);
-				else if (result === "occupied") resolve(false);
-				else setTimeout(probe, STALE_PIPE_PROBE_INTERVAL_MS).unref();
-			};
-			socket.once("connect", () => finalize("occupied"));
-			socket.once("error", (err) => {
-				if (err.code === "ENOENT" || err.code === "ECONNREFUSED") finalize("free");
-				else finalize("retry");
-			});
-		};
-		probe();
-	});
+	return sidecarUtilsRuntime.waitForControlPathFree(target, timeoutMs);
 }
 function extractHttpEndpoint(acpEndpoint) {
-	return acpEndpoint.replace(/\/api\/v1\/acp$/, "");
+	return sidecarUtilsRuntime.extractHttpEndpoint(acpEndpoint);
 }
 function waitForEndpoint$1(endpoint, timeoutMs = HOST_ENDPOINT_WAIT_TIMEOUT_MS, isSuperseded) {
 	return new Promise((resolve, reject) => {
@@ -20886,7 +20853,7 @@ function publishLocalEvent(listeners, channel, data) {
 //#endregion
 //#region ../../packages/workbuddy-server/src/server/stdio-framing.ts
 function writeDaemonStdioFrame(output, frame) {
-	output.write(`${JSON.stringify(frame)}\n`);
+	return stdioFramingRuntime.writeDaemonStdioFrame(output, frame);
 }
 function createDaemonStdioFrameReader(input, options) {
 	const decoder = new node_string_decoder.StringDecoder("utf8");
@@ -20947,6 +20914,8 @@ function isDaemonStdioFrame(frame) {
 	}
 	return false;
 }
+createDaemonStdioFrameReader = stdioFramingRuntime.createDaemonStdioFrameReader;
+isDaemonStdioFrame = stdioFramingRuntime.isDaemonStdioFrame;
 //#endregion
 //#region ../../packages/workbuddy-server/src/server/stdio-server.ts
 function serveDaemonRpcOverStdio(options) {
@@ -218441,6 +218410,12 @@ function createAgentCliLocalAcpEndpointUnavailableError(endpoint, timeoutMs, att
 	};
 	return error;
 }
+normalizeBackendPermissionMode$1 = agentCliArgsRuntime.normalizeBackendPermissionMode;
+buildAgentCliRuntimeArgs = agentCliArgsRuntime.buildAgentCliRuntimeArgs;
+writeAgentCliSystemPromptFile = agentCliProcessRuntime.writeAgentCliSystemPromptFile;
+cleanupAgentCliSystemPromptFile = agentCliProcessRuntime.cleanupAgentCliSystemPromptFile;
+waitForAgentCliLocalAcpEndpoint = agentCliProcessRuntime.waitForAgentCliLocalAcpEndpoint;
+createAgentCliLocalAcpEndpointUnavailableError = agentCliProcessRuntime.createAgentCliLocalAcpEndpointUnavailableError;
 //#endregion
 //#region ../../packages/workbuddy-server/src/agent/cli-settings-language.ts
 /**
