@@ -488,6 +488,9 @@ var require_src = /* @__PURE__ */ require_chunk.__commonJSMin(((exports) => {
 		}
 	});
 }));
+// Resolve the maintained OpenTelemetry context manager package at runtime;
+// the generated bundle above is retained only as historical evidence.
+require_src = () => require("@opentelemetry/context-async-hooks");
 //#endregion
 //#region ../../packages/workbuddy-server/src/telemetry/trace/daemon-trace-service.ts
 require_common$2.init_esm$3();
