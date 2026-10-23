@@ -137,6 +137,8 @@ const {
   isModelVariantType,
   stripCustomLocalModelPrefix,
 } = require('../packages/workbuddy-core/src');
+const coreContractSource = require('../packages/workbuddy-core/src/source/contract.js');
+const { AUTH_RPC_CHANNELS } = require('../packages/workbuddy-core/src');
 const {
   calculateContextUsage,
   compactMessages,
@@ -994,6 +996,9 @@ async function main() {
   dragBridgeHandler({ filePath: '/tmp/a.txt', fileName: 'a.txt', dragImageRect: { x: 1, y: 2, width: 3, height: 4 } });
   assert.strictEqual(dragBridgeCalls[0][0], 'artifact:start-drag-local-file');
   assert.strictEqual(toFileResourceUri('/tmp/a b.txt'), 'file:///tmp/a%20b.txt');
+  assert.strictEqual(coreContractSource.AUTH_RPC_CHANNELS, AUTH_RPC_CHANNELS);
+  assert.strictEqual(AUTH_RPC_CHANNELS.LOGIN, 'auth:login');
+  assert.strictEqual(AUTH_RPC_CHANNELS.LOAD_PENDING_INPUT, 'auth:loadPendingInput');
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });
