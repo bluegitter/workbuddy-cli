@@ -46,6 +46,8 @@ const {
 const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger, formatLocalIsoTimestamp, formatLine, buildLifecycleLine, buildStartupPerfFields } = require('../packages/telemetry/src');
 const telemetryLoggerSource = require('../packages/telemetry/src/source/logger.js');
 const { configureWorkbuddyLogger, createWorkbuddyScopedLogger, getWorkbuddyLogger } = require('../packages/telemetry/src');
+const promptTraceSource = require('../packages/telemetry/src/source/prompt-trace-reporter.js');
+const { reportPromptDoneEvent, reportPromptForwardingEvent, reportPromptTrace, setDesktopMonitorServiceResolver } = require('../packages/telemetry/src');
 const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValueList } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
@@ -906,6 +908,14 @@ async function main() {
   assert.strictEqual(telemetryMessages[0][0], '[test] message');
   assert.strictEqual(telemetryLoggerSource.getWorkbuddyLogger(), getWorkbuddyLogger());
   configureWorkbuddyLogger(console);
+  const promptEvents = [];
+  setDesktopMonitorServiceResolver(async () => ({ getSharedInstance: () => ({ reportAegisEvent: (...args) => promptEvents.push(args) }) }));
+  reportPromptForwardingEvent({ promptRequestId: 'p1', conversationId: 'c1', userId: 'u1', traceId: 't1' });
+  reportPromptDoneEvent({ promptRequestId: 'p1', conversationId: 'c1', userId: 'u1', mainReceiveTime: Date.now() - 5, ok: false, traceId: 't1', errorMessage: 'failed' });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.strictEqual(promptEvents[0][0], 'wb_main_prompt_forwarding');
+  assert.strictEqual(promptEvents[1][0], 'wb_main_prompt_failed');
+  assert.strictEqual(promptTraceSource.reportPromptTrace, reportPromptTrace);
   assert.strictEqual(logAclSource.computeCutoff, computeCutoff);
   assert.strictEqual(computeCutoff('2026-01-07'), '2026-01-01');
   assert.strictEqual(DATE_DIR_PATTERN.test('2026-01-02'), true);
