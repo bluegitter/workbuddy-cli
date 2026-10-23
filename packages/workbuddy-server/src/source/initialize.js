@@ -13,6 +13,10 @@ const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
 const storageUtilsRuntime = require("../runtime/storage-utils.js");
+const sessionPathsRuntime = require("../runtime/session-paths.js");
+const sessionRuntimeConfigRuntime = require("../runtime/session-runtime-config.js");
+const sessionNotificationRuntime = require("../runtime/session-notification-adapter.js");
+const sessionReplayRuntime = require("../runtime/session-replay.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -98692,17 +98696,7 @@ function restoreTaskStateFromStoredStatus(sessionId, createdAt, rawStatus, optio
 //#endregion
 //#region ../../packages/workbuddy-server/src/session/local-paths.ts
 function extractPreviewUrlLocalPath(url) {
-	if (typeof url !== "string" || !url) return;
-	let filePath;
-	if (url.startsWith("file://")) try {
-		filePath = new URL(url).pathname;
-		filePath = decodeURIComponent(filePath);
-	} catch {
-		return;
-	}
-	else if (node_path.isAbsolute(url)) filePath = url;
-	else return;
-	return filePath ? node_path.normalize(filePath) : void 0;
+	return sessionPathsRuntime.extractPreviewUrlLocalPath(url);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/session/handlers.ts
@@ -191198,15 +191192,7 @@ var SESSION_CWD_UNAVAILABLE = "SESSION_CWD_UNAVAILABLE";
 * into `bizCode`. `data` carries enough context for the renderer to give
 * the user actionable guidance (e.g. "the folder `/x/y` no longer exists").
 */
-var SessionCwdUnavailableError = class extends Error {
-	code = SESSION_CWD_UNAVAILABLE;
-	data;
-	constructor(message, data) {
-		super(message);
-		this.name = "SessionCwdUnavailableError";
-		this.data = data;
-	}
-};
+var SessionCwdUnavailableError = sessionPathsRuntime.SessionCwdUnavailableError;
 /**
 * Map a Node errno string (`ENOENT`, `EACCES`, ...) to a
 * `SessionCwdUnavailableReason`. Exported so that other cwd-related failure
@@ -191217,13 +191203,7 @@ var SessionCwdUnavailableError = class extends Error {
 * failure (e.g. an EACCES getting labelled as "missing").
 */
 function classifyErrno(errno) {
-	switch (errno) {
-		case "ENOENT":
-		case "ENOTDIR": return "missing";
-		case "EACCES":
-		case "EPERM": return "permission_denied";
-		default: return "unknown";
-	}
+	return sessionPathsRuntime.classifyErrno(errno);
 }
 /**
 * Throw `SessionCwdUnavailableError` if `cwd` cannot be used as a working
@@ -191243,34 +191223,7 @@ function classifyErrno(errno) {
 *     of scope for this hotfix (#56876).
 */
 async function assertSessionCwdUsable(cwd) {
-	let stat;
-	try {
-		stat = await node_fs.promises.stat(cwd);
-	} catch (err) {
-		const errno = err.code;
-		const reason = classifyErrno(errno);
-		throw new SessionCwdUnavailableError(reason === "missing" ? `Session working directory does not exist or was removed: ${cwd}` : reason === "permission_denied" ? `Permission denied for session working directory: ${cwd}` : `Cannot access session working directory: ${cwd} (${errno ?? "unknown"})`, {
-			cwd,
-			reason,
-			errno,
-			systemMessage: err instanceof Error ? err.message : String(err)
-		});
-	}
-	if (!stat.isDirectory()) throw new SessionCwdUnavailableError(`Session working directory path is not a directory: ${cwd}`, {
-		cwd,
-		reason: "not_a_directory"
-	});
-	try {
-		await node_fs.promises.access(cwd, node_fs.constants.R_OK | node_fs.constants.X_OK);
-	} catch (err) {
-		const errno = err.code;
-		throw new SessionCwdUnavailableError(`Permission denied for session working directory: ${cwd}`, {
-			cwd,
-			reason: "permission_denied",
-			errno,
-			systemMessage: err instanceof Error ? err.message : String(err)
-		});
-	}
+	return sessionPathsRuntime.assertSessionCwdUsable(cwd);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/common/log-details.ts
@@ -196074,33 +196027,17 @@ var WEIXINPAY_BUILTIN_PLUGIN_ID = "weixinpay@workbuddy-builtin";
 * 文件系统异常误禁用插件。
 */
 function isClawRuntimeCwd(cwd) {
-	const trimmed = cwd?.trim();
-	if (!trimmed) return false;
-	try {
-		return node_path.resolve(trimmed).toLowerCase() === node_path.resolve(resolveClawCwd()).toLowerCase();
-	} catch {
-		return false;
-	}
+	return sessionRuntimeConfigRuntime.isClawRuntimeCwd(cwd, resolveClawCwd());
 }
 /**
 * 在 sessionSettings.enabledPlugins 上叠加单个插件的启用态（session-local，
 * 通过 `--settings` 的 CLI scope 下发），不改动持久化的 user/workspace 设置。
 */
 function withSessionEnabledPluginSetting(settings, pluginId, enabled) {
-	const existingEnabledPlugins = settings?.enabledPlugins;
-	const enabledPlugins = existingEnabledPlugins && typeof existingEnabledPlugins === "object" && !Array.isArray(existingEnabledPlugins) ? { ...existingEnabledPlugins } : {};
-	enabledPlugins[pluginId] = enabled;
-	return {
-		...settings ?? {},
-		enabledPlugins
-	};
+	return sessionRuntimeConfigRuntime.withSessionEnabledPluginSetting(settings, pluginId, enabled);
 }
 function summarizeSystemPrompt(systemPrompt) {
-	if (systemPrompt === void 0) return;
-	return {
-		length: systemPrompt.length,
-		preview: systemPrompt.slice(0, 300)
-	};
+	return sessionRuntimeConfigRuntime.summarizeSystemPrompt(systemPrompt);
 }
 /**
 * `ModeLogger.info` treats its second argument as a **string context** (scope
@@ -201255,61 +201192,28 @@ var GATEWAY_REQUEST_HEADER = "X-CodeBuddy-Request";
 var GATEWAY_REQUEST_HEADER_VALUE = "1";
 var REPLAY_HISTORY_LIMIT = 5e3;
 function buildSessionReplayRequestHeaders() {
-	return {
-		[GATEWAY_REQUEST_HEADER]: GATEWAY_REQUEST_HEADER_VALUE,
-		...require_workbuddy_auth_product_coordinator.gatewaySecretHeaders()
-	};
+	return sessionReplayRuntime.buildSessionReplayRequestHeaders(require_workbuddy_auth_product_coordinator.gatewaySecretHeaders());
 }
 async function requestWorkbuddySessionReplay({ runtimeManager, sessionId, fetchFn = fetch, limit = REPLAY_HISTORY_LIMIT, signal, cwd }) {
-	const endpoint = signal ? await raceWithSignal(runtimeManager.getHostEndpoint(), signal, `getHostEndpoint aborted for session "${sessionId}"`) : await runtimeManager.getHostEndpoint();
-	const params = new URLSearchParams({ limit: String(limit) });
-	const trimmedCwd = cwd?.trim();
-	if (trimmedCwd) params.set("cwd", trimmedCwd);
-	const response = await fetchFn(`${endpoint}/api/v1/sessions/${encodeURIComponent(sessionId)}/replay?${params.toString()}`, {
-		headers: buildSessionReplayRequestHeaders(),
-		signal
+	return sessionReplayRuntime.requestWorkbuddySessionReplay({
+		runtimeManager,
+		sessionId,
+		fetchFn,
+		limit,
+		signal,
+		cwd,
+		gatewayHeaders: require_workbuddy_auth_product_coordinator.gatewaySecretHeaders()
 	});
-	if (!response.ok) {
-		const message = await response.text().catch(() => response.statusText);
-		throw new Error(`Failed to fetch session replay for "${sessionId}": HTTP ${response.status}: ${message}`);
-	}
-	const parsed = await parseCliJsonResponse(response);
-	parsed.data.replayTiming = {
-		...parsed.data.replayTiming || {},
-		bytes: parsed.bytes
-	};
-	return parsed.data;
 }
 async function parseCliJsonResponse(response) {
-	const text = await response.text();
-	const bytes = Buffer.byteLength(text, "utf8");
-	const data = JSON.parse(text);
-	if (data && typeof data === "object" && "data" in data) return {
-		data: data.data,
-		bytes
-	};
-	return {
-		data,
-		bytes
-	};
+	return sessionReplayRuntime.parseCliJsonResponse(response);
 }
 /**
 * Race a promise against an AbortSignal. Rejects with the provided message
 * (or the signal's reason) if the signal fires before the promise settles.
 */
 function raceWithSignal(promise, signal, timeoutMessage) {
-	if (signal.aborted) return Promise.reject(signal.reason ?? new Error(timeoutMessage));
-	return new Promise((resolve, reject) => {
-		const onAbort = () => reject(signal.reason ?? new Error(timeoutMessage));
-		signal.addEventListener("abort", onAbort, { once: true });
-		promise.then((value) => {
-			signal.removeEventListener("abort", onAbort);
-			resolve(value);
-		}, (error) => {
-			signal.removeEventListener("abort", onAbort);
-			reject(error);
-		});
-	});
+	return sessionReplayRuntime.raceWithSignal(promise, signal, timeoutMessage);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/session/terminal-proxy.ts
@@ -221959,51 +221863,7 @@ async function readIdAtBytePos(jsonlPath, bytePos) {
 * status 或实时流的 session_end_turn 自行判定 turn 是否结束。
 */
 function convertJsonlItemToSessionNotification(item, sessionId, _lineByteOffset) {
-	if (!item || typeof item !== "object") return [];
-	const raw = item;
-	const rawType = raw.type;
-	const rawRole = raw.role;
-	const rawId = raw.id || "";
-	const rawContent = raw.content;
-	const rawTimestamp = raw.timestamp;
-	if (rawType === "file-history-snapshot") return [];
-	const providerData = raw.providerData;
-	if (rawType === "message" && rawRole === "user" && providerData) {
-		if (providerData.isCompacted === true || providerData.skipRun === true || providerData.isCompactInternal === true || providerData.isAdditionalData === true || providerData.teammateMessage === true || providerData.agent === "compact") return [];
-	}
-	let sessionUpdate;
-	if (rawType === "message" && rawRole === "user") sessionUpdate = "user_message_chunk";
-	else if (rawType === "message" && rawRole === "assistant") sessionUpdate = "agent_message_chunk";
-	else if (rawType === "tool_call" || rawType === "function_call") sessionUpdate = "tool_call";
-	else if (rawType === "tool_result" || rawType === "function_call_result" || rawType === "function_call_output") sessionUpdate = "tool_call_update";
-	else if (rawType === "thinking" || rawType === "reasoning" || rawRole === "thinking") sessionUpdate = "agent_thought_chunk";
-	else return [];
-	const convertedContent = convertContent(Array.isArray(rawContent) && rawContent.length === 0 && raw.rawContent ? raw.rawContent : rawContent, sessionUpdate);
-	return [{
-		sessionId,
-		update: {
-			sessionUpdate,
-			messageId: rawId,
-			...convertedContent,
-			...sessionUpdate === "tool_call" ? {
-				toolCallId: raw.toolCallId || raw.callId || raw.call_id || rawId,
-				title: raw.name || raw.toolName || "",
-				status: raw.status || "completed",
-				rawInput: normalizeArgs(raw.input ?? raw.arguments ?? raw.rawInput),
-				rawOutput: raw.output || raw.rawOutput || ""
-			} : {},
-			...sessionUpdate === "tool_call_update" ? {
-				toolCallId: raw.toolCallId || raw.callId || raw.call_id || "",
-				status: raw.status || "completed",
-				rawOutput: raw.output || raw.content || ""
-			} : {},
-			_meta: { "codebuddy.ai": {
-				messageId: rawId,
-				isHistoryReplay: true,
-				...rawTimestamp ? { timestamp: rawTimestamp } : {}
-			} }
-		}
-	}];
+	return sessionNotificationRuntime.convertJsonlItemToSessionNotification(item, sessionId, _lineByteOffset);
 }
 /**
 * 把 tool_call 的 args 归一化为 object。
@@ -222019,12 +221879,7 @@ function convertJsonlItemToSessionNotification(item, sessionId, _lineByteOffset)
 * - 其他（null / undefined / number / array 等）→ 返回 {}
 */
 function normalizeArgs(v) {
-	if (v && typeof v === "object" && !Array.isArray(v)) return v;
-	if (typeof v === "string" && v.length > 0) try {
-		const parsed = JSON.parse(v);
-		if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
-	} catch {}
-	return {};
+	return sessionNotificationRuntime.normalizeArgs(v);
 }
 /**
 * 转换 content 字段：将 JSONL 的 content 数组/对象适配为 ACP update 里的 content 格式。
@@ -222035,48 +221890,7 @@ function normalizeArgs(v) {
 * - tool_call/tool_result：不处理 content（走上层 rawInput/rawOutput）
 */
 function convertContent(rawContent, sessionUpdate) {
-	if (sessionUpdate === "tool_call" || sessionUpdate === "tool_call_update") return {};
-	if (typeof rawContent === "string") return { content: {
-		type: "text",
-		text: rawContent
-	} };
-	if (Array.isArray(rawContent)) {
-		const texts = [];
-		const imageBlocks = [];
-		for (const block of rawContent) {
-			if (!block || typeof block !== "object") continue;
-			const b = block;
-			const bType = b.type;
-			const bText = b.text;
-			if (bType === "input_text" || bType === "output_text" || bType === "text") {
-				if (bText) texts.push(bText);
-			} else if (bType === "thinking" || bType === "thought" || bType === "reasoning_text") {
-				if (bText) texts.push(bText);
-			} else if (bType === "image_blob_ref") imageBlocks.push(b);
-		}
-		if (imageBlocks.length > 0) {
-			const contentArray = [];
-			if (texts.length > 0) contentArray.push({
-				type: "text",
-				text: texts.join("\n")
-			});
-			contentArray.push(...imageBlocks);
-			return { content: contentArray };
-		}
-		if (texts.length > 0) return { content: {
-			type: "text",
-			text: texts.join("\n")
-		} };
-		return {};
-	}
-	if (rawContent && typeof rawContent === "object") {
-		const c = rawContent;
-		if (c.text) return { content: {
-			type: "text",
-			text: c.text
-		} };
-	}
-	return {};
+	return sessionNotificationRuntime.convertContent(rawContent, sessionUpdate);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/edge-sync/edge-sync-handlers.ts
