@@ -170,6 +170,9 @@ async function main() {
   assert.strictEqual(isSubagent(lineageChild), true);
   assert.deepStrictEqual(buildSessionLineage(lineageChild, lineageManager.sessions).map(({ id }) => id), ['parent', 'child']);
   assert.deepStrictEqual(lineageManager.childrenOf('parent').map(({ id }) => id), ['child']);
+  assert.strictEqual(lineageManager.close('parent', 'cleanup'), true);
+  assert.strictEqual(lineageManager.get('parent'), undefined);
+  assert.strictEqual(lineageManager.get('child'), undefined);
   const connectionListeners = new Map();
   const connection = {
     isInitialized: true, state: 'ready', transport: 'local', capabilities: { prompt: true },

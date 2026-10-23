@@ -22,6 +22,7 @@ class SessionManager {
   close(id, reason) {
     const session = this.sessions.get(id);
     if (!session) return false;
+    for (const child of this.childrenOf(id)) this.close(child.id, reason || 'parent session closed');
     if (!['completed', 'failed', 'cancelled'].includes(session.status)) session.abort(reason);
     this.sessions.delete(id);
     if (session.parentSessionId) this.sessions.get(session.parentSessionId)?.removeChild(id);
