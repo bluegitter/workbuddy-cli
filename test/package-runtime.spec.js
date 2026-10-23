@@ -238,6 +238,12 @@ const {
   readIdAtBytePos,
   readActiveChainPage,
   handleGetPage,
+  handleSessionStop,
+  handleGetAutomations,
+  handleGetTaskArtifacts,
+  handleGetModels,
+  handleGetSessionConfig,
+  handleGetSkills,
   buildDeviceOnlinePayload,
   createInitialTaskState,
   reduceTaskStatus,
@@ -2456,6 +2462,25 @@ async function main() {
   });
   assert.strictEqual(pageResponse.messages.length, 2);
   assert.strictEqual(pageResponse.prevCursor.messageId, 'm1');
+  let cancelledSession;
+  const handlerCtx = {
+    deps: {
+      cancelSession: async (sessionId) => { cancelledSession = sessionId; },
+      getAutomationSnapshot: async () => ({ automations: [] }),
+      getSessionArtifacts: async () => [{ name: 'plan.md' }],
+      getProductConfiguration: async () => ({ models: ['sonnet'] }),
+      getSessionConfig: async () => ({ permissionMode: 'default' }),
+      getInstalledSkills: async () => [{ name: 'skill-a' }],
+    },
+    logger: { info() {}, warn() {} },
+  };
+  assert.deepStrictEqual(await handleSessionStop(handlerCtx, { sessionId: 's1', commandId: 'stop-1' }), { success: true });
+  assert.strictEqual(cancelledSession, 's1');
+  assert.strictEqual((await handleGetAutomations(handlerCtx, {})).success, true);
+  assert.strictEqual((await handleGetTaskArtifacts(handlerCtx, { sessionId: 's1' })).artifacts.length, 1);
+  assert.deepStrictEqual((await handleGetModels(handlerCtx, {})).data.models, ['sonnet']);
+  assert.strictEqual((await handleGetSessionConfig(handlerCtx, { sessionId: 's1' })).data.permissionMode, 'default');
+  assert.strictEqual((await handleGetSkills(handlerCtx, {})).data[0].name, 'skill-a');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });

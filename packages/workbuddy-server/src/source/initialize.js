@@ -12,6 +12,7 @@ const edgeSyncTracingRuntime = require("../runtime/edge-sync-tracing.js");
 const edgeSyncJsonlRuntime = require("../runtime/edge-sync-jsonl.js");
 const edgeSyncApiRuntime = require("../runtime/edge-sync-api.js");
 const edgeSyncChannelRuntime = require("../runtime/edge-sync-channel.js");
+const edgeSyncBasicHandlersRuntime = require("../runtime/edge-sync-basic-handlers.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
@@ -221140,6 +221141,7 @@ function convertContent(rawContent, sessionUpdate) {
 */
 /** 处理云端发来的 session.stop 命令：调用 CLI cancel */
 async function handleSessionStop(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleSessionStop(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §STOP: sid=${cmd.sessionId} commandId=${cmd.commandId}`);
 	try {
 		if (ctx.deps.cancelSession) {
@@ -221604,6 +221606,7 @@ async function handlePermissionResolve(ctx, cmd) {
 }
 /** 处理云端发来的 get_models 命令：返回 Desktop 配置的模型列表 */
 async function handleGetModels(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleGetModels(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §GET_MODELS: commandId=${cmd.commandId}`);
 	try {
 		if (ctx.deps.getProductConfiguration) {
@@ -221623,6 +221626,7 @@ async function handleGetModels(ctx, cmd) {
 }
 /** 处理云端发来的 get_session_config 命令：返回当前 session 的 permissionMode 等运行时配置 */
 async function handleGetSessionConfig(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleGetSessionConfig(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §GET_SESSION_CONFIG: sid=${cmd.sessionId} commandId=${cmd.commandId}`);
 	try {
 		if (ctx.deps.getSessionConfig) {
@@ -221649,6 +221653,7 @@ async function handleGetSessionConfig(ctx, cmd) {
 * 返回的 SkillInfo[] 均为展示字段（name/description/icon/version 等），无敏感信息，可直接透传。
 */
 async function handleGetSkills(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleGetSkills(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §GET_SKILLS: commandId=${cmd.commandId}`);
 	try {
 		if (ctx.deps.getInstalledSkills) {
@@ -221848,6 +221853,7 @@ async function handleGetPage(ctx, cmd) {
 * 由 startListeningCommands 框架通过 replyChannel 自动回传给请求方。
 */
 async function handleGetAutomations(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleGetAutomations(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §8 GET_AUTOMATIONS: commandId=${cmd.commandId}`);
 	if (!ctx.deps.getAutomationSnapshot) {
 		ctx.logger.warn("[EdgeSync] §8 GET_AUTOMATIONS: deps.getAutomationSnapshot not available");
@@ -221878,6 +221884,7 @@ async function handleGetAutomations(ctx, cmd) {
 * 由 startListeningCommands 框架通过 replyChannel 自动回传给请求方。
 */
 async function handleGetTaskArtifacts(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleGetTaskArtifacts(ctx, cmd);
 	const { sessionId, commandId } = cmd;
 	ctx.logger.info(`[EdgeSync] §9 GET_TASK_ARTIFACTS: sid=${sessionId} commandId=${commandId}`);
 	if (!ctx.deps.getSessionArtifacts) {

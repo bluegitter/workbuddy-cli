@@ -40,6 +40,7 @@ module.exports = Object.freeze({
   ...require("./runtime/edge-sync-tracing"),
   ...require("./runtime/edge-sync-mapping-store"),
   ...require("./runtime/edge-sync-jsonl"),
+  ...require("./runtime/edge-sync-basic-handlers"),
   ...require("./runtime/agent-teams-env"),
   ...require("./runtime/agent-teams-env-resolver"),
   ...require("./runtime/agent-cli-args"),
