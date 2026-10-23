@@ -10663,6 +10663,9 @@ var require_cos = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, module)
 var require_cos_nodejs_sdk_v5 = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, module) => {
 	module.exports = require_cos();
 }));
+// COS is an external SDK; keep the generated implementation unreachable while
+// preserving the compiled module's lazy require shape.
+require_cos_nodejs_sdk_v5 = () => require("cos-nodejs-sdk-v5");
 //#endregion
 //#region ../../packages/core/src/node/file-upload/uploader/cos-uploader.ts
 var import_common$24, import_common$25, import_cos_nodejs_sdk_v5, _ref$14, _ref2$8, COSFileUploader;
