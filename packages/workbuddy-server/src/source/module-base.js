@@ -15080,6 +15080,8 @@ var require_lib$1 = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, modul
 	module.exports = Object.assign(Object.assign({}, module.exports), exports.fs);
 	module.exports.semantic = true;
 }));
+// Use the maintained memfs implementation for the runtime Git scanner.
+require_lib$1 = () => require("memfs");
 //#endregion
 //#region ../../packages/runtime/src/common/module.ts
 var module_exports$6 = /* @__PURE__ */ require_chunk.__exportAll({ default: () => module_default$6 });
