@@ -56,6 +56,7 @@ const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-polic
 const projectHttpSource = require('../packages/workbuddy-server/src/source/http.js');
 const { HANDOFF_CANARY_HEADERS, ROUTE_PREFIX, withAcceptLanguageHeader } = require('../packages/workbuddy-server/src');
 const { sessionRecordToTaskConversation } = require('../packages/workbuddy-server/src');
+const { createSessionRecordStore, SessionRuntimeEventService, DefaultUsageCacheService, createUsageCacheStore } = require('../packages/workbuddy-server/src');
 const mcpSchemaSource = require('../packages/workbuddy-server/src/runtime/mcp-schema.js');
 const { EMPTY_COMPLETION_RESULT, createCompletionResult, getZodSchemaObject, isZodRawShapeCompat, isZodSchemaInstance, isZodTypeLike, promptArgumentsFromSchema } = require('../packages/workbuddy-server/src');
 const { startDaemonAppServerEntry } = require('../packages/workbuddy-server/src');
@@ -2533,6 +2534,24 @@ async function main() {
     role: 'creator', conversationOrigin: 'local', isCollaborative: false,
   });
   assert.strictEqual(sessionRecordToTaskConversation({}).lastActivityAt, '1970-01-01T00:00:00.000Z');
+  const databaseSessions = new Map([['s1', { id: 's1', status: 'Pending', title: 'Old', userId: 'u1' }]]);
+  const sessionDb = {
+    initialize() {}, getSession: (id) => databaseSessions.get(id), getSessions: () => [...databaseSessions.values()],
+    upsertSession: (entry) => databaseSessions.set(entry.id, entry), updateSessionStatus: (id, status) => databaseSessions.set(id, { ...databaseSessions.get(id), status }),
+    deleteSession: (id) => databaseSessions.delete(id),
+  };
+  const recordStore = createSessionRecordStore(Promise.resolve({ database: sessionDb }), { getCurrentUserId: () => 'u2' });
+  await recordStore.upsertSession({ id: 's2', status: 'Pending' });
+  assert.strictEqual((await recordStore.getSession('s2')).userId, 'u2');
+  const runtimeSessionEvents = [];
+  const eventService = new SessionRuntimeEventService(sessionDb, { warn() {} }, { sinks: { onSessionUpsert: (value) => runtimeSessionEvents.push(value) } });
+  assert.strictEqual(eventService.handleRuntimeEvent({ sessionId: 's1', rawState: 'running', timestamp: 42 }), true);
+  assert.strictEqual(runtimeSessionEvents[0].status, 'Working');
+  const usageRows = new Map();
+  const usageStore = createUsageCacheStore(Promise.resolve({ database: { initialize() {}, getSessionUsage: (id) => usageRows.get(id), upsertSessionUsage: (entry) => usageRows.set(entry.sessionId, entry), deleteSessionUsage: (id) => usageRows.delete(id), getAllSessionUsages: () => [...usageRows.values()] } }));
+  const usage = new DefaultUsageCacheService({ store: usageStore });
+  usage.recordUsage('s1', { used: 1, size: 2, updatedAt: 3 });
+  assert.deepStrictEqual(await usage.getPersisted('s1'), { used: 1, size: 2, updatedAt: 3 });
   const persistence = createWorkbuddySessionPersistence({
     celljs: { name: 'cell' },
     createRecordStore: (_celljs, options) => ({ kind: 'record', user: options.getCurrentUserId() }),
