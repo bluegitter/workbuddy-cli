@@ -1,5 +1,6 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const require_chunk = require("./chunk.js");
+const { clampBoundsToWorkArea, isVisibleOnAnyDisplay: isVisibleOnAnyDisplayRuntime } = require("../runtime/window-policy.js");
 require("./fs-protection.js");
 const require_common$1 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
@@ -17036,16 +17037,13 @@ var DEFAULTS = {
 	width: 1200,
 	height: 800
 };
+function isVisibleOnAnyDisplay(bounds) {
+	return isVisibleOnAnyDisplayRuntime(bounds, electron.screen.getAllDisplays());
+}
 function stateFilePath() {
 	return path.join(electron.app.getPath("userData"), "window-state.json");
 }
 /** Check that at least part of the rect is visible on some display. */
-function isVisibleOnAnyDisplay(bounds) {
-	return electron.screen.getAllDisplays().some((display) => {
-		const { x, y, width, height } = display.workArea;
-		return bounds.x < x + width && bounds.x + bounds.width > x && bounds.y < y + height && bounds.y + bounds.height > y;
-	});
-}
 /** Center bounds on the primary display, keeping width/height. */
 function centerOnPrimary(bounds) {
 	const { workArea } = electron.screen.getPrimaryDisplay();
@@ -17060,22 +17058,6 @@ function centerOnPrimary(bounds) {
 * Clamp window bounds so they fit within the given workArea.
 * Shrinks width/height if larger than workArea, then re-centers within it.
 */
-function clampBoundsToWorkArea(bounds, workArea) {
-	const width = Math.min(bounds.width, workArea.width);
-	const height = Math.min(bounds.height, workArea.height);
-	let x = bounds.x;
-	let y = bounds.y;
-	if (x < workArea.x) x = workArea.x;
-	if (y < workArea.y) y = workArea.y;
-	if (x + width > workArea.x + workArea.width) x = workArea.x + workArea.width - width;
-	if (y + height > workArea.y + workArea.height) y = workArea.y + workArea.height - height;
-	return {
-		x,
-		y,
-		width,
-		height
-	};
-}
 function loadWindowState() {
 	const fallback = {
 		bounds: centerOnPrimary(DEFAULTS),
