@@ -220581,6 +220581,7 @@ function computeLineByteStarts(lines, baseByteOffset) {
 * @returns items（正序）、实际收集的轮数、是否还有更早的轮次
 */
 async function readActiveChainPage(jsonlPath, limitTurns, startBytePos) {
+	return edgeSyncJsonlRuntime.readActiveChainPage(jsonlPath, limitTurns, startBytePos, { edgeLog });
 	if ((await (await import("node:fs/promises")).stat(jsonlPath)).size === 0) return {
 		items: [],
 		itemByteOffsets: [],
@@ -220773,6 +220774,7 @@ function checkPrevLineTombstone(prevLine) {
 * @param startBytePos 从哪个字节位置开始逆序读（默认 = 文件尾）
 */
 async function readJsonlPageByParentChain(jsonlPath, lastMessageId, limitTurns, startBytePos) {
+	return edgeSyncJsonlRuntime.readJsonlPageByParentChain(jsonlPath, lastMessageId, limitTurns, startBytePos, { edgeLog });
 	const fsPromises = await import("node:fs/promises");
 	const fileSize = (await fsPromises.stat(jsonlPath)).size;
 	const effectiveStart = startBytePos !== void 0 ? await extendToLineEnd(jsonlPath, startBytePos ?? fileSize) : fileSize;

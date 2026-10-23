@@ -236,6 +236,7 @@ const {
   extendToLineEnd,
   findLastMessageIdFromFile,
   readIdAtBytePos,
+  readActiveChainPage,
   buildDeviceOnlinePayload,
   createInitialTaskState,
   reduceTaskStatus,
@@ -2440,6 +2441,9 @@ async function main() {
   assert.strictEqual(await extendToLineEnd(jsonlPath, m1Position.bytePos), Buffer.byteLength(JSON.stringify({ id: 'm1', type: 'message', role: 'user' })) + 1);
   assert.strictEqual(await findLastMessageIdFromFile(jsonlPath), 'm2');
   assert.strictEqual(await readIdAtBytePos(jsonlPath, m1Position.bytePos), 'm1');
+  const page = await readActiveChainPage(jsonlPath, 1);
+  assert.deepStrictEqual(page.items.map((item) => item.id), ['m1', 'm2']);
+  assert.strictEqual(page.turnsCollected, 1);
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });

@@ -138,6 +138,132 @@ async function readIdAtBytePos(jsonlPath, bytePos) {
   }
 }
 
+async function readActiveChainPage(jsonlPath, limitTurns, startBytePos, options = {}) {
+  const fsPromises = require('fs').promises;
+  const trace = options.edgeLog || (() => {});
+  const fileSize = (await fsPromises.stat(jsonlPath)).size;
+  if (fileSize === 0) return { items: [], itemByteOffsets: [], turnsCollected: 0, hasMore: false };
+  const firstScreen = startBytePos === undefined;
+  const targetId = firstScreen ? await findLastMessageIdFromFile(jsonlPath) : await readIdAtBytePos(jsonlPath, startBytePos) || await findLastMessageIdFromFile(jsonlPath);
+  if (!targetId) return { items: [], itemByteOffsets: [], turnsCollected: 0, hasMore: false, linesScanned: 0, bytesScanned: 0 };
+  trace('ACTIVE_CHAIN_PAGE', `mode=${firstScreen ? 'first-screen' : 'paging'} targetId=${targetId.slice(0, 12)} startBytePos=${startBytePos ?? 'fileEnd'}`);
+  return readJsonlPageByParentChain(jsonlPath, targetId, limitTurns, startBytePos, options);
+}
+
+async function readJsonlPageByParentChain(jsonlPath, lastMessageId, limitTurns, startBytePos, options = {}) {
+  const fsPromises = require('fs').promises;
+  const trace = options.edgeLog || (() => {});
+  const fileSize = (await fsPromises.stat(jsonlPath)).size;
+  const effectiveStart = startBytePos !== undefined ? await extendToLineEnd(jsonlPath, startBytePos ?? fileSize) : fileSize;
+  const emptyStats = { chainMatched: 0, forkSkipped: 0, chainHops: 0, customItems: 0 };
+  if (effectiveStart <= 0 || !lastMessageId) return { items: [], itemByteOffsets: [], turnsCollected: 0, hasMore: false, linesScanned: 0, bytesScanned: 0, parentChainStats: emptyStats };
+  const fd = await fsPromises.open(jsonlPath, 'r');
+  try {
+    const collected = [];
+    const offsets = [];
+    let totalBytes = 0;
+    let turnsCollected = 0;
+    let hasMore = false;
+    let linesScanned = 0;
+    let bytesScanned = 0;
+    let chainMatched = 0;
+    let forkSkipped = 0;
+    let chainHops = 0;
+    let customItems = 0;
+    let targetId = lastMessageId;
+    let headParentId;
+    let chainBrokenByOther = false;
+    const visitedTargets = new Set([lastMessageId]);
+    const collectLine = (item, line, byteOffset) => {
+      collected.push(item);
+      offsets.push(byteOffset);
+      totalBytes += estimateItemPayloadBytes(item, line);
+      if (isLikelyUserMessageLine(line)) {
+        const data = item.providerData;
+        const internal = data && (data.isCompacted === true || data.skipRun === true || data.isCompactInternal === true || data.isAdditionalData === true || data.teammateMessage === true || data.agent === 'compact');
+        if (!internal) {
+          turnsCollected += 1;
+          if (turnsCollected >= limitTurns) { hasMore = true; return true; }
+        }
+      }
+      if (collected.length >= MAX_ITEMS || totalBytes >= MAX_BYTES) {
+        if (turnsCollected >= 1) { hasMore = true; return true; }
+        trace('PC_BUDGET_OVERRIDE', `bytes=${totalBytes} items=${collected.length} turns=0`);
+      }
+      return false;
+    };
+    const computeHopTarget = (item, line, prevLine) => {
+      if (isLikelyUserMessageLine(line)) {
+        const tombstone = checkPrevLineTombstone(prevLine);
+        if (tombstone.isTombstone) return tombstone.forkPoint;
+      }
+      return item.parentId ?? item.logicalParentId;
+    };
+    await iterateChunksBackward(fd, effectiveStart, ({ line, byteOffset, prevLine }) => {
+      linesScanned += 1;
+      bytesScanned += line.length;
+      if (isLikelyCustomItemLine(line)) { customItems += 1; if (headParentId !== undefined) chainBrokenByOther = true; return; }
+      const lineId = line.match(ID_REGEX)?.[1];
+      if (!lineId || !targetId) return;
+      if (lineId === targetId && !chainBrokenByOther) {
+        let item;
+        try { item = parseLineWithLazyLoad(line); } catch { return; }
+        headParentId = computeHopTarget(item, line, prevLine) ?? null;
+        chainMatched += 1;
+        if (collectLine(item, line, byteOffset)) return { stop: true };
+        return;
+      }
+      if (headParentId !== undefined) {
+        if (headParentId === null) return { stop: true };
+        const oldTarget = targetId;
+        targetId = headParentId;
+        headParentId = undefined;
+        chainHops += 1;
+        chainBrokenByOther = false;
+        if (visitedTargets.has(targetId)) return { stop: true };
+        visitedTargets.add(targetId);
+        trace('PC_HOP', `${oldTarget.slice(0, 12)}->${targetId.slice(0, 12)} (triggered by ${lineId.slice(0, 12)})`);
+        if (lineId === targetId) {
+          let item;
+          try { item = parseLineWithLazyLoad(line); } catch { return; }
+          headParentId = computeHopTarget(item, line, prevLine) ?? null;
+          chainMatched += 1;
+          if (collectLine(item, line, byteOffset)) return { stop: true };
+        } else forkSkipped += 1;
+        return;
+      }
+      forkSkipped += 1;
+    }, ({ line, byteOffset }) => {
+      linesScanned += 1;
+      bytesScanned += line.length;
+      if (headParentId && headParentId !== null && !hasMore) {
+        if (visitedTargets.has(headParentId)) targetId = undefined;
+        else { targetId = headParentId; visitedTargets.add(targetId); }
+        headParentId = undefined;
+        chainHops += 1;
+      } else if (headParentId === null) targetId = undefined;
+      if (hasMore || !targetId || isLikelyCustomItemLine(line)) { if (isLikelyCustomItemLine(line)) customItems += 1; return; }
+      if (line.match(ID_REGEX)?.[1] !== targetId) { forkSkipped += 1; return; }
+      try {
+        const item = parseLineWithLazyLoad(line);
+        collected.push(item); offsets.push(byteOffset); chainMatched += 1;
+        if (isLikelyUserMessageLine(line)) turnsCollected += 1;
+      } catch {}
+    });
+    collected.reverse(); offsets.reverse();
+    if (collected.length > 1) {
+      const indices = collected.map((_, index) => index).sort((a, b) => offsets[a] - offsets[b]);
+      const sortedItems = indices.map((index) => collected[index]);
+      const sortedOffsets = indices.map((index) => offsets[index]);
+      collected.splice(0, collected.length, ...sortedItems);
+      offsets.splice(0, offsets.length, ...sortedOffsets);
+    }
+    return { items: collected, itemByteOffsets: offsets, turnsCollected, hasMore, linesScanned, bytesScanned, parentChainStats: { chainMatched, forkSkipped, chainHops, customItems } };
+  } finally {
+    await fd.close();
+  }
+}
+
 function estimateItemPayloadBytes(item, line) { return item && typeof item === 'object' && item._lazyLoad === true ? 512 : line.length; }
 function parseLineWithLazyLoad(line) {
   if (line.length <= LARGE_LINE_THRESHOLD) return JSON.parse(line);
@@ -151,4 +277,4 @@ function isLikelyUserMessageLine(line) { const head = line.length > 200 ? line.s
 function isLikelyCustomItemLine(line) { for (const type of CUSTOM_ITEM_TYPES) if (line.includes(`"type":"${type}"`)) return true; return false; }
 function checkPrevLineTombstone(prevLine) { if (!prevLine || !prevLine.includes(TOMBSTONE_MARK)) return { isTombstone: false }; return { isTombstone: true, forkPoint: prevLine.match(RE_TOMBSTONE_PARENT)?.[1] }; }
 
-module.exports = Object.freeze({ CHUNK_SIZE, MAX_ITEMS, MAX_BYTES, LARGE_LINE_THRESHOLD, LAZY_LOAD_TYPES, CUSTOM_ITEM_TYPES, ID_REGEX, estimateItemPayloadBytes, parseLineWithLazyLoad, computeLineByteStarts, isLikelyUserMessageLine, isLikelyCustomItemLine, checkPrevLineTombstone, iterateChunksBackward, findBytePosByMessageId, peekIdAtBytePos, extendToLineEnd, findLastMessageIdFromFile, readIdAtBytePos });
+module.exports = Object.freeze({ CHUNK_SIZE, MAX_ITEMS, MAX_BYTES, LARGE_LINE_THRESHOLD, LAZY_LOAD_TYPES, CUSTOM_ITEM_TYPES, ID_REGEX, estimateItemPayloadBytes, parseLineWithLazyLoad, computeLineByteStarts, isLikelyUserMessageLine, isLikelyCustomItemLine, checkPrevLineTombstone, iterateChunksBackward, findBytePosByMessageId, peekIdAtBytePos, extendToLineEnd, findLastMessageIdFromFile, readIdAtBytePos, readActiveChainPage, readJsonlPageByParentChain });
