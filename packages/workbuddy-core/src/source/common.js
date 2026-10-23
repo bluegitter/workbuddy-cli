@@ -23385,6 +23385,10 @@ var require_isAxiosError = /* @__PURE__ */ require_chunk.__commonJSMin(((exports
 //#endregion
 //#region ../../node_modules/@celljs/http/node_modules/axios/lib/axios.js
 var require_axios$1 = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, module) => {
+	// CellJS consumes the standard Axios instance contract, so use the
+	// workspace dependency instead of the copy embedded in this artifact.
+	module.exports = require("axios");
+	return;
 	var utils = require_utils();
 	var bind = require_bind();
 	var Axios = require_Axios();
