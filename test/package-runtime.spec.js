@@ -377,6 +377,7 @@ const {
   readExpertMcpDeclaration,
   SessionStore,
   ToolRoutingTable,
+  shouldHideToolsFromCli,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1636,6 +1637,12 @@ async function main() {
   assert.deepStrictEqual(routing.listTools().map((tool) => tool.name), ['search']);
   assert.deepStrictEqual(routing.listTools({ projectId: 'p1' }).map((tool) => tool.name), ['search', 'files']);
   assert.strictEqual(routing.toolServerMap().search, 'docs');
+  assert.strictEqual(shouldHideToolsFromCli('tencent-docs'), true);
+  const hiddenRouting = new ToolRoutingTable({ clients: new Map([
+    ['connector:tencent-docs', { status: 'connected', tools: [{ name: 'search' }] }],
+  ]) });
+  hiddenRouting.upsert('tencent-docs_search', 'connector:tencent-docs');
+  assert.deepStrictEqual(hiddenRouting.listTools(), []);
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
   await expertCache.saveManifest(cachedManifest, 'source-1');

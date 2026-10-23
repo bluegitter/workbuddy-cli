@@ -11,6 +11,12 @@ function extractServerShortName(configId) {
   return String(configId).replace(/^(connector|plugin-mcp|custom-mcp|project-mcp):/, '');
 }
 
+const HIDDEN_CLI_TOOL_CONNECTORS = new Set(['tencent-docs', 'tencent-docs-oa']);
+
+function shouldHideToolsFromCli(shortName) {
+  return HIDDEN_CLI_TOOL_CONNECTORS.has(shortName);
+}
+
 class ToolRoutingTable {
   constructor({ clients = new Map(), builtinTools = new Map(), disabledTools = new Map() } = {}) {
     this.clients = clients;
@@ -56,6 +62,7 @@ class ToolRoutingTable {
       if (welcomeMode !== undefined && welcomeMode !== 'design' && serverName === 'ardot') continue;
       if (selected.configId.startsWith('project-mcp:') && !projectId) continue;
       if (serverName === 'netdrive' && !projectId) continue;
+      if (shouldHideToolsFromCli(serverName)) continue;
       const disabled = new Set(this.disabledTools.get(selected.configId) || []);
       for (const tool of selected.entry.tools || []) {
         if (disabled.has(tool.name) || visible.has(tool.name)) continue;
@@ -69,4 +76,4 @@ class ToolRoutingTable {
   toolServerMap(options) { return Object.fromEntries(this.listTools(options).filter((tool) => tool._meta?.serverName).map((tool) => [tool.name, tool._meta.serverName])); }
 }
 
-module.exports = { ToolRoutingTable, configPriority, extractServerShortName };
+module.exports = { HIDDEN_CLI_TOOL_CONNECTORS, ToolRoutingTable, configPriority, extractServerShortName, shouldHideToolsFromCli };
