@@ -11,6 +11,7 @@ module.exports = Object.freeze({
   ...require("./runtime/automation-scheduler"),
   ...require("./runtime/mcp-registry"),
   ...require("./runtime/session-store"),
+  ...require("./runtime/session-notification-adapter"),
   ...require("./runtime/expert-manifest"),
   ...require("./runtime/connector-config"),
   ...require("./runtime/version-compatibility"),

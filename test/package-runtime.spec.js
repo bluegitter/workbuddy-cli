@@ -359,6 +359,9 @@ const {
   ConnectorTokenRefreshService,
   buildQqMailConfirmationInstruction,
   markQqMailConfirmationRequired,
+  convertJsonlItemToSessionNotification,
+  normalizeArgs,
+  resolveSessionUpdate,
 } = require('../packages/workbuddy-server/src');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
@@ -518,6 +521,19 @@ const {
 } = require('../packages/authentication/src');
 
 async function main() {
+  assert.strictEqual(resolveSessionUpdate('message', 'assistant'), 'agent_message_chunk');
+  assert.deepStrictEqual(normalizeArgs('{"command":"echo hi"}'), { command: 'echo hi' });
+  assert.deepStrictEqual(normalizeArgs('{bad json'), {});
+  assert.deepStrictEqual(convertJsonlItemToSessionNotification({
+    id: 'msg-1', type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'hello' }], timestamp: 42,
+  }, 'session-1'), [{
+    sessionId: 'session-1',
+    update: {
+      sessionUpdate: 'agent_message_chunk', messageId: 'msg-1', content: { type: 'text', text: 'hello' },
+      _meta: { 'codebuddy.ai': { messageId: 'msg-1', isHistoryReplay: true, timestamp: 42 } },
+    },
+  }]);
+  assert.deepStrictEqual(convertJsonlItemToSessionNotification({ id: 'compact', type: 'message', role: 'user', providerData: { isCompacted: true }, content: 'hidden' }, 'session-1'), []);
   assert.strictEqual(classifyCliExit(127), 'startup-failed');
   assert.strictEqual(classifyCliExit(9009), 'startup-failed');
   assert.strictEqual(classifyCliExit(1), 'ran-with-error');

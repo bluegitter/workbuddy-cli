@@ -10,6 +10,7 @@ const require_cli_process_env = require("./cli-process-env.js");
 const require_workbuddy_product_config = require("./workbuddy-product-config.js");
 const require_contract = require("./contract.js");
 const require_runtime_http = require("./runtime-http.js");
+const require_session_notification_adapter = require("../runtime/session-notification-adapter.js");
 const require_readonly = require("./readonly.js");
 const require_adm_zip$1 = require("./adm-zip.js");
 const require_handlers = require("./handlers.js");
@@ -223096,7 +223097,7 @@ async function handleGetPage(ctx, cmd) {
 		const pcs = pageResult.parentChainStats;
 		const pcsStr = pcs ? ` parentChain[matched=${pcs.chainMatched} forkSkipped=${pcs.forkSkipped} hops=${pcs.chainHops} customItems=${pcs.customItems}]` : "";
 		edgeLog("GET_PAGE_RESULT", `pathTaken=${pathTaken} direction=${direction} items=${_n} turns=${pageResult.turnsCollected} hasMore=${pageResult.hasMore} linesScanned=${pageResult.linesScanned ?? "?"} bytesScanned=${bytesScanned} findMs=${findMs} readMs=${readMs}${pcsStr}`);
-		const notifications = pageResult.items.flatMap((item, i) => convertJsonlItemToSessionNotification(item, sessionId, pageResult.itemByteOffsets[i])).map((n) => ({
+		const notifications = pageResult.items.flatMap((item, i) => require_session_notification_adapter.convertJsonlItemToSessionNotification(item, sessionId, pageResult.itemByteOffsets[i])).map((n) => ({
 			jsonrpc: "2.0",
 			method: "session/update",
 			params: n
