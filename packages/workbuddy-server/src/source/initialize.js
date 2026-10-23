@@ -221557,6 +221557,7 @@ async function handleSessionGetPermissionMode(ctx, cmd) {
 }
 /** 处理云端发来的 tool.answer 命令：回答 AskUserQuestion */
 async function handleToolAnswer(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleToolAnswer(ctx, cmd);
 	const answersPreview = cmd.answers ? JSON.stringify(cmd.answers).slice(0, 100) : "empty";
 	ctx.logger.info(`[EdgeSync] §TOOL.ANSWER: sid=${cmd.sessionId} toolCallId=${cmd.toolCallId || "unknown"} answers=${answersPreview}`);
 	try {
@@ -221572,6 +221573,7 @@ async function handleToolAnswer(ctx, cmd) {
 }
 /** 处理云端发来的 tool.cancel 命令：取消 AskUserQuestion */
 async function handleToolCancel(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleToolCancel(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §TOOL.CANCEL: sid=${cmd.sessionId} toolCallId=${cmd.toolCallId || "unknown"}`);
 	try {
 		if (ctx.deps.cancelTool) {
@@ -221586,6 +221588,7 @@ async function handleToolCancel(ctx, cmd) {
 }
 /** 处理云端发来的 permission.resolve 命令：审批工具执行（内联消息流中的允许/拒绝按钮） */
 async function handlePermissionResolve(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handlePermissionResolve(ctx, cmd, { edgeLog });
 	const decision = cmd.decision || "allow";
 	ctx.logger.info(`[EdgeSync] §PERMISSION.RESOLVE: sid=${cmd.sessionId} toolCallId=${cmd.toolCallId || "unknown"} decision=${decision}`);
 	try {

@@ -247,6 +247,9 @@ const {
   handleSessionGetModel,
   handleSessionSetPermissionMode,
   handleSessionGetPermissionMode,
+  handleToolAnswer,
+  handleToolCancel,
+  handlePermissionResolve,
   handleGetAutomations,
   handleGetTaskArtifacts,
   handleGetModels,
@@ -2524,6 +2527,13 @@ async function main() {
   assert.deepStrictEqual(await handleSessionGetModel(modeCtx, { sessionId: 's1' }), { success: true, data: { model: 'opus' } });
   assert.deepStrictEqual(await handleSessionSetPermissionMode(modeCtx, { sessionId: 's1', permissionMode: 'default' }), { success: true });
   assert.deepStrictEqual(await handleSessionGetPermissionMode(modeCtx, { sessionId: 's1' }), { success: true, data: { permissionMode: 'default' } });
+  let toolCall;
+  const toolCtx = { deps: { answerTool: async (...args) => { toolCall = ['answer', ...args]; }, cancelTool: async (...args) => { toolCall = ['cancel', ...args]; }, resolveInterruption: async (...args) => { toolCall = ['resolve', ...args]; } }, logger: { warn() {} }, pushToRenderer() {} };
+  assert.deepStrictEqual(await handleToolAnswer(toolCtx, { sessionId: 's1', toolCallId: 't1', answers: { ok: true } }), { success: true });
+  assert.deepStrictEqual(toolCall, ['answer', 's1', 't1', { ok: true }]);
+  assert.deepStrictEqual(await handleToolCancel(toolCtx, { sessionId: 's1', toolCallId: 't1' }), { success: true });
+  assert.deepStrictEqual(await handlePermissionResolve(toolCtx, { sessionId: 's1', toolCallId: 't1', decision: 'deny' }), { success: true });
+  assert.deepStrictEqual(toolCall, ['resolve', 's1', 't1', 'deny']);
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });

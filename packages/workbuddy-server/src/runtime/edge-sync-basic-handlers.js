@@ -118,6 +118,25 @@ const handleSessionSetModel = (ctx, cmd) => setSessionValue(ctx, cmd, 'setSessio
 const handleSessionGetModel = (ctx, cmd) => getSessionValue(ctx, cmd, 'getSessionModel', 'model', 'GET_MODEL');
 const handleSessionSetPermissionMode = (ctx, cmd) => setSessionValue(ctx, cmd, 'setSessionPermissionMode', cmd.permissionMode, 'SET_PERMISSION_MODE');
 const handleSessionGetPermissionMode = (ctx, cmd) => getSessionValue(ctx, cmd, 'getSessionPermissionMode', 'permissionMode', 'GET_PERMISSION_MODE');
+async function handleToolAnswer(ctx, cmd) {
+  try { if (ctx.deps.answerTool) await ctx.deps.answerTool(cmd.sessionId, cmd.toolCallId || '', cmd.answers || {}); return { success: true }; }
+  catch (error) { logger(ctx).warn(`[EdgeSync] TOOL.ANSWER failed: ${errorText(error)}`); return { success: false }; }
+}
+async function handleToolCancel(ctx, cmd) {
+  try { if (ctx.deps.cancelTool) await ctx.deps.cancelTool(cmd.sessionId, cmd.toolCallId || ''); return { success: true }; }
+  catch (error) { logger(ctx).warn(`[EdgeSync] TOOL.CANCEL failed: ${errorText(error)}`); return { success: false }; }
+}
+async function handlePermissionResolve(ctx, cmd, options = {}) {
+  const decision = cmd.decision || 'allow';
+  try {
+    if (ctx.deps.resolveInterruption) {
+      await ctx.deps.resolveInterruption(cmd.sessionId, cmd.toolCallId || '', decision);
+      ctx.pushToRenderer?.(cmd.sessionId, { sessionId: cmd.sessionId, update: { sessionUpdate: 'session_info_update', _meta: { 'codebuddy.ai/permissionResolved': { requestId: cmd.toolCallId || '', toolCallId: cmd.toolCallId || '', decision } } } });
+      options.edgeLog?.('PERMISSION_RESOLVE_PUSH', `sid=${cmd.sessionId} toolCallId=${cmd.toolCallId || ''} decision=${decision}`);
+    }
+    return { success: true };
+  } catch (error) { logger(ctx).warn(`[EdgeSync] PERMISSION.RESOLVE failed: ${errorText(error)}`); return { success: false }; }
+}
 
 async function handleSessionStop(ctx, cmd) {
   const log = logger(ctx);
@@ -162,4 +181,4 @@ async function handleGetSkills(ctx, cmd) {
   catch (error) { log.warn(`[EdgeSync] GET_SKILLS failed: ${errorText(error)}`); return { success: false }; }
 }
 
-module.exports = Object.freeze({ handleSessionCreate, handlePromptSubmit, handleSessionStop, handleGetAutomations, handleGetTaskArtifacts, handleGetModels, handleGetSessionConfig, handleGetSkills, handleSessionSetMode, handleSessionGetMode, handleSessionSetModel, handleSessionGetModel, handleSessionSetPermissionMode, handleSessionGetPermissionMode });
+module.exports = Object.freeze({ handleSessionCreate, handlePromptSubmit, handleSessionStop, handleGetAutomations, handleGetTaskArtifacts, handleGetModels, handleGetSessionConfig, handleGetSkills, handleSessionSetMode, handleSessionGetMode, handleSessionSetModel, handleSessionGetModel, handleSessionSetPermissionMode, handleSessionGetPermissionMode, handleToolAnswer, handleToolCancel, handlePermissionResolve });
