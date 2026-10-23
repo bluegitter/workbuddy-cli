@@ -391,6 +391,9 @@ const {
   buildEnabledPluginIndex,
   discoverPluginMcpConfigs,
   isInside,
+  mergeConnectorMcpServers,
+  normalizeTimeout,
+  writeConnectorMcpConfig,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1765,6 +1768,18 @@ async function main() {
   assert.strictEqual(isInside(pluginRoot, pluginDir), true);
   assert.strictEqual(isInside(pluginRoot, path.join(pluginRoot, '..')), false);
   fs.rmSync(pluginRoot, { recursive: true, force: true });
+  assert.strictEqual(normalizeTimeout(2), 2000);
+  assert.strictEqual(normalizeTimeout(2000), 2000);
+  const connectorConfig = mergeConnectorMcpServers({ connectors: [{ source: 'docs' }, { source: 'cli', type: 'cli' }] }, {
+    enabled: [],
+    toProxyConfigId: (id) => `custom:${id}`,
+    readConnectorMcpConfig: () => ({ mcpServers: { docs: { url: 'https://docs', timeout: 2 } } }),
+  });
+  assert.deepStrictEqual(connectorConfig.mcpServers['custom:docs'], { url: 'https://docs', timeout: 2000, disabled: true });
+  const configFile = path.join(os.tmpdir(), `workbuddy-config-${Date.now()}`, 'mcp.json');
+  writeConnectorMcpConfig(configFile, connectorConfig);
+  assert.deepStrictEqual(JSON.parse(fs.readFileSync(configFile, 'utf8')), connectorConfig);
+  fs.rmSync(path.dirname(configFile), { recursive: true, force: true });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
