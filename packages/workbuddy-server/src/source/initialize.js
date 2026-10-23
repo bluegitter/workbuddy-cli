@@ -17,6 +17,7 @@ const edgeSyncArtifactsRuntime = require("../runtime/edge-sync-artifacts.js");
 const { EdgeSyncMappingStore: EdgeSyncMappingStoreRuntime } = require("../runtime/edge-sync-mapping-store.js");
 const { EdgeSyncNetworkRecovery: EdgeSyncNetworkRecoveryRuntime } = require("../runtime/edge-sync-recovery.js");
 const { EdgeSyncTurnTraceStore: EdgeSyncTurnTraceStoreRuntime } = require("../runtime/edge-sync-trace.js");
+const workbuddyDatabaseRuntime = require("../runtime/workbuddy-database.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
@@ -5963,6 +5964,27 @@ var sessionUsage = sqliteTable("session_usage", {
 	updatedAt: integer("updated_at").notNull(),
 	creditJson: text("credit_json")
 });
+// Use the maintained Drizzle package for all database objects created by the
+// repositories below. The surrounding legacy code remains temporarily in the
+// compiled artifact as migration evidence, but the live bindings are external.
+sessions = workbuddyDatabaseRuntime.sessions;
+workspaces = workbuddyDatabaseRuntime.workspaces;
+automations = workbuddyDatabaseRuntime.automations;
+automationRuns = workbuddyDatabaseRuntime.automationRuns;
+automationRuntimeState = workbuddyDatabaseRuntime.automationRuntimeState;
+automationDeliveryOutbox = workbuddyDatabaseRuntime.automationDeliveryOutbox;
+migrationMeta = workbuddyDatabaseRuntime.migrationMeta;
+sessionUsage = workbuddyDatabaseRuntime.sessionUsage;
+schema_exports = workbuddyDatabaseRuntime.schema;
+drizzle = workbuddyDatabaseRuntime.drizzle;
+sql = workbuddyDatabaseRuntime.sql;
+eq = workbuddyDatabaseRuntime.eq;
+and = workbuddyDatabaseRuntime.and;
+or = workbuddyDatabaseRuntime.or;
+isNull = workbuddyDatabaseRuntime.isNull;
+inArray = workbuddyDatabaseRuntime.inArray;
+desc = workbuddyDatabaseRuntime.desc;
+asc = workbuddyDatabaseRuntime.asc;
 //#endregion
 //#region ../../packages/workbuddy-server/src/storage/drizzle/migrator.ts
 var WORKBUDDY_DRIZZLE_MIGRATIONS_TABLE = "__workbuddy_drizzle_migrations";

@@ -60,6 +60,7 @@ const { createSessionRecordStore, SessionRuntimeEventService, DefaultUsageCacheS
 const mcpSchemaSource = require('../packages/workbuddy-server/src/runtime/mcp-schema.js');
 const { EMPTY_COMPLETION_RESULT, createCompletionResult, getZodSchemaObject, isZodRawShapeCompat, isZodSchemaInstance, isZodTypeLike, promptArgumentsFromSchema } = require('../packages/workbuddy-server/src');
 const { startDaemonAppServerEntry } = require('../packages/workbuddy-server/src');
+const workbuddyDatabase = require('../packages/workbuddy-server/src/runtime/workbuddy-database.js');
 const { FileBackedLegacyLocalStorageMigrationService, createAppServerDesktopHostBridge, partitionToScope, readOpenDialogResult, readSaveDialogResult } = require('../packages/workbuddy-server/src');
 const { markDaemon, resolveProductName, resolveStoredSessionTitle } = require('../packages/workbuddy-server/src');
 const { configureDaemonNetworkProxy } = require('../packages/workbuddy-server/src');
@@ -615,6 +616,13 @@ const {
 } = require('../packages/authentication/src');
 
 async function main() {
+  assert.deepStrictEqual(Object.keys(workbuddyDatabase.schema), [
+    'sessions', 'workspaces', 'automations', 'automationRuns', 'automationRuntimeState',
+    'automationDeliveryOutbox', 'migrationMeta', 'sessionUsage',
+  ]);
+  const databaseMock = workbuddyDatabase.drizzle.mock({ schema: workbuddyDatabase.schema });
+  assert.strictEqual(typeof databaseMock.select, 'function');
+  assert.match(workbuddyDatabase.WORKBUDDY_SQLITE_MIGRATION_FILES['0000_workbuddy_sqlite_baseline.sql'], /CREATE TABLE IF NOT EXISTS sessions/);
   assert.strictEqual(runtimeCliProcessEnv.isNamedPipe('win32'), true);
   assert.deepStrictEqual(resolveAgentCliServerExecutablePath({ resolveBundledAsset: () => '/tmp/bundled-codebuddy', getRuntimeAppPath: () => '/tmp/app', exists: () => true }), { path: '/tmp/bundled-codebuddy', source: 'bundled' });
   assert.strictEqual(runtimeCliProcessEnv.isNamedPipe('darwin'), false);
