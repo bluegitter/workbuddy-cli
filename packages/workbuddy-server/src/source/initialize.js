@@ -7,6 +7,7 @@ const localDocsHelpersRuntime = require("../runtime/local-docs-helpers.js");
 const { createLocalDocsHostFacade: createLocalDocsHostFacadeRuntime } = require("../runtime/local-docs-facade.js");
 const codebuddyBackendUtilsRuntime = require("../runtime/codebuddy-backend-utils.js");
 const edgeSyncTranslateRuntime = require("../runtime/edge-sync-translate.js");
+const edgeSyncTracingRuntime = require("../runtime/edge-sync-tracing.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -221484,6 +221485,7 @@ function reportDesktopChannelTrace(input) {
 	} catch {}
 }
 function resolveDesktopSpanPlan(input) {
+	return edgeSyncTracingRuntime.resolveDesktopSpanPlan(input);
 	if (!isTraceId$1(input.traceId) || !isSpanId$1(input.spanId)) return;
 	return {
 		traceId: input.traceId.toLowerCase(),
@@ -221493,6 +221495,7 @@ function resolveDesktopSpanPlan(input) {
 }
 var HIGH_CARDINALITY_ID_KEY = /(^|[._])(message|request|session|conversation|device|user|trace|span)[._-]?id([._-]|$)/i;
 function sanitizeChannelTraceAttributes(attributes) {
+	return edgeSyncTracingRuntime.sanitizeChannelTraceAttributes(attributes);
 	return Object.fromEntries(Object.entries(attributes).filter(([key]) => !HIGH_CARDINALITY_ID_KEY.test(key)));
 }
 function isTraceId$1(value) {
