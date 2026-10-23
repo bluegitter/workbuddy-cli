@@ -8,6 +8,8 @@ const { createLocalDocsHostFacade: createLocalDocsHostFacadeRuntime } = require(
 const codebuddyBackendUtilsRuntime = require("../runtime/codebuddy-backend-utils.js");
 const edgeSyncTranslateRuntime = require("../runtime/edge-sync-translate.js");
 const edgeSyncTracingRuntime = require("../runtime/edge-sync-tracing.js");
+const edgeSyncJsonlRuntime = require("../runtime/edge-sync-jsonl.js");
+const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -9000,67 +9002,10 @@ var DEFAULT_AGENT_CLI_BUNDLED_RUNTIME_CONFIG = {
 	}
 };
 function buildAgentCliRuntimeEnv(options) {
-	const env = {
-		DISABLE_AUTOUPDATER: "1",
-		ELECTRON_RUN_AS_NODE: "1",
-		CODEBUDDY_GIT_REPO_SCAN_DISABLED: "1",
-		CODEBUDDY_PROMPT_SUGGESTION_DISABLED: "1",
-		CODEBUDDY_CONFIG_DIR: options.configDir,
-		WORKBUDDY_CONFIG_DIR: options.configDir,
-		WORKBUDDY_DATA_FOLDER_NAME: options.dataFolderName?.trim() || options.processEnv?.WORKBUDDY_DATA_FOLDER_NAME?.trim() || ".workbuddy",
-		...require_workbuddy_auth_product_coordinator.gatewaySecretEnv(),
-		CODEBUDDY_DISABLE_CRON: "1",
-		CODEBUDDY_INCLUDE_TOPIC_MESSAGE: "1",
-		CODEBUDDY_CODE_DISABLE_SESSION_SUMMARY: "1",
-		CODEBUDDY_BUILTIN_SKILLS_DIR: options.builtinSkillsDir,
-		CODEBUDDY_DISABLE_AUTO_MEMORY: "1",
-		CODEBUDDY_DISABLE_SYSTEM_REMINDER_MD: "1",
-		CODEBUDDY_DISABLE_REQUEST_VALIDATION: "1",
-		CODEBUDDY_SKIP_GIT_BASH_CHECK: "1",
-		CODEBUDDY_HOST: "workbuddy-desktop",
-		CODEBUDDY_HIGH_CREDIT_APPROVAL_ENABLED: "1",
-		CODEBUDDY_DISABLE_EXTENDED_PLUGIN_HOOKS: "1",
-		CODEBUDDY_DISABLE_SESSION_HISTORY_CLEANUP: "1",
-		CODEBUDDY_POWERSHELL_USE_PTY: "1",
-		CODEBUDDY_REPLAY_SHOW_PRE_COMPACT: "1",
-		CODEBUDDY_REASONING_ONLY_END_TURN: "1",
-		CODEBUDDY_CODE_IMAGE_COMPRESSION_MAX_DIMENSION: "1080",
-		CODEBUDDY_SKILL_TOOL_CHAR_BUDGET: "30000",
-		CODEBUDDY_DISABLE_FORK_SUBAGENT: "1",
-		CODEBUDDY_ENABLE_SECURITY_AUDIT: "1",
-		...stringValues(options.clientInfoEnv)
-	};
-	if (options.productConfigEnv) env.ACC_PRODUCT_CONFIG_V3 = options.productConfigEnv;
-	if (options.productConfigPathEnv) env.ACC_PRODUCT_CONFIG_PATH = options.productConfigPathEnv;
-	if (options.hostedCliInternetEnv) env.CODEBUDDY_INTERNET_ENVIRONMENT = options.hostedCliInternetEnv;
-	if (options.pluginDirs) env.CODEBUDDY_PLUGIN_DIRS = options.pluginDirs;
-	Object.assign(env, stringValues(options.proxyEnv));
-	const runtimeConfig = options.bundledRuntimeConfig ?? DEFAULT_AGENT_CLI_BUNDLED_RUNTIME_CONFIG;
-	const rtEnabled = runtimeConfig.enabled !== false;
-	const managedNodeBinDirs = rtEnabled && runtimeConfig.tools?.node !== false ? options.managedNodeBinDirs ?? [] : [];
-	const extraPathParts = [];
-	extraPathParts.push(...managedNodeBinDirs);
-	if (rtEnabled && runtimeConfig.tools?.python !== false) extraPathParts.push(...options.managedPythonBinDirs ?? []);
-	extraPathParts.push(options.cliConnectorBin);
-	env.WORKBUDDY_EXTRA_PATHS = extraPathParts.filter(Boolean).join(options.pathDelimiter);
-	const processEnv = options.processEnv ?? {};
-	prependDirsToEnvPath(env, managedNodeBinDirs, processEnv, options.pathDelimiter);
-	if (rtEnabled && runtimeConfig.tools?.gitBash !== false && processEnv.CODEBUDDY_CODE_GIT_BASH_PATH) env.CODEBUDDY_CODE_GIT_BASH_PATH = processEnv.CODEBUDDY_CODE_GIT_BASH_PATH;
-	const disabledTypes = resolveDisabledManagedRuntimeTypes(runtimeConfig, options.registeredBinaryTypes ?? []);
-	if (disabledTypes.length > 0) env.WORKBUDDY_MANAGED_RUNTIME_DISABLED = disabledTypes.join(",");
-	copyProcessEnv(env, processEnv, [
-		"SANDBOX_CLI_SHOW_CONSOLE",
-		"SANDBOX_CLI_PATH",
-		"CODEBUDDY_DISABLE_WEB_FETCH_REMOTE_API",
-		"CODEBUDDY_PRE_MESSAGE_COMPACT_PCT",
-		"CODEBUDDY_AUTOCOMPACT_PCT_OVERRIDE",
-		"CODEBUDDY_ENGINEERING_COMPACT_SUFFICIENCY_PCT",
-		"WEIXINPAY_MOCK_OUTCOME"
-	]);
-	const devEndpointOverride = require_common$3.getProductEndpointOverride().resolve();
-	if (devEndpointOverride) env[require_common$3.WORKBUDDY_DEV_ENDPOINT_OVERRIDE_ENV] = devEndpointOverride;
-	if (options.extra) Object.assign(env, options.extra);
-	return env;
+	return agentCliRuntime.buildAgentCliRuntimeEnv({
+		...options,
+		gatewaySecretEnv: require_workbuddy_auth_product_coordinator.gatewaySecretEnv()
+	});
 }
 /**
 * 把 `dirs` 前置进 `env` 的 PATH。用 `processEnv` 中实际的 path 键名
@@ -9069,208 +9014,61 @@ function buildAgentCliRuntimeEnv(options) {
 * `dirs` 为空时不改动 `env`。
 */
 function prependDirsToEnvPath(env, dirs, processEnv, pathDelimiter) {
-	if (dirs.length === 0) return;
-	const pathKey = Object.keys(processEnv).find((key) => key.toLowerCase() === "path") ?? "PATH";
-	const base = env[pathKey] ?? processEnv[pathKey] ?? "";
-	env[pathKey] = [...dirs, base].filter(Boolean).join(pathDelimiter);
+	return agentCliRuntime.prependDirsToEnvPath(env, dirs, processEnv, pathDelimiter);
 }
 function resolveDisabledManagedRuntimeTypes(runtimeConfig, registeredBinaryTypes) {
-	if (runtimeConfig.enabled === false) return [...registeredBinaryTypes];
-	return registeredBinaryTypes.filter((type) => runtimeConfig.tools?.[type] === false);
+	return agentCliRuntime.resolveDisabledManagedRuntimeTypes(runtimeConfig, registeredBinaryTypes);
 }
 function stringValues(input) {
-	const output = {};
-	for (const [key, value] of Object.entries(input ?? {})) if (typeof value === "string") output[key] = value;
-	return output;
+	return agentCliRuntime.stringValues(input);
 }
 function copyProcessEnv(env, processEnv, keys) {
-	for (const key of keys) {
-		const value = processEnv[key];
-		if (typeof value === "string" && value) env[key] = value;
-	}
+	return agentCliRuntime.copyProcessEnv(env, processEnv, keys);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/agent/cli-runtime-files.ts
 var fsp$4 = node_fs.promises;
 function resolveAgentCliConnectorBin({ homeDir, platform }) {
-	return platform === "win32" ? node_path.join(homeDir, ".workbuddy", "binaries", "node", "cli-connector-packages") : node_path.join(homeDir, ".workbuddy", "binaries", "node", "cli-connector-packages", "bin");
+	return agentCliRuntime.resolveAgentCliConnectorBin({ homeDir, platform });
 }
 function resolveAgentCliExecutablePath({ bundledCliPaths = [], monorepoCliPath, envCliPath, exists = node_fs.existsSync }) {
-	for (const bundledPath of bundledCliPaths) if (typeof bundledPath === "string" && bundledPath.trim()) return {
-		path: bundledPath,
-		source: "bundled"
-	};
-	if (typeof monorepoCliPath === "string" && monorepoCliPath.trim() && exists(monorepoCliPath)) return {
-		path: monorepoCliPath,
-		source: "monorepo"
-	};
-	const normalizedEnvPath = envCliPath?.trim();
-	if (normalizedEnvPath && exists(normalizedEnvPath)) return {
-		path: normalizedEnvPath,
-		source: "env"
-	};
+	return agentCliRuntime.resolveAgentCliExecutablePath({ bundledCliPaths, monorepoCliPath, envCliPath, exists });
 }
 function listAgentCliManagedBinDirs({ homeDir, platform, binaryType }) {
-	const versionsDir = node_path.join(homeDir, ".workbuddy", "binaries", binaryType, "versions");
-	try {
-		const entries = node_fs.readdirSync(versionsDir);
-		const validEntries = [];
-		for (const entry of entries) {
-			if (entry.includes(".installing.") || entry.includes(".__extract_temp__")) continue;
-			const versionRoot = node_path.join(versionsDir, entry);
-			try {
-				if (!node_fs.statSync(versionRoot).isDirectory()) continue;
-			} catch {
-				continue;
-			}
-			validEntries.push(entry);
-		}
-		validEntries.sort(compareVersionsDesc);
-		return validEntries.map((entry) => {
-			const versionRoot = node_path.join(versionsDir, entry);
-			return platform === "win32" ? versionRoot : node_path.join(versionRoot, "bin");
-		});
-	} catch {
-		return [];
-	}
+	return agentCliRuntime.listAgentCliManagedBinDirs({ homeDir, platform, binaryType });
 }
 async function listAgentCliManagedBinDirsAsync({ homeDir, platform, binaryType }) {
-	const versionsDir = node_path.join(homeDir, ".workbuddy", "binaries", binaryType, "versions");
-	try {
-		const entries = await fsp$4.readdir(versionsDir);
-		const validEntries = (await Promise.all(entries.map(async (entry) => {
-			if (entry.includes(".installing.") || entry.includes(".__extract_temp__")) return;
-			const versionRoot = node_path.join(versionsDir, entry);
-			try {
-				return (await fsp$4.stat(versionRoot)).isDirectory() ? entry : void 0;
-			} catch {
-				return;
-			}
-		}))).filter((entry) => !!entry);
-		validEntries.sort(compareVersionsDesc);
-		return validEntries.map((entry) => {
-			const versionRoot = node_path.join(versionsDir, entry);
-			return platform === "win32" ? versionRoot : node_path.join(versionRoot, "bin");
-		});
-	} catch {
-		return [];
-	}
+	return agentCliRuntime.listAgentCliManagedBinDirsAsync({ homeDir, platform, binaryType });
 }
 function readAgentCliBundledRuntimeConfig(userDataDir) {
-	try {
-		const configPath = node_path.join(userDataDir, "app-config.json");
-		const raw = node_fs.readFileSync(configPath, "utf8");
-		const rt = JSON.parse(raw)?.bundledRuntime;
-		if (rt && typeof rt === "object") return {
-			enabled: rt.enabled !== false,
-			tools: {
-				node: rt.tools?.node !== false,
-				python: rt.tools?.python !== false,
-				gitBash: rt.tools?.gitBash !== false
-			}
-		};
-	} catch {}
-	return DEFAULT_AGENT_CLI_BUNDLED_RUNTIME_CONFIG;
+	return agentCliRuntime.readAgentCliBundledRuntimeConfig(userDataDir);
 }
 async function readAgentCliBundledRuntimeConfigAsync(userDataDir) {
-	try {
-		const configPath = node_path.join(userDataDir, "app-config.json");
-		const raw = await fsp$4.readFile(configPath, "utf8");
-		const rt = JSON.parse(raw)?.bundledRuntime;
-		if (rt && typeof rt === "object") return {
-			enabled: rt.enabled !== false,
-			tools: {
-				node: rt.tools?.node !== false,
-				python: rt.tools?.python !== false,
-				gitBash: rt.tools?.gitBash !== false
-			}
-		};
-	} catch {}
-	return DEFAULT_AGENT_CLI_BUNDLED_RUNTIME_CONFIG;
+	return agentCliRuntime.readAgentCliBundledRuntimeConfigAsync(userDataDir);
 }
 function readAgentCliAppConfigValue(key, { userDataDir }) {
-	try {
-		const configPath = node_path.join(userDataDir, "app-config.json");
-		const raw = node_fs.readFileSync(configPath, "utf8");
-		return JSON.parse(raw)?.[key] ?? null;
-	} catch {
-		return null;
-	}
+	return agentCliRuntime.readAgentCliAppConfigValue(key, { userDataDir });
 }
 function resolveAgentCliRuntimeDirs(options) {
-	const configDir = resolveAgentCliConfigDir(options);
-	return {
-		configDir,
-		userDataDir: resolveAgentCliUserDataDir({
-			...options,
-			configDir
-		})
-	};
+	return agentCliRuntime.resolveAgentCliRuntimeDirs(options);
 }
 function resolveAgentCliConfigDir({ getConfigDir, homeDir, processEnv = process.env, defaultConfigDirname = ".workbuddy" }) {
-	return resolveInjectedPath(getConfigDir) || processEnv.WORKBUDDY_CONFIG_DIR?.trim() || node_path.join(homeDir, defaultConfigDirname);
+	return agentCliRuntime.resolveAgentCliConfigDir({ getConfigDir, homeDir, processEnv, defaultConfigDirname });
 }
 function resolveAgentCliUserDataDir({ getUserDataDir, processEnv = process.env, configDir }) {
-	return resolveInjectedPath(getUserDataDir) || processEnv.WORKBUDDY_USER_DATA_DIR?.trim() || node_path.join(configDir, "app");
+	return agentCliRuntime.resolveAgentCliUserDataDir({ getUserDataDir, processEnv, configDir });
 }
 function listAgentCliEnabledPluginDirs(configDir) {
-	try {
-		const settingsPath = node_path.join(configDir, "settings.json");
-		if (!node_fs.existsSync(settingsPath)) return [];
-		const enabledPlugins = JSON.parse(node_fs.readFileSync(settingsPath, "utf-8")).enabledPlugins || {};
-		const dirs = [];
-		for (const [pluginId, enabled] of Object.entries(enabledPlugins)) {
-			if (!enabled) continue;
-			const atIdx = pluginId.indexOf("@");
-			if (atIdx <= 0) continue;
-			const pluginName = pluginId.substring(0, atIdx);
-			const marketplace = pluginId.substring(atIdx + 1);
-			const pluginDir = node_path.join(configDir, "plugins", "marketplaces", marketplace, "plugins", pluginName);
-			if (node_fs.existsSync(pluginDir)) dirs.push(pluginDir);
-		}
-		return dirs;
-	} catch {
-		return [];
-	}
+	return agentCliRuntime.listAgentCliEnabledPluginDirs(configDir);
 }
 async function listAgentCliEnabledPluginDirsAsync(configDir) {
-	try {
-		const settingsPath = node_path.join(configDir, "settings.json");
-		const raw = await fsp$4.readFile(settingsPath, "utf-8");
-		const enabledPlugins = JSON.parse(raw).enabledPlugins || {};
-		return (await Promise.all(Object.entries(enabledPlugins).map(async ([pluginId, enabled]) => {
-			if (!enabled) return;
-			const atIdx = pluginId.indexOf("@");
-			if (atIdx <= 0) return;
-			const pluginName = pluginId.substring(0, atIdx);
-			const marketplace = pluginId.substring(atIdx + 1);
-			const pluginDir = node_path.join(configDir, "plugins", "marketplaces", marketplace, "plugins", pluginName);
-			try {
-				await fsp$4.access(pluginDir);
-				return pluginDir;
-			} catch {
-				return;
-			}
-		}))).filter((dir) => !!dir);
-	} catch {
-		return [];
-	}
+	return agentCliRuntime.listAgentCliEnabledPluginDirsAsync(configDir);
 }
 function normalizeAgentCliBuiltinSkillsDir(resolvedPath) {
-	if (resolvedPath.includes("app.asar") && !resolvedPath.includes("app.asar.unpacked")) return resolvedPath.replace("app.asar", "app.asar.unpacked");
-	return resolvedPath;
+	return agentCliRuntime.normalizeAgentCliBuiltinSkillsDir(resolvedPath);
 }
 function compareVersionsDesc(a, b) {
-	const partsA = a.split(".").map(Number);
-	const partsB = b.split(".").map(Number);
-	const len = Math.max(partsA.length, partsB.length);
-	for (let i = 0; i < len; i++) {
-		const na = partsA[i] || 0;
-		const nb = partsB[i] || 0;
-		if (Number.isNaN(na) || Number.isNaN(nb)) return b.localeCompare(a);
-		if (nb !== na) return nb - na;
-	}
-	return 0;
+	return agentCliRuntime.compareVersionsDesc(a, b);
 }
 function resolveInjectedPath(resolvePath) {
 	try {
@@ -221756,6 +221554,7 @@ var LARGE_LINE_THRESHOLD = 100 * 1024;
 * status/_lazyLoad/_originalSize/output 占位/content:[]）的字节数上界，足够 conservative。
 */
 function estimateItemPayloadBytes(item, line) {
+	return edgeSyncJsonlRuntime.estimateItemPayloadBytes(item, line);
 	if (item && typeof item === "object" && item._lazyLoad === true) return 512;
 	return line.length;
 }
@@ -221783,6 +221582,7 @@ var LAZY_LOAD_TYPES = new Set([
 * 都要走这个函数，不能直接 JSON.parse（否则翻到大 tool_call output 会卡死进程）。
 */
 function parseLineWithLazyLoad(line) {
+	return edgeSyncJsonlRuntime.parseLineWithLazyLoad(line);
 	if (line.length <= LARGE_LINE_THRESHOLD) return JSON.parse(line);
 	const head = line.slice(0, 500);
 	const type = head.match(/"type":"([^"]+)"/)?.[1] || "";
@@ -221847,6 +221647,7 @@ async function iterateChunksBackward(fd, startBytePos, onLine, onFragment) {
 * 用 Buffer.byteLength 精确统计 UTF-8 字节数（避免字符数 vs 字节数偏差）。
 */
 function computeLineByteStarts(lines, baseByteOffset) {
+	return edgeSyncJsonlRuntime.computeLineByteStarts(lines, baseByteOffset);
 	const starts = new Array(lines.length);
 	let cursor = baseByteOffset;
 	for (let k = 0; k < lines.length; k++) {
@@ -222023,6 +221824,7 @@ async function extendToLineEnd(jsonlPath, startBytePos) {
 * - 真正收集时会 JSON.parse 验证
 */
 function isLikelyUserMessageLine(line) {
+	return edgeSyncJsonlRuntime.isLikelyUserMessageLine(line);
 	const head = line.length > 200 ? line.slice(0, 200) : line;
 	return head.includes("\"type\":\"message\"") && head.includes("\"role\":\"user\"");
 }
@@ -222041,6 +221843,7 @@ var CUSTOM_ITEM_TYPES = new Set([
 ]);
 /** 快速判断是否为 custom item（不参与 parentId 链的辅助记录） */
 function isLikelyCustomItemLine(line) {
+	return edgeSyncJsonlRuntime.isLikelyCustomItemLine(line);
 	for (const t of CUSTOM_ITEM_TYPES) if (line.includes(`"type":"${t}"`)) return true;
 	return false;
 }
@@ -222055,6 +221858,7 @@ var TOMBSTONE_MARK = "\"type\":\"resend-fork-notice\"";
 * @returns { isTombstone: true, forkPoint } | { isTombstone: false }
 */
 function checkPrevLineTombstone(prevLine) {
+	return edgeSyncJsonlRuntime.checkPrevLineTombstone(prevLine);
 	if (!prevLine) return { isTombstone: false };
 	if (!prevLine.includes(TOMBSTONE_MARK)) return { isTombstone: false };
 	return {

@@ -165,9 +165,21 @@ function listAgentCliEnabledPluginDirs(configDir) {
   } catch { return []; }
 }
 
+async function listAgentCliEnabledPluginDirsAsync(configDir) {
+  try {
+    const enabled = JSON.parse(await fsp.readFile(path.join(configDir, 'settings.json'), 'utf8')).enabledPlugins || {};
+    const dirs = await Promise.all(Object.entries(enabled).filter(([, value]) => value).map(async ([id]) => {
+      const at = id.indexOf('@'); if (at <= 0) return undefined;
+      const dir = path.join(configDir, 'plugins', 'marketplaces', id.slice(at + 1), 'plugins', id.slice(0, at));
+      try { await fsp.access(dir); return dir; } catch { return undefined; }
+    }));
+    return dirs.filter(Boolean);
+  } catch { return []; }
+}
+
 module.exports = {
   DEFAULT_AGENT_CLI_BUNDLED_RUNTIME_CONFIG, PASSTHROUGH_ENV_KEYS,
-  buildAgentCliRuntimeEnv, compareVersionsDesc, copyProcessEnv, listAgentCliEnabledPluginDirs,
+  buildAgentCliRuntimeEnv, compareVersionsDesc, copyProcessEnv, listAgentCliEnabledPluginDirs, listAgentCliEnabledPluginDirsAsync,
   listAgentCliManagedBinDirs, listAgentCliManagedBinDirsAsync, normalizeAgentCliBuiltinSkillsDir,
   prependDirsToEnvPath, readAgentCliBundledRuntimeConfig, readAgentCliBundledRuntimeConfigAsync, readAgentCliAppConfigValue, readAgentCliAppConfigValueAsync, resolveAgentCliConfigDir,
   resolveAgentCliConnectorBin, resolveAgentCliExecutablePath, resolveAgentCliRuntimeDirs,
