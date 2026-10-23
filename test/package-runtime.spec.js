@@ -13,6 +13,9 @@ const {
   validatePluginManifest,
 } = require('../packages/plugin-core/src');
 const { CommandPolicy } = require('../packages/sandbox-cli/src');
+const runtimeCliProcessEnv = require('../packages/runtime/src/source/cli-process-env.js');
+const runtimeContextSource = require('../packages/runtime/src/source/runtime-context.js');
+const runtimeHttpSource = require('../packages/runtime/src/source/runtime-http.js');
 const {
   AuthSession,
   CredentialStore,
@@ -523,6 +526,12 @@ const {
 } = require('../packages/authentication/src');
 
 async function main() {
+  assert.strictEqual(runtimeCliProcessEnv.isNamedPipe('win32'), true);
+  assert.strictEqual(runtimeCliProcessEnv.isNamedPipe('darwin'), false);
+  assert.match(runtimeCliProcessEnv.dataSocketPath('session-1', { WORKBUDDY_CONFIG_DIR: '/tmp/workbuddy-test' }, 'darwin'), /s-[a-f0-9]{16}\.sock$/);
+  assert.strictEqual(runtimeCliProcessEnv.buildCliProcessEnv({ SERVER__PORT: '1234' }, { CODEBUDDY_SECRET: 'drop', PATH: '/bin' }).SERVER__PORT, '1234');
+  assert.strictEqual(typeof runtimeContextSource.configureWorkbuddyRuntimeContext, 'function');
+  assert.strictEqual(typeof runtimeHttpSource.createRuntimeHttp, 'function');
   assert.strictEqual(acpNode.PROTOCOL_VERSION, 1);
   assert.strictEqual(acpRenderer.PROTOCOL_VERSION, 1);
   assert.strictEqual(typeof acpNode.RpcConnection, 'function');

@@ -10,6 +10,7 @@ module.exports = Object.freeze({
   ...require("./runtime/runtime-context"),
   ...require("./runtime/startup-context"),
   ...require("./runtime/cli-process-env"),
+  ...require("./runtime/sidecar-paths"),
   ...require("./runtime/sidecar-protocol"),
   ...require("./runtime/ring-buffer"),
   ...require("./runtime/session-ready-registry"),
