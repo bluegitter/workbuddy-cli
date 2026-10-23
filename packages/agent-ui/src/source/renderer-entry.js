@@ -42,6 +42,13 @@ import {
 	resolveSessionSwitchTargetPanelOpen as resolveSessionSwitchTargetPanelOpenRuntime,
 	resolveDetailPanelOpenForSessionSave as resolveDetailPanelOpenForSessionSaveRuntime,
 } from "../runtime/session-detail-state.js";
+import {
+	getDeepLinkPath,
+	mapDeepLinkToRoute,
+	normalizePendingOpenUrlPayload,
+	parseDeepLink,
+	summarizeOpenUrl as summarizeRendererOpenUrl,
+} from "../runtime/deep-link-coordinator.js";
 import { n as init_ArtifactFileIconTypes, t as getArtifactFileIconKind } from "./ArtifactFileIconTypes-mWPconF_.js";
 import { n as useI18n, r as useTranslation$1, t as init_useI18n } from "./useI18n-DDytAo7_.js";
 import { A as init_route_matchers, S as useRouterContextSafe, _ as RouterProvider, b as resetRouterToHome, j as matchShellRoute, t as init_router } from "./router-DJX2y4GM.js";
@@ -52982,63 +52989,6 @@ function logFirstEffectCommit(name) {
 		signal?.();
 	} catch {}
 }
-function getDeepLinkPath(url) {
-	if (url.host && (!url.pathname || url.pathname === "/")) return `/${url.host}`;
-	if (url.host) return `/${url.host}${url.pathname}`;
-	return url.pathname || "/";
-}
-function withSearchAndHash(pathname, url) {
-	return `${pathname}${url.search}${url.hash}`;
-}
-function toQueryString(searchParams) {
-	const query = searchParams.toString();
-	return query ? `?${query}` : "";
-}
-function parseDeepLink(urlString) {
-	try {
-		return new URL(urlString);
-	} catch {
-		return;
-	}
-}
-function summarizeRendererOpenUrl(url) {
-	if (!url) return { hasUrl: false };
-	try {
-		const parsed = typeof url === "string" ? new URL(url) : url;
-		return {
-			hasUrl: true,
-			scheme: parsed.protocol.replace(/:$/, ""),
-			host: parsed.host,
-			pathname: parsed.pathname,
-			searchKeys: Array.from(parsed.searchParams.keys()),
-			hash: parsed.hash ? "<present>" : "",
-			urlLength: parsed.toString().length
-		};
-	} catch {
-		return {
-			hasUrl: true,
-			parseError: true,
-			urlLength: typeof url === "string" ? url.length : void 0
-		};
-	}
-}
-function mapDeepLinkToRoute(parsedUrl) {
-	const path = getDeepLinkPath(parsedUrl);
-	const searchParams = new URLSearchParams(parsedUrl.search);
-	const callbackPathMatch = path.match(/^\/(?:agents\/)?callback\/([^/]+)\/?$/);
-	if (callbackPathMatch) {
-		if (!searchParams.has("name")) searchParams.set("name", decodeURIComponent(callbackPathMatch[1]));
-		return `/callback${toQueryString(searchParams)}`;
-	}
-	if (path === "/callback" || path === "/agents/callback") return `/callback${toQueryString(searchParams)}`;
-	const connectorCallbackMatch = path.match(/^\/console\/as\/connector\/oauth\/([^/]+)\/connect\/?$/);
-	if (connectorCallbackMatch) {
-		if (!searchParams.has("name")) searchParams.set("name", decodeURIComponent(connectorCallbackMatch[1]));
-		return `/callback${toQueryString(searchParams)}`;
-	}
-	if (path.startsWith("/task/")) return withSearchAndHash(path, parsedUrl);
-	return null;
-}
 function tryHandleSkillInstallDeepLink(parsedUrl) {
 	if (parsedUrl.host !== "codebuddy-ide") return false;
 	if (parsedUrl.pathname.replace(/\/+$/, "") !== "/skill/install") return false;
@@ -53173,10 +53123,6 @@ function handleDesktopOpenUrl(url) {
 		path: route,
 		replace: true
 	} }));
-}
-function normalizePendingOpenUrlPayload(payload) {
-	if (typeof payload === "string") return payload;
-	return typeof payload?.url === "string" ? payload.url : null;
 }
 async function consumePendingDesktopOpenUrls() {
 	const pending = await daemonClient.consumePendingOpenUrls?.().catch((error) => {

@@ -4,6 +4,51 @@ function parseUrl(value) {
   try { return typeof value === 'string' && value.trim() ? new URL(value) : undefined; } catch { return undefined; }
 }
 
+function getDeepLinkPath(url) {
+  if (url.host && (!url.pathname || url.pathname === '/')) return `/${url.host}`;
+  if (url.host) return `/${url.host}${url.pathname}`;
+  return url.pathname || '/';
+}
+
+function toQueryString(searchParams) {
+  const query = searchParams.toString();
+  return query ? `?${query}` : '';
+}
+
+function mapDeepLinkToRoute(value) {
+  const url = value instanceof URL ? value : parseUrl(value);
+  if (!url) return null;
+  const path = getDeepLinkPath(url);
+  const searchParams = new URLSearchParams(url.search);
+  const callbackMatch = path.match(/^\/(?:agents\/)?callback\/([^/]+)\/?$/);
+  if (callbackMatch) {
+    if (!searchParams.has('name')) searchParams.set('name', decodeURIComponent(callbackMatch[1]));
+    return `/callback${toQueryString(searchParams)}`;
+  }
+  if (path === '/callback' || path === '/agents/callback') return `/callback${toQueryString(searchParams)}`;
+  const connectorMatch = path.match(/^\/console\/as\/connector\/oauth\/([^/]+)\/connect\/?$/);
+  if (connectorMatch) {
+    if (!searchParams.has('name')) searchParams.set('name', decodeURIComponent(connectorMatch[1]));
+    return `/callback${toQueryString(searchParams)}`;
+  }
+  return path.startsWith('/task/') ? `${path}${url.search}${url.hash}` : null;
+}
+
+function summarizeOpenUrl(value) {
+  if (!value) return { hasUrl: false };
+  const parsed = value instanceof URL ? value : parseUrl(value);
+  if (!parsed) return { hasUrl: true, parseError: true, urlLength: typeof value === 'string' ? value.length : undefined };
+  return {
+    hasUrl: true,
+    scheme: parsed.protocol.replace(/:$/, ''),
+    host: parsed.host,
+    pathname: parsed.pathname,
+    searchKeys: [...parsed.searchParams.keys()],
+    hash: parsed.hash ? '<present>' : '',
+    urlLength: parsed.toString().length,
+  };
+}
+
 function normalizePendingOpenUrlPayload(payload) {
   if (typeof payload === 'string') return payload;
   return typeof payload?.url === 'string' ? payload.url : null;
@@ -66,4 +111,15 @@ async function consumePendingDesktopOpenUrls(fetchPending, handleOpenUrl, onErro
   return handled;
 }
 
-module.exports = { classifyDesktopOpenUrl, consumePendingDesktopOpenUrls, createDesktopOpenUrlHandler, normalizePendingOpenUrlPayload, parseUrl };
+module.exports = {
+  classifyDesktopOpenUrl,
+  consumePendingDesktopOpenUrls,
+  createDesktopOpenUrlHandler,
+  getDeepLinkPath,
+  mapDeepLinkToRoute,
+  normalizePendingOpenUrlPayload,
+  parseDeepLink: parseUrl,
+  parseUrl,
+  summarizeOpenUrl,
+  toQueryString,
+};

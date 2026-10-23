@@ -103,6 +103,7 @@ const {
   resolveSessionSwitchTargetPanelOpen,
   resolveDetailPanelOpenForSessionSave,
 } = require('../packages/agent-ui/src');
+const agentUiDeepLinks = require('../packages/agent-ui/src/runtime/deep-link-coordinator.js');
 const {
   QueueSnapshotStore,
   WindowState,
@@ -1462,6 +1463,11 @@ async function main() {
   assert.deepStrictEqual(parseTeammateMessage('<teammate-message teammate_id="researcher" summary="Done">ok</teammate-message>'), { teammateId: 'researcher', summary: 'Done', content: 'ok' });
   assert.strictEqual(formatTeammateContent('{"type":"shutdown_response","approve":true}'), 'Shutdown accepted');
   assert.strictEqual(normalizePendingOpenUrlPayload({ url: 'workbuddy://home' }), 'workbuddy://home');
+  assert.strictEqual(agentUiDeepLinks.getDeepLinkPath(new URL('workbuddy://agents/callback/docs')), '/agents/callback/docs');
+  assert.strictEqual(agentUiDeepLinks.mapDeepLinkToRoute('workbuddy://console/as/connector/oauth/docs/connect?state=s1'), '/callback?state=s1&name=docs');
+  assert.deepStrictEqual(agentUiDeepLinks.summarizeOpenUrl('workbuddy://task/run?token=secret#draft'), {
+    hasUrl: true, scheme: 'workbuddy', host: 'task', pathname: '/run', searchKeys: ['token'], hash: '<present>', urlLength: 39,
+  });
   assert.strictEqual(isInfraError('Network timeout while checking content'), true);
   assert.strictEqual(isInfraError('content rejected'), false);
   assert.deepStrictEqual(normalizeModerationResult({ pass: false, error: 'fetch failed' }, 'hello'), { pass: false, reason: 'serviceUnavailable', blockedText: 'hello', error: 'fetch failed' });
