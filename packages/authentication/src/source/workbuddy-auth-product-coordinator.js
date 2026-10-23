@@ -1,4 +1,5 @@
 const require_chunk = require("./chunk.js");
+const { DocumentEditContext: DocumentEditContextRuntime } = require("../runtime/document-edit-context.js");
 const require_common$2 = require("./common.js");
 const require_logger = require("./logger.js");
 const require_log_acl_guard = require("./log-acl-guard.js");
@@ -57,7 +58,7 @@ require_common$2.init_common$5();
 require_common$2.init__esm5();
 require_common$2.init_common$4();
 require_common$2.init_common$3();
-var DocumentEditContext = class {
+var CompiledDocumentEditContext = class {
 	/** 当前文档上下文 */
 	activeContext = null;
 	/** 过期时间（5 分钟） */
@@ -126,6 +127,7 @@ var DocumentEditContext = class {
 		this.activeContext = null;
 	}
 };
+var DocumentEditContext = DocumentEditContextRuntime;
 //#endregion
 //#region ../../packages/workbuddy-server/src/docs-shared/document-edit-types.ts
 /**

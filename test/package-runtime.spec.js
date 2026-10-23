@@ -63,6 +63,7 @@ const { markDaemon, resolveProductName, resolveStoredSessionTitle } = require('.
 const { configureDaemonNetworkProxy } = require('../packages/workbuddy-server/src');
 const { createTencentDocsEngineProvider } = require('../packages/workbuddy-server/src');
 const { OnlineDocPreviewRegistry, OnlineDocumentSelectionStore, truncateForBroadcast } = require('../packages/workbuddy-server/src');
+const { DocumentEditContext } = require('../packages/authentication/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
@@ -1078,6 +1079,13 @@ async function main() {
   const engineProvider = createTencentDocsEngineProvider({ documentService: { canEnsureEngineStart: async () => true, isEngineStarted: () => engineStarted, ensureEngineStarted: async () => { engineStarted = true; }, getEnginePort: () => 4321 }, buildLocalMcpEnv: (port) => ({ MCP_PORT: String(port) }), logger: { info: (_message, details) => engineLogs.push(details) } });
   assert.deepStrictEqual(await engineProvider.resolveAgentEnv(), { MCP_PORT: '4321', editor_sdk_port: '4321' });
   assert.strictEqual(engineLogs[0].engineStarted, true);
+  let documentNow = 1000;
+  const editContext = new DocumentEditContext(100, () => documentNow);
+  editContext.clearSelection('file:///tmp/a', '/tmp/a', 'doc');
+  editContext.setFileId('file-id');
+  assert.strictEqual(editContext.getActiveContext().fileId, 'file-id');
+  documentNow = 1101;
+  assert.strictEqual(editContext.getActiveContext(), null);
   const previewRegistry = new OnlineDocPreviewRegistry({ logger: { debug: () => {} } });
   previewRegistry.register('file-1', ' session-1 ');
   assert.deepStrictEqual(previewRegistry.getRecordByFileId('file-1'), { sessionId: 'session-1' });

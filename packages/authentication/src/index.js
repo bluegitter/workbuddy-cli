@@ -27,4 +27,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-oauth-store"),
   ...require("./runtime/connector-oauth-api"),
   ...require("./runtime/oauth-acl"),
+  ...require("./runtime/document-edit-context"),
 });
