@@ -108,7 +108,14 @@ class ConnectorMcpClientPool {
 
   resolveToolConfigId(toolName, options) {
     const routing = new ToolRoutingTable({ clients: this.clients, builtinTools: this.builtinTools, disabledTools: new Map([...this.clients.keys()].map((id) => [id, this.getDisabledTools(id)])) });
-    return routing.resolve(toolName, options);
+    const explicit = routing.resolve(toolName, options);
+    if (explicit) return explicit;
+    for (const candidates of routing.primaryClients().values()) {
+      const selection = candidates[0];
+      if (!selection) continue;
+      if (selection.entry.tools?.some((tool) => tool.name === toolName)) return selection.configId;
+    }
+    return undefined;
   }
 
   async callTool(toolName, args = {}, context = {}, onProgress) {
