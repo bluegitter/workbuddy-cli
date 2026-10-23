@@ -396,6 +396,8 @@ const {
   writeConnectorMcpConfig,
   disableConnectorSkills,
   markSkillFileDisabled,
+  MarketplaceCache,
+  normalizeEtag,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1793,6 +1795,18 @@ async function main() {
   assert(fs.readFileSync(skillB, 'utf8').includes('disable: true'));
   assert.strictEqual(markSkillFileDisabled(skillA), true);
   fs.rmSync(skillRoot, { recursive: true, force: true });
+  assert.strictEqual(normalizeEtag('W/"abc"'), 'abc');
+  const marketplaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-marketplace-'));
+  const marketplace = new MarketplaceCache({ baseDir: path.join(marketplaceRoot, 'current'), metaPath: path.join(marketplaceRoot, 'meta.json'), lockPath: path.join(marketplaceRoot, 'lock'), now: () => 1000 });
+  const fingerprint = marketplace.fingerprint(Buffer.from('marketplace'), '"etag-1"');
+  assert.strictEqual(fingerprint.etag, 'etag-1');
+  assert.strictEqual(marketplace.saveMeta(fingerprint), true);
+  assert.deepStrictEqual(marketplace.readMeta(), fingerprint);
+  const sourceMarketplace = path.join(marketplaceRoot, 'incoming');
+  fs.mkdirSync(sourceMarketplace); fs.writeFileSync(path.join(sourceMarketplace, 'marketplace.json'), '{}');
+  assert.strictEqual(marketplace.replaceDirectory(sourceMarketplace), true);
+  assert(fs.existsSync(path.join(marketplaceRoot, 'current', 'marketplace.json')));
+  fs.rmSync(marketplaceRoot, { recursive: true, force: true });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
