@@ -6,6 +6,7 @@ const { ConnectorServiceState } = require('./connector-service-state');
 const { disableConnectorSkills } = require('./connector-skill-state');
 const { ConnectorAuthCoordinator } = require('./connector-auth-coordinator');
 const { listMcpServers } = require('./mcp-server-listing');
+const { buildDesiredConnectorConfigs } = require('./connector-desired-configs');
 
 /**
  * Readable composition root for connector operations. The concrete auth/MCP
@@ -43,6 +44,10 @@ class ConnectorService {
     this.isUserServerApproved = options.isUserServerApproved || (() => false);
     this.getLastApprovedAt = options.getLastApprovedAt || (() => undefined);
     this.resolveDisabledToolNames = options.resolveDisabledToolNames || ((name, configured) => new Set([...(Array.isArray(configured) ? configured : []), ...(this.persistentState.disabledToolsOverrides?.[name] || [])]));
+    this.calculateConfigHash = options.calculateConfigHash || ((config) => require('./mcp-server-listing').calculateMcpConfigHash(config));
+    this.refreshExpiredTokens = options.refreshExpiredTokens || (async () => []);
+    this.beforeSync = options.beforeSync || (async () => {});
+    this.afterSync = options.afterSync || (async () => {});
   }
 
   async init() {
@@ -72,6 +77,32 @@ class ConnectorService {
   }
 
   async sync(desiredConfigs) { return this.state.sync(desiredConfigs); }
+
+  buildDesiredConfigs() {
+    const trust = this.getTrustLists() || {};
+    return buildDesiredConnectorConfigs({
+      manifest: this.manifest,
+      enabled: this.state.persistentState.enabled,
+      readConnectorMcpConfig: this.readConnectorMcpConfig,
+      readCustomMcpConfig: this.readCustomMcpConfig,
+      readPluginMcpConfigs: this.readPluginMcpConfigs,
+      toProxyConfigId: this.toProxyConfigId,
+      blacklist: trust.blacklist || trust.BLACKLIST_HASHES || [],
+      isApproved: this.isUserServerApproved,
+      calculateHash: this.calculateConfigHash,
+      disabledToolsOverrides: this.state.persistentState.disabledToolsOverrides,
+      logger: this.logger,
+    });
+  }
+
+  async refreshAndSync() {
+    await this.beforeSync();
+    await this.refreshExpiredTokens();
+    const desiredConfigs = this.buildDesiredConfigs();
+    const result = await this.state.sync(desiredConfigs);
+    await this.afterSync(result, desiredConfigs);
+    return { desiredConfigs, result };
+  }
 
   listMcpServers() {
     const trust = this.getTrustLists() || {};

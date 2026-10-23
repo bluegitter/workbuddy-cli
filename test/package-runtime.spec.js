@@ -390,6 +390,7 @@ const {
   ConnectorAuthCoordinator,
   calculateMcpConfigHash,
   listMcpServers,
+  buildDesiredConnectorConfigs,
   normalizePersistentState,
   buildEnabledPluginIndex,
   discoverPluginMcpConfigs,
@@ -1880,6 +1881,21 @@ async function main() {
   assert.strictEqual(listing[0].trustLevel, 'gray');
   assert.strictEqual(listing[1].configSource, 'plugin');
   assert.strictEqual(typeof calculateMcpConfigHash({ url: 'https://docs/path' }), 'string');
+  const desired = buildDesiredConnectorConfigs({
+    manifest: { connectors: [{ source: 'official' }, { source: 'cli', type: 'cli' }] },
+    enabled: ['official'],
+    readConnectorMcpConfig: () => ({ mcpServers: { main: { url: 'https://official', timeout: 2 } } }),
+    readCustomMcpConfig: () => ({ mcpServers: { custom: { url: 'https://custom' }, blocked: { url: 'https://blocked' } } }),
+    readPluginMcpConfigs: () => ({ plugin: { config: { command: 'node', args: ['mcp.js'] } } }),
+    toProxyConfigId: (id) => `connector:${id}`,
+    calculateHash: (config) => config.url === 'https://blocked' ? 'blocked' : 'ok',
+    blacklist: ['blocked'],
+    isApproved: () => true,
+    disabledToolsOverrides: { custom: ['write'] },
+  });
+  assert.deepStrictEqual(Object.keys(desired), ['connector:official', 'custom-mcp:custom', 'custom-mcp:plugin']);
+  assert.strictEqual(desired['connector:official'].timeout, 2000);
+  assert.deepStrictEqual(desired['custom-mcp:custom'].disabledTools, ['write']);
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, true);
   fs.rmSync(facadeRoot, { recursive: true, force: true });
   proxyServer.stop();
