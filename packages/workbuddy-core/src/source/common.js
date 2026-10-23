@@ -15,6 +15,12 @@ let perf_hooks = require("perf_hooks");
 var Reflect_exports = /* @__PURE__ */ require_chunk.__exportAll({});
 var Reflect$1;
 var init_Reflect = require_chunk.__esmMin((() => {
+	// Metadata is provided by the workspace dependency. Keep this initializer
+	// compatible with the generated module contract while avoiding a second
+	// implementation of the Reflect metadata proposal in the live path.
+	require("reflect-metadata");
+	Reflect$1 = typeof globalThis === "object" ? globalThis.Reflect : void 0;
+	return;
 	(function(Reflect) {
 		(function(factory) {
 			var root = typeof global === "object" ? global : typeof self === "object" ? self : typeof this === "object" ? this : Function("return this;")();
