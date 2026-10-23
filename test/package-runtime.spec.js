@@ -17,6 +17,7 @@ const runtimeCliProcessEnv = require('../packages/runtime/src/source/cli-process
 const runtimeContextSource = require('../packages/runtime/src/source/runtime-context.js');
 const runtimeHttpSource = require('../packages/runtime/src/source/runtime-http.js');
 const oauthSource = require('../packages/authentication/src/source/auth.js');
+const fileAuthenticationStorageSource = require('../packages/authentication/src/source/file-authentication-storage.js');
 const {
   AuthSession,
   CredentialStore,
@@ -842,13 +843,32 @@ async function main() {
   assert.strictEqual(storedSessions.length, 3);
   const authFile = path.join(root, 'auth', 'session.info');
   const fileStorage = new FileAuthenticationStorage({ filePath: authFile });
+  assert.strictEqual(fileAuthenticationStorageSource.FileAuthenticationStorage, FileAuthenticationStorage);
   await fileStorage.store({ account: { uid: 'u2' }, auth: { accessToken: 'token' } });
   assert.strictEqual((await fileStorage.restore()).account.uid, 'u2');
+  const authBackupsBeforeClean = fs.readdirSync(path.dirname(authFile)).filter((name) => name.includes('.session.') && name.endsWith('.info'));
   const logoutToken = await fileStorage.beginLogout();
   assert.strictEqual((await fileStorage.restore()), undefined);
   assert.strictEqual(await fileStorage.clean({ logoutToken: 'stale-token' }), false);
   assert.strictEqual(await fileStorage.clean({ logoutToken }), true);
+  const authBackupsAfterClean = fs.readdirSync(path.dirname(authFile)).filter((name) => name.includes('.session.') && name.endsWith('.info'));
+  assert.ok(authBackupsAfterClean.length > authBackupsBeforeClean.length);
   await fileStorage.dispose();
+  const migratedAuthFile = path.join(root, 'auth', 'migrated.info');
+  const { setWorkbuddyLegacyAuthSessionMigrator } = require('../packages/authentication/src/runtime/file-authentication-storage.js');
+  setWorkbuddyLegacyAuthSessionMigrator({ migrate: async () => ({ account: { uid: 'legacy' }, auth: { accessToken: 'legacy-token' } }) });
+  const migratedStorage = new FileAuthenticationStorage({ filePath: migratedAuthFile });
+  assert.strictEqual((await migratedStorage.restore()).account.uid, 'legacy');
+  await migratedStorage.dispose();
+  setWorkbuddyLegacyAuthSessionMigrator(undefined);
+  const watchedAuthFile = path.join(root, 'auth', 'watched.info');
+  const watchedStorage = new FileAuthenticationStorage({ filePath: watchedAuthFile, watch: true });
+  watchedStorage.init();
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  fs.writeFileSync(watchedAuthFile, JSON.stringify({ account: { uid: 'external' }, auth: { accessToken: 'external-token' } }, null, 2));
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  assert.strictEqual(watchedStorage.session.account.uid, 'external');
+  await watchedStorage.dispose();
   const token = `header.${Buffer.from(JSON.stringify({ sub: 'custom-user', nickname: 'Custom', iss: 'https://sso.example/sso-ent-1' })).toString('base64url')}.signature`;
   const customProduct = { authentication: { type: AuthenticationType.CUSTOM_TOKEN, attributes: { token } } };
   const customStorage = new CustomTokenAuthenticationStorage({ productManager: { configuration: { getValue: () => customProduct }, waitConfiguration: async () => customProduct }, env: {} });
