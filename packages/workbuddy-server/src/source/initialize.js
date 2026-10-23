@@ -1,6 +1,7 @@
 const require_chunk = require("./chunk.js");
 const { getOnlineDocPreviewRegistry: getOnlineDocPreviewRegistryRuntime } = require("../runtime/online-doc-preview-registry.js");
 const { getOnlineDocumentSelectionStore: getOnlineDocumentSelectionStoreRuntime } = require("../runtime/online-document-selection-store.js");
+const { createMqqSelectionReporter: createMqqSelectionReporterRuntime } = require("../runtime/mqq-selection-router.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -279,6 +280,13 @@ function getOnlineDocumentSelectionStore() {
 //#endregion
 //#region ../../packages/workbuddy-server/src/docs/route-mqq-selection.ts
 function createMqqSelectionReporter(deps) {
+	return createMqqSelectionReporterRuntime({
+		...deps,
+		logger: require_workbuddy_auth_product_coordinator.windowLog,
+		isTencentOnlineFilePath: require_workbuddy_auth_product_coordinator.isTencentOnlineFilePath,
+		extractTencentOnlineFileId: require_workbuddy_auth_product_coordinator.extractTencentOnlineFileId,
+		onlineFilePathPrefix: require_workbuddy_auth_product_coordinator.TENCENT_ONLINE_FILE_PATH_PREFIX
+	});
 	return (selection) => routeMqqSelectionReportWithDeps(selection, deps);
 }
 function routeMqqSelectionReportWithDeps(selection, deps) {

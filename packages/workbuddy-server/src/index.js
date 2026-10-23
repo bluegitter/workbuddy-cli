@@ -162,4 +162,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-mcp-client-pool"),
   ...require("./runtime/online-doc-preview-registry"),
   ...require("./runtime/online-document-selection-store"),
+  ...require("./runtime/mqq-selection-router"),
 });

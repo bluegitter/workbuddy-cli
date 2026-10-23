@@ -63,6 +63,7 @@ const { markDaemon, resolveProductName, resolveStoredSessionTitle } = require('.
 const { configureDaemonNetworkProxy } = require('../packages/workbuddy-server/src');
 const { createTencentDocsEngineProvider } = require('../packages/workbuddy-server/src');
 const { OnlineDocPreviewRegistry, OnlineDocumentSelectionStore, truncateForBroadcast } = require('../packages/workbuddy-server/src');
+const { createMqqSelectionReporter, stripPadIdPrefix, resolveOnlineFileIdWithoutResourceUri } = require('../packages/workbuddy-server/src');
 const { DocumentEditContext, resolveToolUsableFileIdFromSelection, toActiveFileContextInfo, toActiveFilePreviewContextInfo, TencentDocsContextManager } = require('../packages/authentication/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
@@ -1122,6 +1123,20 @@ async function main() {
   assert.strictEqual(selectionStore.getActiveSelection('session-1').selection.text, 'hello');
   selectionStore.reportSelection({ filePath: 'tdoc://file-1', sessionId: 'session-1', fileType: 'doc', selection: null });
   assert.strictEqual(selectionEvents.length, 2);
+  assert.strictEqual(stripPadIdPrefix('pad$online-file'), 'online-file');
+  const routedOnline = [];
+  const mqqReporter = createMqqSelectionReporter({
+    onlineFilePathPrefix: 'tdoc://',
+    isTencentOnlineFilePath: (value) => value?.startsWith('tdoc://'),
+    extractTencentOnlineFileId: (value) => value.slice(7),
+    onlineDocPreviewRegistry: { getRecordByFileId: (value) => value === 'online-file' ? { sessionId: 's1' } : undefined },
+    onlineDocumentSelectionStore: { reportSelection: (value) => routedOnline.push(value) },
+    documentService: { reportDocumentSelection: () => { throw new Error('local route not expected'); } },
+    logger: { info: () => {}, warn: () => {} },
+  });
+  mqqReporter({ documentResourceUri: 'tdoc://online-file', fileType: 'doc', selection: { text: 'x' } });
+  assert.strictEqual(routedOnline[0].sessionId, 's1');
+  assert.strictEqual(resolveOnlineFileIdWithoutResourceUri({ selection: { fileId: 'pad$online-file' } }, { isTencentOnlineFilePath: () => false, extractTencentOnlineFileId: () => undefined, onlineDocPreviewRegistry: { getRecordByFileId: (value) => value === 'online-file' ? {} : undefined } }), 'online-file');
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });
