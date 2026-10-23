@@ -71,6 +71,7 @@ const {
 } = require('../src');
 
 async function main() {
+  assert.strictEqual(require.cache[require.resolve('../src/source/cli-bundle.js')], undefined);
   assert.deepStrictEqual(normalizeToolInput('{"path":"/tmp/a"}'), { path: '/tmp/a' });
   assert.deepStrictEqual(normalizeToolInput('not-json'), {});
   assert.deepStrictEqual(extractToolCalls([{ type: 'tool_use', id: 'tool-1', name: 'Read', arguments: '{"path":"/tmp/a"}' }]), [
