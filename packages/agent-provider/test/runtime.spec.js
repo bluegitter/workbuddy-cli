@@ -27,6 +27,7 @@ const {
   ToolRegistry,
   executeToolCall,
   prepareToolInput,
+  resolveToolPermission,
   mapWithConcurrency,
   partitionToolCalls,
   runAgentLoop,
@@ -185,6 +186,24 @@ async function main() {
   assert.strictEqual(invalidToolResult.content, 'missing path');
   assert.deepStrictEqual(invalidToolResult.metadata, { validation: true, errorCode: 42 });
   assert.strictEqual(invalidToolSideEffects, 0);
+  let globalPermissionChecks = 0;
+  const toolDenied = await resolveToolPermission({
+    name: 'publish',
+    checkPermissions: async () => ({ behavior: 'deny', message: 'publishing is blocked' }),
+  }, { command: 'publish' }, {
+    permissions: { canUse: async () => { globalPermissionChecks += 1; return { behavior: 'allow' }; } },
+  });
+  assert.strictEqual(toolDenied.behavior, 'deny');
+  assert.strictEqual(globalPermissionChecks, 0);
+  let globalPermissionInput;
+  const coordinatedPermission = await resolveToolPermission({
+    name: 'edit',
+    checkPermissions: async () => ({ behavior: 'allow', updatedInput: { path: '/safe/file' }, source: 'tool' }),
+  }, { path: '/unsafe/file' }, {
+    permissions: { canUse: async (_tool, input) => { globalPermissionInput = input; return { behavior: 'allow', source: 'rule' }; } },
+  });
+  assert.deepStrictEqual(globalPermissionInput, { path: '/safe/file' });
+  assert.deepStrictEqual(coordinatedPermission.updatedInput, { path: '/safe/file' });
 
   const session = new AgentSession({ messages: [{ role: 'user', content: 'read' }] });
   const lineageManager = new SessionManager();

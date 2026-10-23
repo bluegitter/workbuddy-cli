@@ -3,6 +3,7 @@
 const { HookEvent } = require('./hook-registry');
 const { getPermissionInput, normalizePermissionDecision } = require('./permission-result');
 const { parseToolInput, prepareToolInput } = require('./tool-input-pipeline');
+const { resolveToolPermission } = require('./tool-permission-coordinator');
 
 async function executeToolCall(call, context) {
   if (context.signal?.aborted) return toolResult(call, true, 'Tool use cancelled', { cancelled: true });
@@ -21,10 +22,7 @@ async function executeToolCall(call, context) {
   if (preHook?.stopped) return toolResult(call, true, preHook.reason, { hook: HookEvent.PRE_TOOL_USE });
   if (preHook?.payload?.input !== undefined) parsed = preHook.payload.input;
 
-  let decision = normalizePermissionDecision(
-    await context.permissions.canUse(tool, parsed, context),
-    parsed,
-  );
+  let decision = await resolveToolPermission(tool, parsed, context);
   if (preHook?.payload?.permissionDecision) {
     decision = normalizePermissionDecision({
       ...decision,
