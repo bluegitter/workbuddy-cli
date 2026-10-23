@@ -164,4 +164,5 @@ module.exports = Object.freeze({
   ...require("./runtime/online-document-selection-store"),
   ...require("./runtime/mqq-selection-router"),
   ...require("./runtime/system-open-local-file"),
+  ...require("./runtime/local-docs-helpers"),
 });

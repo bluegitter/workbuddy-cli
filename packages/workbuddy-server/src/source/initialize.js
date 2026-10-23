@@ -3,6 +3,7 @@ const { getOnlineDocPreviewRegistry: getOnlineDocPreviewRegistryRuntime } = requ
 const { getOnlineDocumentSelectionStore: getOnlineDocumentSelectionStoreRuntime } = require("../runtime/online-document-selection-store.js");
 const { createMqqSelectionReporter: createMqqSelectionReporterRuntime } = require("../runtime/mqq-selection-router.js");
 const { createSystemOpenLocalFileHandler: createSystemOpenLocalFileHandlerRuntime, TENCENT_DOCS_RENDERER_PUSH_CHANNELS: TENCENT_DOCS_RENDERER_PUSH_CHANNELS_RUNTIME } = require("../runtime/system-open-local-file.js");
+const localDocsHelpersRuntime = require("../runtime/local-docs-helpers.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -514,6 +515,7 @@ require_common$3.init__esm5();
 require_common$3.init_common$3();
 /** 在预览 URL 上追加来源标记 `wb_source`。失败静默降级返回原 URL。 */
 function appendWbSource(url, source) {
+	return localDocsHelpersRuntime.appendWbSource(url, source);
 	try {
 		const u = new URL(url);
 		u.searchParams.set("wb_source", source);
@@ -526,6 +528,7 @@ function appendWbSource(url, source) {
 //#region ../../packages/workbuddy-server/src/docs/preview/local-file-open-check-open.ts
 /** 将冲突预检结果映射为 localDocs.checkOpen RPC 返回值（不含 UI 副作用）。 */
 function mapConflictToCheckOpenResult(conflict, requestSessionId) {
+	return localDocsHelpersRuntime.mapConflictToCheckOpenResult(conflict, requestSessionId, require_workbuddy_auth_product_coordinator.shouldBlockLocalDocumentOpenAttempt);
 	if (conflict.kind === "owned-by-other" && conflict.sessionId) {
 		const title = conflict.filePath.split(/[\\/]/).pop() || conflict.filePath;
 		return {
@@ -575,6 +578,7 @@ function isSupportedExtension$1(filePath) {
 }
 /** 在 URL 上追加对话场景标记 `_wbchat=1`。失败时静默降级返回原 URL。 */
 function appendChatMarker(url) {
+	return localDocsHelpersRuntime.appendChatMarker(url);
 	try {
 		const u = new URL(url);
 		u.searchParams.set("_wbchat", "1");
