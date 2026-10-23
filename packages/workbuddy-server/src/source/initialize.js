@@ -98693,6 +98693,15 @@ function restoreTaskStateFromStoredStatus(sessionId, createdAt, rawStatus, optio
 	});
 	return initial;
 }
+// Keep the generated entry points wired to the readable runtime implementation.
+createInitialTaskState = taskStatusRuntime.createInitialTaskState;
+deriveTaskStatus = taskStatusRuntime.deriveTaskStatus;
+isTaskTerminal = taskStatusRuntime.isTaskTerminal;
+isTerminalTaskStatus = taskStatusRuntime.isTerminalTaskStatus;
+reduceTaskStatus = taskStatusRuntime.reduceTaskStatus;
+normalizeTaskStatus = taskStatusRuntime.normalizeTaskStatus;
+applyManualTaskStatus = taskStatusRuntime.applyManualTaskStatus;
+restoreTaskStateFromStoredStatus = taskStatusRuntime.restoreTaskStateFromStoredStatus;
 //#endregion
 //#region ../../packages/workbuddy-server/src/session/local-paths.ts
 function extractPreviewUrlLocalPath(url) {
@@ -201181,8 +201190,7 @@ var TEAM_EXPERT_TYPE = "team";
 * - 函数纯函数实现，便于单测。
 */
 function resolveAgentTeamsEnv(input = {}) {
-	if (input.expertType === TEAM_EXPERT_TYPE) return ENABLED;
-	return input.disableAgentTeams ?? true ? DISABLED : ENABLED;
+	return agentTeamsEnvRuntime.resolveAgentTeamsEnv(input);
 }
 /** 注入子进程 env 时使用的键名，集中常量避免拼写漂移。 */
 var AGENT_TEAMS_ENV_KEY = "CODEBUDDY_CODE_EXPERIMENTAL_AGENT_TEAMS";
