@@ -15,6 +15,7 @@ const {
 const { CommandPolicy } = require('../packages/sandbox-cli/src');
 const runtimeCliProcessEnv = require('../packages/runtime/src/source/cli-process-env.js');
 const runtimeContextSource = require('../packages/runtime/src/source/runtime-context.js');
+const startupContextSource = require('../packages/runtime/src/source/startup-context.js');
 const runtimeHttpSource = require('../packages/runtime/src/source/runtime-http.js');
 const oauthSource = require('../packages/authentication/src/source/auth.js');
 const fileAuthenticationStorageSource = require('../packages/authentication/src/source/file-authentication-storage.js');
@@ -541,6 +542,7 @@ async function main() {
   assert.match(runtimeCliProcessEnv.dataSocketPath('session-1', { WORKBUDDY_CONFIG_DIR: '/tmp/workbuddy-test' }, 'darwin'), /s-[a-f0-9]{16}\.sock$/);
   assert.strictEqual(runtimeCliProcessEnv.buildCliProcessEnv({ SERVER__PORT: '1234' }, { CODEBUDDY_SECRET: 'drop', PATH: '/bin' }).SERVER__PORT, '1234');
   assert.strictEqual(typeof runtimeContextSource.configureWorkbuddyRuntimeContext, 'function');
+  assert.strictEqual(startupContextSource.initStartupContextFromEnv, initStartupContextFromEnv);
   assert.strictEqual(typeof runtimeHttpSource.createRuntimeHttp, 'function');
   assert.strictEqual(typeof oauthSource.auth, 'function');
   assert.strictEqual(typeof oauthSource.auth_exports.refreshAuthorization, 'function');
