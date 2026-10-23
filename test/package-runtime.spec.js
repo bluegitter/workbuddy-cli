@@ -58,6 +58,7 @@ const { HANDOFF_CANARY_HEADERS, ROUTE_PREFIX, withAcceptLanguageHeader } = requi
 const mcpSchemaSource = require('../packages/workbuddy-server/src/runtime/mcp-schema.js');
 const { EMPTY_COMPLETION_RESULT, createCompletionResult, getZodSchemaObject, isZodRawShapeCompat, isZodSchemaInstance, isZodTypeLike, promptArgumentsFromSchema } = require('../packages/workbuddy-server/src');
 const { startDaemonAppServerEntry } = require('../packages/workbuddy-server/src');
+const { FileBackedLegacyLocalStorageMigrationService, createAppServerDesktopHostBridge, partitionToScope, readOpenDialogResult, readSaveDialogResult } = require('../packages/workbuddy-server/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
@@ -1014,6 +1015,26 @@ async function main() {
   const daemonEntryCalls = [];
   await startDaemonAppServerEntry({ initStartupContext: (proc) => daemonEntryCalls.push(['startup', proc]), configureLogger: (options) => daemonEntryCalls.push(['logger', options]), loadMain: async () => ({ runDaemonAppServerEntry: async () => daemonEntryCalls.push(['main']) }) });
   assert.deepStrictEqual(daemonEntryCalls.map(([kind]) => kind), ['startup', 'logger', 'main']);
+  const legacyMigration = new FileBackedLegacyLocalStorageMigrationService('/ignored', { readFileSync: () => JSON.stringify({ sourceSessionPath: '/old', entries: { theme: 'dark' } }) });
+  assert.deepStrictEqual(await legacyMigration.migrate(), { sourceSessionPath: '/old', currentSessionPath: '', skipped: false, entries: { theme: 'dark' } });
+  assert.strictEqual((await new FileBackedLegacyLocalStorageMigrationService('', { readFileSync: () => '' }).migrate()).reason, 'legacy_localstorage_result_path_missing');
+  assert.deepStrictEqual(readOpenDialogResult({ canceled: false, filePaths: ['/tmp/a', 3] }), { canceled: false, filePaths: ['/tmp/a'] });
+  assert.deepStrictEqual(readOpenDialogResult(undefined), { canceled: true, filePaths: [] });
+  assert.deepStrictEqual(readSaveDialogResult({ canceled: true }), { canceled: true });
+  assert.strictEqual(partitionToScope('persist:tdoc-import'), 'tdoc-import');
+  assert.throws(() => partitionToScope('persist:other'), /Unsupported app-server desktop host partition/);
+  const bridgeInvocations = [];
+  const bridgeEvents = [];
+  const bridgeChannels = { OPEN_EXTERNAL: 'openExternal', OPEN_PATH: 'openPath', SHOW_ITEM_IN_FOLDER: 'showItem', CLEAR_DEFAULT_SESSION_COOKIES_FOR_DOMAINS: 'clearCookies', RESOLVE_PROXY: 'resolveProxy', APPLY_PROXY_SETTINGS: 'proxySettings', DECRYPT_LEGACY_AUTH_SESSION: 'decrypt', COOKIE_SET: 'cookieSet', COOKIE_GET: 'cookieGet', COOKIE_REMOVE: 'cookieRemove', SHOW_OPEN_DIALOG: 'openDialog', SHOW_SAVE_DIALOG: 'saveDialog', SHOW_MESSAGE_BOX: 'messageBox', TASK_COMPLETED_NOTIFICATION: 'taskCompleted' };
+  const bridgeParent = { invoke: async (channel, payload) => { bridgeInvocations.push([channel, payload]); if (channel === 'resolveProxy') return undefined; if (channel === 'cookieGet') return [{ name: 'sid' }]; return undefined; } };
+  const noopDesktopHost = { app: {}, shell: {}, network: {}, auth: {}, window: {} };
+  const bridge = createAppServerDesktopHostBridge({ parent: bridgeParent, events: { push: (...event) => bridgeEvents.push(event) }, appName: 'Buddy', noopDesktopHost, channels: bridgeChannels });
+  assert.strictEqual(bridge.app.getName(), 'Buddy');
+  assert.strictEqual(await bridge.network.resolveProxy('https://example.test'), 'DIRECT');
+  assert.deepStrictEqual(await bridge.network.getDefaultSession().cookies.get({}), [{ name: 'sid' }]);
+  bridge.showTaskCompletedNotification({ id: 'task-1' });
+  assert.deepStrictEqual(bridgeEvents[0], ['taskCompleted', { id: 'task-1' }]);
+  assert.ok(bridgeInvocations.some(([channel]) => channel === 'cookieGet'));
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });

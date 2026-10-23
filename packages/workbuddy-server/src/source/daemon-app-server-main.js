@@ -11,6 +11,8 @@ const require_file_authentication_storage = require("./file-authentication-stora
 const require_legacy_auth_session_migrator = require("./legacy-auth-session-migrator.js");
 const require_module_base = require("./module-base.js");
 const require_module_app_server = require("./module.app-server.js");
+const { FileBackedLegacyLocalStorageMigrationService } = require("../runtime/legacy-localstorage-migration.js");
+const { createAppServerDesktopHostBridge: createDesktopHostBridge } = require("../runtime/desktop-host-bridge.js");
 let node_fs = require("node:fs");
 node_fs = require_chunk.__toESM(node_fs);
 let _tencent_tencent_docs_ai_engine = require("@tencent/tencent-docs-ai-engine");
@@ -43,230 +45,25 @@ function resolveStoredSessionTitle(database, sessionId) {
 	return row?.title?.trim() || void 0;
 }
 //#endregion
-//#region src/main/features/workflows/migration/file-localstorage-migration-service.ts
-var FileBackedLegacyLocalStorageMigrationService = class {
-	constructor(resultPath) {
-		this.resultPath = resultPath;
-	}
-	async migrate() {
-		if (!this.resultPath) return createSkippedLocalStorageResult("legacy_localstorage_result_path_missing");
-		let raw;
-		try {
-			raw = node_fs.readFileSync(this.resultPath, "utf8");
-		} catch (error) {
-			return createSkippedLocalStorageResult(`legacy_localstorage_result_read_failed: ${formatError(error)}`);
-		}
-		try {
-			return normalizeLocalStorageResult(JSON.parse(raw));
-		} catch (error) {
-			return createSkippedLocalStorageResult(`legacy_localstorage_result_parse_failed: ${formatError(error)}`);
-		}
-	}
-};
-function normalizeLocalStorageResult(value) {
-	if (!value || typeof value !== "object") return createSkippedLocalStorageResult("legacy_localstorage_result_invalid");
-	const record = value;
-	const entries = isStringRecord(record.entries) ? record.entries : {};
-	const sourceSessionPath = typeof record.sourceSessionPath === "string" ? record.sourceSessionPath : "";
-	const currentSessionPath = typeof record.currentSessionPath === "string" ? record.currentSessionPath : "";
-	const skipped = record.skipped === true;
-	const reason = typeof record.reason === "string" ? record.reason : void 0;
-	if (skipped) return {
-		sourceSessionPath,
-		currentSessionPath,
-		skipped: true,
-		reason,
-		entries
-	};
-	return {
-		sourceSessionPath,
-		currentSessionPath,
-		skipped: false,
-		entries
-	};
-}
-function createSkippedLocalStorageResult(reason) {
-	return {
-		sourceSessionPath: "",
-		currentSessionPath: "",
-		skipped: true,
-		reason,
-		entries: {}
-	};
-}
-function isStringRecord(value) {
-	if (!value || typeof value !== "object") return false;
-	return Object.values(value).every((entry) => typeof entry === "string");
-}
-function formatError(error) {
-	return error instanceof Error ? error.message : String(error);
-}
-//#endregion
 //#region src/main/daemon/app-server/desktop-host-bridge.ts
 require_workbuddy_product_config.init_bundled_assets();
 require_dev_env_override.init_dev_env_override();
 require_workbuddy_product_config.init_workbuddy_product_config();
 function createAppServerDesktopHostBridge({ parent, events, appName, appVersion, appLocale, appConfigDir, isPackaged }) {
-	return {
-		...require_initialize.NOOP_DESKTOP_HOST,
-		app: {
-			...require_initialize.NOOP_DESKTOP_HOST.app,
-			getName: () => appName || require_initialize.NOOP_DESKTOP_HOST.app.getName(),
-			getVersion: () => appVersion || require_initialize.NOOP_DESKTOP_HOST.app.getVersion(),
-			getLocale: () => appLocale || require_initialize.NOOP_DESKTOP_HOST.app.getLocale(),
-			getConfigDir: () => appConfigDir || require_initialize.NOOP_DESKTOP_HOST.app.getConfigDir(),
-			isPackaged: () => isPackaged === true
-		},
-		dialog: createBridgeDialog(parent),
-		shell: {
-			...require_initialize.NOOP_DESKTOP_HOST.shell,
-			openExternal: async (url) => {
-				const result = await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.OPEN_EXTERNAL, url);
-				const opened = result === false ? false : true;
-				console.log(`[DesktopHostBridge] openExternal RPC result=${String(result)} -> opened=${opened} for: ${url}`);
-				return opened;
-			},
-			openPath: async (filePath) => {
-				const result = await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.OPEN_PATH, filePath);
-				return typeof result === "string" ? result : "";
-			},
-			showItemInFolder: async (filePath) => {
-				await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.SHOW_ITEM_IN_FOLDER, filePath);
-			}
-		},
-		network: {
-			...require_initialize.NOOP_DESKTOP_HOST.network,
-			fetch: async (url, init) => fetch(url, init),
-			getDefaultSession: () => createBridgeSession(parent, "default"),
-			getSessionPartition: (partition) => createBridgeSession(parent, partitionToScope(partition)),
-			clearDefaultSessionCookiesForDomains: async (domains) => {
-				const result = await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.CLEAR_DEFAULT_SESSION_COOKIES_FOR_DOMAINS, { domains });
-				return typeof result === "number" ? result : 0;
-			},
-			resolveProxy: async (targetUrl) => {
-				const result = await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.RESOLVE_PROXY, { targetUrl });
-				return typeof result === "string" ? result : "DIRECT";
-			},
-			applyProxySettings: async (settings) => {
-				const result = await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.APPLY_PROXY_SETTINGS, { settings });
-				if (result && typeof result === "object" && "HTTP_PROXY" in result && "HTTPS_PROXY" in result && "NO_PROXY" in result) return result;
-				return {
-					HTTP_PROXY: "",
-					HTTPS_PROXY: "",
-					NO_PROXY: ""
-				};
-			}
-		},
-		auth: {
-			...require_initialize.NOOP_DESKTOP_HOST.auth,
-			decryptLegacyAuthSession: async (encryptedBase64) => {
-				const result = await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.DECRYPT_LEGACY_AUTH_SESSION, { encryptedBase64 });
-				return typeof result === "string" ? result : void 0;
-			}
-		},
-		window: {
-			...require_initialize.NOOP_DESKTOP_HOST.window,
-			send(channel, data) {
-				events.push(channel, data);
-				return true;
-			}
-		},
-		showTaskCompletedNotification(payload) {
-			events.push(require_initialize.WORKBUDDY_APP_SERVER_HOST_EVENT_CHANNELS.TASK_COMPLETED_NOTIFICATION, payload);
-			return true;
+	return createDesktopHostBridge({
+		parent,
+		events,
+		appName,
+		appVersion,
+		appLocale,
+		appConfigDir,
+		isPackaged,
+		noopDesktopHost: require_initialize.NOOP_DESKTOP_HOST,
+		channels: {
+			...require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS,
+			TASK_COMPLETED_NOTIFICATION: require_initialize.WORKBUDDY_APP_SERVER_HOST_EVENT_CHANNELS.TASK_COMPLETED_NOTIFICATION
 		}
-	};
-}
-function createBridgeSession(parent, scope) {
-	return { cookies: {
-		async set(details) {
-			await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.COOKIE_SET, {
-				scope,
-				details
-			});
-		},
-		async get(filter) {
-			const result = await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.COOKIE_GET, {
-				scope,
-				filter
-			});
-			return Array.isArray(result) ? result : [];
-		},
-		async remove(url, name) {
-			await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.COOKIE_REMOVE, {
-				scope,
-				url,
-				name
-			});
-		}
-	} };
-}
-function partitionToScope(partition) {
-	if (partition === "persist:tdoc-import") return "tdoc-import";
-	if (partition === "persist:tdoc-preview") return "tdoc-preview";
-	throw new Error(`Unsupported app-server desktop host partition: ${partition}`);
-}
-function createBridgeDialog(parent) {
-	return {
-		async showOpenDialog(options) {
-			const params = {
-				title: options.title,
-				defaultPath: options.defaultPath,
-				filters: options.filters,
-				properties: options.properties
-			};
-			return readOpenDialogResult(await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.SHOW_OPEN_DIALOG, params));
-		},
-		async showSaveDialog(options) {
-			const params = {
-				title: options.title,
-				defaultPath: options.defaultPath,
-				filters: options.filters
-			};
-			return readSaveDialogResult(await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.SHOW_SAVE_DIALOG, params));
-		},
-		async showMessageBox(options) {
-			const params = {
-				type: options.type,
-				title: options.title,
-				message: options.message,
-				detail: options.detail,
-				buttons: options.buttons,
-				defaultId: options.defaultId,
-				cancelId: options.cancelId,
-				noLink: options.noLink
-			};
-			return readMessageBoxResult(await parent.invoke(require_initialize.WORKBUDDY_APP_SERVER_HOST_RPC_CHANNELS.SHOW_MESSAGE_BOX, params));
-		}
-	};
-}
-function readOpenDialogResult(value) {
-	if (!value || typeof value !== "object") return {
-		canceled: true,
-		filePaths: []
-	};
-	const record = value;
-	const filePaths = Array.isArray(record.filePaths) ? record.filePaths.filter((item) => typeof item === "string") : [];
-	return {
-		canceled: record.canceled !== false && filePaths.length === 0,
-		filePaths
-	};
-}
-function readSaveDialogResult(value) {
-	if (!value || typeof value !== "object") throw new Error("desktopHost.showSaveDialog returned an invalid result");
-	const record = value;
-	if (record.canceled === true) return { canceled: true };
-	const filePath = typeof record.filePath === "string" && record.filePath.trim() ? record.filePath : void 0;
-	if (!filePath) throw new Error("desktopHost.showSaveDialog returned an invalid result");
-	return {
-		canceled: false,
-		filePath
-	};
-}
-function readMessageBoxResult(value) {
-	if (!value || typeof value !== "object") return { response: 0 };
-	const record = value;
-	return { response: typeof record.response === "number" ? record.response : 0 };
+	});
 }
 //#endregion
 //#region src/main/daemon/daemon-app-server-main.ts
