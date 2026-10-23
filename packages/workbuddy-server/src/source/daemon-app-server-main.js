@@ -13,6 +13,7 @@ const require_module_base = require("./module-base.js");
 const require_module_app_server = require("./module.app-server.js");
 const { FileBackedLegacyLocalStorageMigrationService } = require("../runtime/legacy-localstorage-migration.js");
 const { createAppServerDesktopHostBridge: createDesktopHostBridge } = require("../runtime/desktop-host-bridge.js");
+const { markDaemon: markDaemonRuntime, resolveProductName, resolveStoredSessionTitle } = require("../runtime/daemon-utils.js");
 let node_fs = require("node:fs");
 node_fs = require_chunk.__toESM(node_fs);
 let _tencent_tencent_docs_ai_engine = require("@tencent/tencent-docs-ai-engine");
@@ -38,12 +39,6 @@ function createTencentDocsEngineProvider(options) {
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/session/tencent-docs-document-lifecycle-port.ts
-function resolveStoredSessionTitle(database, sessionId) {
-	const row = database.getSession(sessionId);
-	const customTitle = row?.customTitle?.trim();
-	if (customTitle) return customTitle;
-	return row?.title?.trim() || void 0;
-}
 //#endregion
 //#region src/main/daemon/app-server/desktop-host-bridge.ts
 require_workbuddy_product_config.init_bundled_assets();
@@ -74,14 +69,11 @@ function createAppServerDesktopHostBridge({ parent, events, appName, appVersion,
 * 全程吞异常，绝不阻塞 daemon 启动。
 */
 function markDaemon(id) {
-	try {
-		const def = require_marks.STARTUP_MARKS[id];
-		if (!def) return;
-		require_marks.getWorkbuddyPerfLogger(require_marks.PerfFlow.STARTUP).mark(def.key, {
-			id: def.id,
-			phase: def.phase
-		});
-	} catch {}
+	markDaemonRuntime(id, {
+		marks: require_marks.STARTUP_MARKS,
+		getPerfLogger: require_marks.getWorkbuddyPerfLogger,
+		flow: require_marks.PerfFlow.STARTUP
+	});
 }
 function requireStdioMode() {
 	require_initialize.assertWorkbuddyAppServerStdioMode(process.argv);
@@ -523,15 +515,6 @@ async function configureDaemonNetworkProxy(resolveDaemonProxyEnv, pacResolver) {
 		daemonAppServerLogger.warn("[TlsVerification] early bootstrap injection skipped (non-fatal)", error);
 	}
 	return pacRpcHandle;
-}
-async function resolveProductName(celljs) {
-	const fromEnv = process.env.WORKBUDDY_PRODUCT_NAME?.trim();
-	if (fromEnv) return fromEnv;
-	try {
-		const productName = (await celljs.productManager?.waitConfiguration?.())?.productName ?? celljs.productManager?.configuration?.productName;
-		if (typeof productName === "string" && productName.trim()) return productName;
-	} catch {}
-	return "WorkBuddy";
 }
 //#endregion
 exports.runDaemonAppServerEntry = runDaemonAppServerEntry;
