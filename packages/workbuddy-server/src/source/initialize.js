@@ -4,6 +4,7 @@ const { getOnlineDocumentSelectionStore: getOnlineDocumentSelectionStoreRuntime 
 const { createMqqSelectionReporter: createMqqSelectionReporterRuntime } = require("../runtime/mqq-selection-router.js");
 const { createSystemOpenLocalFileHandler: createSystemOpenLocalFileHandlerRuntime, TENCENT_DOCS_RENDERER_PUSH_CHANNELS: TENCENT_DOCS_RENDERER_PUSH_CHANNELS_RUNTIME } = require("../runtime/system-open-local-file.js");
 const localDocsHelpersRuntime = require("../runtime/local-docs-helpers.js");
+const { createLocalDocsHostFacade: createLocalDocsHostFacadeRuntime } = require("../runtime/local-docs-facade.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -595,6 +596,22 @@ function appendChatMarker(url) {
 * @param deps.logger 可选日志（默认 no-op）。
 */
 function createLocalDocsHostFacade(deps) {
+	return createLocalDocsHostFacadeRuntime({
+		...deps,
+		fsAccess: (filePath) => node_fs.promises.access(filePath, node_fs.constants.R_OK),
+		isSupportedExtension: isSupportedExtension$1,
+		normalizeLocalDocumentFilePath: require_workbuddy_auth_product_coordinator.normalizeLocalDocumentFilePath,
+		filterTencentDocsAiServiceFilePaths: require_workbuddy_auth_product_coordinator.filterTencentDocsAiServiceFilePaths,
+		mapConflictToCheckOpenResult: (conflict, requestSessionId) => mapConflictToCheckOpenResult(conflict, requestSessionId),
+		appendWbSource,
+		appendChatMarker,
+		getLocalDocumentWriteAccess: require_workbuddy_auth_product_coordinator.getLocalDocumentWriteAccess,
+		buildLocalDocumentSaveChoices: require_workbuddy_auth_product_coordinator.buildLocalDocumentSaveChoices,
+		getLocalDocumentDialogButtonIds: require_workbuddy_auth_product_coordinator.getLocalDocumentDialogButtonIds,
+		requestLocalDocumentSaveAsPath: require_workbuddy_auth_product_coordinator.requestLocalDocumentSaveAsPath,
+		formatLocalPreviewText: require_workbuddy_auth_product_coordinator.formatLocalPreviewText,
+		logger: deps.logger,
+	});
 	const { documentService, platform } = deps;
 	const log = deps.logger ?? {
 		info: () => {},

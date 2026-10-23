@@ -66,6 +66,7 @@ const { OnlineDocPreviewRegistry, OnlineDocumentSelectionStore, truncateForBroad
 const { createMqqSelectionReporter, stripPadIdPrefix, resolveOnlineFileIdWithoutResourceUri } = require('../packages/workbuddy-server/src');
 const { createSystemOpenLocalFileHandler, TENCENT_DOCS_RENDERER_PUSH_CHANNELS } = require('../packages/workbuddy-server/src');
 const { appendWbSource, appendChatMarker, mapConflictToCheckOpenResult } = require('../packages/workbuddy-server/src');
+const { createLocalDocsHostFacade } = require('../packages/workbuddy-server/src');
 const { DocumentEditContext, resolveToolUsableFileIdFromSelection, toActiveFileContextInfo, toActiveFilePreviewContextInfo, TencentDocsContextManager } = require('../packages/authentication/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
@@ -1153,6 +1154,17 @@ async function main() {
   assert.strictEqual(appendWbSource('https://example.test/doc', 'local'), 'https://example.test/doc?wb_source=local');
   assert.strictEqual(appendChatMarker('https://example.test/doc'), 'https://example.test/doc?_wbchat=1');
   assert.deepStrictEqual(mapConflictToCheckOpenResult({ kind: 'owned-by-other', filePath: '/tmp/demo.docx', sessionId: 's2', sessionTitle: 'Other' }, 's1', () => true).shouldBlockOpen, true);
+  const localDocsFacade = createLocalDocsHostFacade({
+    documentService: { checkLocalFileOpenConflict: () => ({ kind: 'none' }), createEmbeddedPreview: async () => ({ url: 'https://preview.test/doc' }), getEmbeddedPreviewContextInfo: () => undefined },
+    platform: { osPlatform: 'darwin' },
+    fsAccess: async () => {},
+    isSupportedExtension: () => true,
+    normalizeLocalDocumentFilePath: (value) => value,
+    appendWbSource,
+    appendChatMarker,
+  });
+  assert.deepStrictEqual(await localDocsFacade.checkOpen('/tmp/demo.docx'), { success: true, status: 'none' });
+  assert.strictEqual((await localDocsFacade.getPreviewUrl('/tmp/demo.docx', { sessionId: 's1' })).url, 'https://preview.test/doc?_wbchat=1&wb_source=local');
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });

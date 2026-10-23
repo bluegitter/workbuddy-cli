@@ -165,4 +165,5 @@ module.exports = Object.freeze({
   ...require("./runtime/mqq-selection-router"),
   ...require("./runtime/system-open-local-file"),
   ...require("./runtime/local-docs-helpers"),
+  ...require("./runtime/local-docs-facade"),
 });
