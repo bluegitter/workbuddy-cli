@@ -63,7 +63,7 @@ const { markDaemon, resolveProductName, resolveStoredSessionTitle } = require('.
 const { configureDaemonNetworkProxy } = require('../packages/workbuddy-server/src');
 const { createTencentDocsEngineProvider } = require('../packages/workbuddy-server/src');
 const { OnlineDocPreviewRegistry, OnlineDocumentSelectionStore, truncateForBroadcast } = require('../packages/workbuddy-server/src');
-const { DocumentEditContext, resolveToolUsableFileIdFromSelection, toActiveFileContextInfo, toActiveFilePreviewContextInfo } = require('../packages/authentication/src');
+const { DocumentEditContext, resolveToolUsableFileIdFromSelection, toActiveFileContextInfo, toActiveFilePreviewContextInfo, TencentDocsContextManager } = require('../packages/authentication/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
@@ -1096,6 +1096,19 @@ async function main() {
   assert.strictEqual(resolveToolUsableFileIdFromSelection(contextRecord, 'id-2'), 'id-2');
   assert.deepStrictEqual(toActiveFileContextInfo(contextRecord), { documentResourceUri: 'file:///tmp/a', filePath: '/tmp/a', fileType: 'doc', title: 'Demo', fileId: 'id-1', sessionId: 's1' });
   assert.strictEqual(toActiveFilePreviewContextInfo(contextRecord).previewUrl, 'https://preview');
+  const contextEvents = [];
+  const docsContextManager = new TencentDocsContextManager({
+    detectDocumentFileType: () => 'doc',
+    toDocumentResourceUri: (value) => `file://${value}`,
+    truncateForBroadcast: (value) => value,
+    logger: { warn: () => {}, info: () => {} },
+  });
+  docsContextManager.onSelectionChange((event) => contextEvents.push(event));
+  assert.deepStrictEqual(docsContextManager.createFileContext({ filePath: '/tmp/a.doc', sessionId: 's1', title: 'A' }).status, 'created');
+  docsContextManager.reportDocumentSelection({ documentResourceUri: 'file:///tmp/a.doc', sessionId: 's1', filePath: '/tmp/a.doc', selection: { text: 'selected', fileId: 'tool-file' } });
+  assert.strictEqual(docsContextManager.getActiveDocumentContext('s1').selection.text, 'selected');
+  assert.strictEqual(contextEvents.length, 1);
+  assert.strictEqual(docsContextManager.releaseSessionContexts('s1').length, 1);
   const previewRegistry = new OnlineDocPreviewRegistry({ logger: { debug: () => {} } });
   previewRegistry.register('file-1', ' session-1 ');
   assert.deepStrictEqual(previewRegistry.getRecordByFileId('file-1'), { sessionId: 'session-1' });

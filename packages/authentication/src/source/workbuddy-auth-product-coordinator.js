@@ -1,6 +1,7 @@
 const require_chunk = require("./chunk.js");
 const { DocumentEditContext: DocumentEditContextRuntime } = require("../runtime/document-edit-context.js");
 const documentContextUtils = require("../runtime/document-context-utils.js");
+const { TencentDocsContextManager: TencentDocsContextManagerRuntime } = require("../runtime/tencent-docs-context-manager.js");
 const require_common$2 = require("./common.js");
 const require_logger = require("./logger.js");
 const require_log_acl_guard = require("./log-acl-guard.js");
@@ -249,7 +250,7 @@ var maxSelectionTextLengthForBroadcast = 240;
 * Source of truth 只使用 `documentResourceUri`：本地为 `file://...`，在线为 `tdoc://...`。
 * 真实 `filePath` 仅用于 SDK、fs、watcher 和 MCP 参数，不能作为上下文主键。
 */
-var TencentDocsContextManager = class {
+var CompiledTencentDocsContextManager = class {
 	contextsByResourceUri = /* @__PURE__ */ new Map();
 	/** 每个 chat/session 当前活动的文档资源，用于 chip 和 prompt 隔离。 */
 	activeResourceUriBySessionId = /* @__PURE__ */ new Map();
@@ -739,6 +740,21 @@ var TencentDocsContextManager = class {
 		} catch (error) {
 			windowLog.warn("[TencentDocsContextManager] selection change listener threw", { error: error instanceof Error ? error.message : String(error) });
 		}
+	}
+};
+var TencentDocsContextManager = class extends TencentDocsContextManagerRuntime {
+	constructor(options = {}) {
+		super({
+			documentEditContext: () => new DocumentEditContextRuntime(),
+			detectDocumentFileType,
+			isTencentOnlineFilePath,
+			extractTencentOnlineFileId,
+			isLocalPreviewGlobalPadId,
+			toDocumentResourceUri,
+			truncateForBroadcast,
+			logger: windowLog,
+			...options
+		});
 	}
 };
 /**

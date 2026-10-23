@@ -29,4 +29,5 @@ module.exports = Object.freeze({
   ...require("./runtime/oauth-acl"),
   ...require("./runtime/document-edit-context"),
   ...require("./runtime/document-context-utils"),
+  ...require("./runtime/tencent-docs-context-manager"),
 });
