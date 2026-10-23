@@ -173,6 +173,7 @@ const {
   enrichLanguageModelFromCatalog,
 } = require('../packages/workbuddy-core/src');
 const coreContractSource = require('../packages/workbuddy-core/src/source/contract.js');
+const coreHelpersSource = require('../packages/workbuddy-core/src/source/helpers.js');
 const { AUTH_RPC_CHANNELS } = require('../packages/workbuddy-core/src');
 const {
   calculateContextUsage,
@@ -616,6 +617,9 @@ const {
 } = require('../packages/authentication/src');
 
 async function main() {
+  assert.strictEqual(typeof coreHelpersSource.Protocol, 'function');
+  assert.strictEqual(typeof coreHelpersSource.AjvJsonSchemaValidator, 'function');
+  assert.strictEqual(typeof coreHelpersSource.toJsonSchemaCompat, 'function');
   assert.deepStrictEqual(Object.keys(workbuddyDatabase.schema), [
     'sessions', 'workspaces', 'automations', 'automationRuns', 'automationRuntimeState',
     'automationDeliveryOutbox', 'migrationMeta', 'sessionUsage',
