@@ -221459,6 +221459,7 @@ function publishPromptError(ctx, sessionId, error) {
 }
 /** 处理云端发来的 session.set_mode 命令：切换对话模式（craft/ask/plan/expert） */
 async function handleSessionSetMode(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleSessionSetMode(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §SET_MODE: sid=${cmd.sessionId} mode=${cmd.mode || "unknown"}`);
 	try {
 		if (ctx.deps.setSessionMode) {
@@ -221478,6 +221479,7 @@ async function handleSessionSetMode(ctx, cmd) {
 }
 /** 处理云端发来的 session.get_mode 命令：返回当前 session 的对话模式 */
 async function handleSessionGetMode(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleSessionGetMode(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §GET_MODE: sid=${cmd.sessionId} commandId=${cmd.commandId}`);
 	try {
 		if (ctx.deps.getSessionMode) return {
@@ -221493,6 +221495,7 @@ async function handleSessionGetMode(ctx, cmd) {
 }
 /** 处理云端发来的 session.set_model 命令：切换 session 使用的模型 */
 async function handleSessionSetModel(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleSessionSetModel(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §SET_MODEL: sid=${cmd.sessionId} model=${cmd.model || "unknown"}`);
 	try {
 		if (ctx.deps.setSessionModel) {
@@ -221507,6 +221510,7 @@ async function handleSessionSetModel(ctx, cmd) {
 }
 /** 处理云端发来的 session.get_model 命令：返回当前 session 使用的模型 */
 async function handleSessionGetModel(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleSessionGetModel(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §GET_MODEL: sid=${cmd.sessionId} commandId=${cmd.commandId}`);
 	try {
 		if (ctx.deps.getSessionModel) return {
@@ -221522,6 +221526,7 @@ async function handleSessionGetModel(ctx, cmd) {
 }
 /** 处理云端发来的 session.set_permission_mode 命令：切换权限模式（default/bypassPermissions/plan） */
 async function handleSessionSetPermissionMode(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleSessionSetPermissionMode(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §SET_PERMISSION_MODE: sid=${cmd.sessionId} permissionMode=${cmd.permissionMode || "unknown"}`);
 	try {
 		if (ctx.deps.setSessionPermissionMode) {
@@ -221536,6 +221541,7 @@ async function handleSessionSetPermissionMode(ctx, cmd) {
 }
 /** 处理云端发来的 session.get_permission_mode 命令：返回当前权限模式 */
 async function handleSessionGetPermissionMode(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleSessionGetPermissionMode(ctx, cmd);
 	ctx.logger.info(`[EdgeSync] §GET_PERMISSION_MODE: sid=${cmd.sessionId} commandId=${cmd.commandId}`);
 	try {
 		if (ctx.deps.getSessionPermissionMode) return {

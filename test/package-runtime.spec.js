@@ -241,6 +241,12 @@ const {
   handleSessionStop,
   handleSessionCreate,
   handlePromptSubmit,
+  handleSessionSetMode,
+  handleSessionGetMode,
+  handleSessionSetModel,
+  handleSessionGetModel,
+  handleSessionSetPermissionMode,
+  handleSessionGetPermissionMode,
   handleGetAutomations,
   handleGetTaskArtifacts,
   handleGetModels,
@@ -2503,6 +2509,21 @@ async function main() {
   assert.deepStrictEqual(promptResponse, { success: true, sessionId: 's2' });
   assert.strictEqual(submittedPrompt[0], undefined);
   assert.strictEqual(submittedPrompt[3].model, 'sonnet');
+  const modeCalls = [];
+  const modeCtx = {
+    deps: {
+      setSessionMode: async (...args) => modeCalls.push(['mode', ...args]), getSessionMode: async () => 'plan',
+      setSessionModel: async (...args) => modeCalls.push(['model', ...args]), getSessionModel: async () => 'opus',
+      setSessionPermissionMode: async (...args) => modeCalls.push(['permission', ...args]), getSessionPermissionMode: async () => 'default',
+    },
+    logger: { info() {}, warn() {} },
+  };
+  assert.deepStrictEqual(await handleSessionSetMode(modeCtx, { sessionId: 's1', mode: 'plan' }), { success: true, data: { mode: 'plan' } });
+  assert.deepStrictEqual(await handleSessionGetMode(modeCtx, { sessionId: 's1' }), { success: true, data: { mode: 'plan' } });
+  assert.deepStrictEqual(await handleSessionSetModel(modeCtx, { sessionId: 's1', model: 'opus' }), { success: true });
+  assert.deepStrictEqual(await handleSessionGetModel(modeCtx, { sessionId: 's1' }), { success: true, data: { model: 'opus' } });
+  assert.deepStrictEqual(await handleSessionSetPermissionMode(modeCtx, { sessionId: 's1', permissionMode: 'default' }), { success: true });
+  assert.deepStrictEqual(await handleSessionGetPermissionMode(modeCtx, { sessionId: 's1' }), { success: true, data: { permissionMode: 'default' } });
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });

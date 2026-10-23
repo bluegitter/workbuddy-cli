@@ -89,6 +89,36 @@ async function handlePromptSubmit(ctx, cmd, options = {}) {
   }
 }
 
+async function setSessionValue(ctx, cmd, setter, value, label) {
+  const log = logger(ctx);
+  log.info(`[EdgeSync] ${label}: sid=${cmd.sessionId} value=${value || 'unknown'}`);
+  try {
+    if (ctx.deps[setter]) await ctx.deps[setter](cmd.sessionId, value || '');
+    else log.warn(`[EdgeSync] ${label}: ${setter} not provided`);
+    return { success: true };
+  } catch (error) { log.warn(`[EdgeSync] ${label} failed: ${errorText(error)}`); return { success: false }; }
+}
+async function getSessionValue(ctx, cmd, getter, field, label) {
+  const log = logger(ctx);
+  log.info(`[EdgeSync] ${label}: sid=${cmd.sessionId} commandId=${cmd.commandId}`);
+  try {
+    if (!ctx.deps[getter]) return { success: false };
+    return { success: true, data: { [field]: await ctx.deps[getter](cmd.sessionId) } };
+  } catch (error) { log.warn(`[EdgeSync] ${label} failed: ${errorText(error)}`); return { success: false }; }
+}
+async function handleSessionSetMode(ctx, cmd) {
+  try {
+    const result = await setSessionValue(ctx, cmd, 'setSessionMode', cmd.mode, 'SET_MODE');
+    if (result.success && ctx.deps.getSessionMode) result.data = { mode: await ctx.deps.getSessionMode(cmd.sessionId) || cmd.mode };
+    return result;
+  } catch (error) { logger(ctx).warn(`[EdgeSync] SET_MODE failed: ${errorText(error)}`); return { success: false }; }
+}
+const handleSessionGetMode = (ctx, cmd) => getSessionValue(ctx, cmd, 'getSessionMode', 'mode', 'GET_MODE');
+const handleSessionSetModel = (ctx, cmd) => setSessionValue(ctx, cmd, 'setSessionModel', cmd.model, 'SET_MODEL');
+const handleSessionGetModel = (ctx, cmd) => getSessionValue(ctx, cmd, 'getSessionModel', 'model', 'GET_MODEL');
+const handleSessionSetPermissionMode = (ctx, cmd) => setSessionValue(ctx, cmd, 'setSessionPermissionMode', cmd.permissionMode, 'SET_PERMISSION_MODE');
+const handleSessionGetPermissionMode = (ctx, cmd) => getSessionValue(ctx, cmd, 'getSessionPermissionMode', 'permissionMode', 'GET_PERMISSION_MODE');
+
 async function handleSessionStop(ctx, cmd) {
   const log = logger(ctx);
   log.info(`[EdgeSync] STOP: sid=${cmd.sessionId} commandId=${cmd.commandId}`);
@@ -132,4 +162,4 @@ async function handleGetSkills(ctx, cmd) {
   catch (error) { log.warn(`[EdgeSync] GET_SKILLS failed: ${errorText(error)}`); return { success: false }; }
 }
 
-module.exports = Object.freeze({ handleSessionCreate, handlePromptSubmit, handleSessionStop, handleGetAutomations, handleGetTaskArtifacts, handleGetModels, handleGetSessionConfig, handleGetSkills });
+module.exports = Object.freeze({ handleSessionCreate, handlePromptSubmit, handleSessionStop, handleGetAutomations, handleGetTaskArtifacts, handleGetModels, handleGetSessionConfig, handleGetSkills, handleSessionSetMode, handleSessionGetMode, handleSessionSetModel, handleSessionGetModel, handleSessionSetPermissionMode, handleSessionGetPermissionMode });
