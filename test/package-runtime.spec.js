@@ -63,7 +63,7 @@ const { markDaemon, resolveProductName, resolveStoredSessionTitle } = require('.
 const { configureDaemonNetworkProxy } = require('../packages/workbuddy-server/src');
 const { createTencentDocsEngineProvider } = require('../packages/workbuddy-server/src');
 const { OnlineDocPreviewRegistry, OnlineDocumentSelectionStore, truncateForBroadcast } = require('../packages/workbuddy-server/src');
-const { DocumentEditContext } = require('../packages/authentication/src');
+const { DocumentEditContext, resolveToolUsableFileIdFromSelection, toActiveFileContextInfo, toActiveFilePreviewContextInfo } = require('../packages/authentication/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
@@ -1086,6 +1086,11 @@ async function main() {
   assert.strictEqual(editContext.getActiveContext().fileId, 'file-id');
   documentNow = 1101;
   assert.strictEqual(editContext.getActiveContext(), null);
+  const contextRecord = { documentResourceUri: 'file:///tmp/a', filePath: '/tmp/a', fileType: 'doc', title: 'Demo', fileId: 'id-1', sessionId: 's1', previewUrl: 'https://preview', createdAt: 1000 };
+  assert.strictEqual(resolveToolUsableFileIdFromSelection(contextRecord, 'id-1', { isLocalPreviewGlobalPadId: () => true }), undefined);
+  assert.strictEqual(resolveToolUsableFileIdFromSelection(contextRecord, 'id-2'), 'id-2');
+  assert.deepStrictEqual(toActiveFileContextInfo(contextRecord), { documentResourceUri: 'file:///tmp/a', filePath: '/tmp/a', fileType: 'doc', title: 'Demo', fileId: 'id-1', sessionId: 's1' });
+  assert.strictEqual(toActiveFilePreviewContextInfo(contextRecord).previewUrl, 'https://preview');
   const previewRegistry = new OnlineDocPreviewRegistry({ logger: { debug: () => {} } });
   previewRegistry.register('file-1', ' session-1 ');
   assert.deepStrictEqual(previewRegistry.getRecordByFileId('file-1'), { sessionId: 'session-1' });

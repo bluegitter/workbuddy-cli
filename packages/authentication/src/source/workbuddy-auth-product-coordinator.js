@@ -1,5 +1,6 @@
 const require_chunk = require("./chunk.js");
 const { DocumentEditContext: DocumentEditContextRuntime } = require("../runtime/document-edit-context.js");
+const documentContextUtils = require("../runtime/document-context-utils.js");
 const require_common$2 = require("./common.js");
 const require_logger = require("./logger.js");
 const require_log_acl_guard = require("./log-acl-guard.js");
@@ -745,12 +746,17 @@ var TencentDocsContextManager = class {
 * 在线文档仍允许；本地仅当不是 globalPadId 时才提升到 record.fileId。
 */
 function resolveToolUsableFileIdFromSelection(record, reportedFileId) {
+	return documentContextUtils.resolveToolUsableFileIdFromSelection(record, reportedFileId, {
+		isTencentOnlineFilePath,
+		isLocalPreviewGlobalPadId
+	});
 	if (!reportedFileId) return;
 	if (isTencentOnlineFilePath(record.documentResourceUri)) return reportedFileId;
 	if (isLocalPreviewGlobalPadId(record.filePath, reportedFileId)) return;
 	return reportedFileId;
 }
 function toActiveFileContextInfo(record) {
+	return documentContextUtils.toActiveFileContextInfo(record);
 	return {
 		documentResourceUri: record.documentResourceUri,
 		filePath: record.filePath,
@@ -761,6 +767,7 @@ function toActiveFileContextInfo(record) {
 	};
 }
 function toActiveFilePreviewContextInfo(record) {
+	return documentContextUtils.toActiveFilePreviewContextInfo(record);
 	return {
 		...toActiveFileContextInfo(record),
 		previewUrl: record.previewUrl,
