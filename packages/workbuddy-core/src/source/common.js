@@ -45992,14 +45992,6 @@ function enrichLanguageModelFromCatalog(model) {
 		supplements: REASONING_SUPPLEMENTS,
 		stripCustomLocalModelPrefix
 	});
-	const caps = resolveModelCapabilities(model.id);
-	if (!caps) return model;
-	const target = model;
-	if (target.maxInputTokens === void 0 && caps.contextWindow !== void 0) target.maxInputTokens = caps.contextWindow;
-	if (target.maxOutputTokens === void 0 && caps.maxTokens !== void 0) target.maxOutputTokens = caps.maxTokens;
-	if (target.supportsReasoning === void 0 && caps.reasoning !== void 0) target.supportsReasoning = caps.reasoning;
-	if (target.thinkingLevelMap === void 0 && caps.thinkingLevelMap !== void 0) target.thinkingLevelMap = caps.thinkingLevelMap;
-	return applyReasoningSupplement(model);
 }
 var PROVIDER_PRIORITY, indexesCache;
 var init_model_catalog = require_chunk.__esmMin((() => {
