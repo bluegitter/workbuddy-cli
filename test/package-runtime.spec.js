@@ -113,6 +113,9 @@ const {
   mergeCapabilities,
   normalizeObjectSchema,
   safeParse,
+  CUSTOM_LOCAL_MODEL_PREFIX,
+  isModelVariantType,
+  stripCustomLocalModelPrefix,
 } = require('../packages/workbuddy-core/src');
 const {
   calculateContextUsage,
@@ -1209,6 +1212,10 @@ async function main() {
   const deferredValue = new Deferred();
   deferredValue.resolve('value');
   assert.strictEqual(await deferredValue.promise, 'value');
+  assert.strictEqual(CUSTOM_LOCAL_MODEL_PREFIX, 'custom-local:');
+  assert.strictEqual(stripCustomLocalModelPrefix('custom-local:model-x'), 'model-x');
+  assert.strictEqual(isModelVariantType('reasoning'), true);
+  assert.strictEqual(isModelVariantType('unknown'), false);
 
   const serverEvents = [];
   const sessions = new SessionStore({ clock: (() => { let now = 100; return () => ++now; })() });

@@ -14,4 +14,5 @@ module.exports = Object.freeze({
   ...require("./runtime/emitter"),
   ...require("./runtime/disposable"),
   ...require("./runtime/promise-util"),
+  ...require("./runtime/language-model"),
 });
