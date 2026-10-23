@@ -383,6 +383,8 @@ const {
   shouldHideToolsFromCli,
   runConnectorReconnect,
   ConnectorProxySessionRegistry,
+  ConnectorProxyServer,
+  normalizeToolResult,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1680,6 +1682,39 @@ async function main() {
   assert.strictEqual(sentNotifications[0].method, 'notifications/tools/list_changed');
   assert.strictEqual(sessionRegistry.remove('mcp-1'), true);
   assert.strictEqual(sessionRegistry.size, 0);
+  assert.deepStrictEqual(normalizeToolResult('ok', { mcpServer: 'docs' }), { content: [{ type: 'text', text: 'ok' }], _meta: { 'workbuddy.ai/connectorServer': 'docs' } });
+  const handlerMap = new Map();
+  class FakeMcpServer {
+    constructor() { this.server = this; }
+    setRequestHandler(schema, handler) { handlerMap.set(schema, handler); }
+    async connect(transport) { this.transport = transport; }
+    close() {}
+  }
+  class FakeTransport {
+    constructor(options) { this.options = options; this.handled = 0; }
+    async handleRequest() { this.handled += 1; }
+    send(value) { sentNotifications.push(value); }
+    close() {}
+  }
+  const proxyServer = new ConnectorProxyServer({
+    McpServerCtor: FakeMcpServer,
+    TransportCtor: FakeTransport,
+    schemas: { ListToolsRequestSchema: 'tools/list', CallToolRequestSchema: 'tools/call' },
+    proxy: { listAllTools: () => [{ name: 'search' }], callTool: async () => 'result', getMcpInvokeDims: () => ({ mcpServer: 'docs' }) },
+    randomBytes: () => Buffer.from('proxy-secret'),
+    randomUUID: () => 'transport-1',
+    createServer: () => ({ close() {} }),
+    listen: async () => 19001,
+    logger: { info() {}, warn() {}, error() {} },
+  });
+  assert.strictEqual(await proxyServer.start(), 19001);
+  assert.strictEqual(proxyServer.getProxySecret(), 'cHJveHktc2VjcmV0');
+  const proxyPair = await proxyServer.createSessionPair({ projectId: 'p1' });
+  proxyPair.transport.options.onsessioninitialized('session-1');
+  assert.strictEqual(proxyServer.sessions.has('session-1'), true);
+  assert.deepStrictEqual(await handlerMap.get('tools/list')(), { tools: [{ name: 'search' }] });
+  assert.deepStrictEqual(await handlerMap.get('tools/call')({ params: { name: 'search', arguments: {} } }), { content: [{ type: 'text', text: 'result' }], _meta: { 'workbuddy.ai/connectorServer': 'docs' } });
+  proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
   await expertCache.saveManifest(cachedManifest, 'source-1');
