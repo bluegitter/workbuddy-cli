@@ -409,6 +409,7 @@ const {
   ConnectorMarketplaceService,
   ConnectorService,
   createConnectorServiceFacade,
+  createConnectorOAuthCallbackFacade,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1949,6 +1950,13 @@ async function main() {
   await rpcFacade.disconnect('docs');
   assert.deepStrictEqual(facadeCalls, ['init', 'connect:docs', 'disconnect:docs']);
   assert.deepStrictEqual(rpcFacade.listMcpServers(), [{ id: 'docs' }]);
+  const oauthFacade = createConnectorOAuthCallbackFacade({ connectorMcpProxy: {
+    isOAuthCallbackUrl: (url) => url.includes('/oauth/callback'),
+    handleOAuthCallbackFromUrl: async (url) => ({ url }),
+    handleOAuthCallback: async (state, code) => ({ state, code }),
+  } });
+  assert.strictEqual(oauthFacade.isOAuthCallbackUrl('http://localhost/oauth/callback'), true);
+  assert.deepStrictEqual(await oauthFacade.handleOAuthCallback('state', 'code'), { state: 'state', code: 'code' });
   fs.rmSync(facadeRoot, { recursive: true, force: true });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));

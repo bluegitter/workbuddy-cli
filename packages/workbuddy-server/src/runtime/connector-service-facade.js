@@ -36,4 +36,13 @@ function requireDependency(value, name) {
   return value;
 }
 
-module.exports = { createConnectorServiceFacade };
+function createConnectorOAuthCallbackFacade(deps = {}) {
+  const proxy = requireDependency(deps.connectorMcpProxy, 'connectorMcpProxy');
+  return {
+    isOAuthCallbackUrl: (url) => proxy.isOAuthCallbackUrl?.(url),
+    handleOAuthCallbackFromUrl: (url) => proxy.handleOAuthCallbackFromUrl?.(url),
+    handleOAuthCallback: (state, code) => proxy.handleOAuthCallback?.(state, code),
+  };
+}
+
+module.exports = { createConnectorOAuthCallbackFacade, createConnectorServiceFacade };
