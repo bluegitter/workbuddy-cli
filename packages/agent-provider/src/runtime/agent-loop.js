@@ -1,9 +1,7 @@
 'use strict';
 
-const { buildAgentContext } = require('./context-builder');
 const { HookEvent } = require('./hook-registry');
-const { normalizeModelResponse } = require('./messages');
-const { runTools } = require('./tool-orchestration');
+const { runAgentTurn } = require('./agent-turn');
 
 async function runAgentLoop(session, runtime) {
   session.status = 'running';
@@ -15,23 +13,11 @@ async function runAgentLoop(session, runtime) {
       if (typeof runtime.compactContext === 'function') {
         await runtime.compactContext(session, runtime);
       }
-      const response = normalizeModelResponse(await runtime.model.complete(buildAgentContext(session, runtime.context)));
-      session.append(response.message);
-      const calls = response.toolCalls;
-      if (calls.length === 0) {
-        session.status = 'completed';
-        return response.message;
+      const turnResult = await runAgentTurn(session, runtime);
+      if (turnResult.completed) {
+        session.status = turnResult.reason === 'cancelled' ? 'cancelled' : 'completed';
+        return turnResult.message;
       }
-      const results = await runTools(calls, {
-        session,
-        tools: runtime.tools,
-        permissions: runtime.permissions,
-        interruptions: runtime.interruptions,
-        hooks: runtime.hooks,
-        maxToolConcurrency: runtime.maxToolConcurrency,
-        signal: session.abortController.signal,
-      });
-      for (const result of results) session.append(result);
     }
     if (session.status === 'running') session.status = 'max_turns';
     return session.messages.at(-1);

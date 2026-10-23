@@ -23,6 +23,8 @@ const {
   mapWithConcurrency,
   partitionToolCalls,
   runAgentLoop,
+  runAgentTurn,
+  isTerminalStopReason,
   LRUCache,
   runWithConcurrencySettled,
   CommodityCode,
@@ -236,6 +238,17 @@ async function main() {
   });
   assert.strictEqual(session.status, 'completed');
   assert.strictEqual(session.messages.at(-2).content, 'ok');
+  assert.strictEqual(isTerminalStopReason('end_turn'), true);
+  assert.strictEqual(isTerminalStopReason('tool_use'), false);
+  const singleTurn = new AgentSession({ messages: [{ role: 'user', content: 'hello' }] });
+  const singleTurnResult = await runAgentTurn(singleTurn, {
+    tools,
+    permissions: new PermissionController(),
+    model: { complete: async () => ({ content: 'finished', stopReason: 'end_turn' }) },
+  });
+  assert.strictEqual(singleTurnResult.completed, true);
+  assert.strictEqual(singleTurnResult.reason, 'end_turn');
+  assert.strictEqual(singleTurn.messages.at(-1).content, 'finished');
 
   const denied = await new PermissionController({ mode: PermissionMode.PLAN })
     .canUse(tools.get('write'), {}, {});
