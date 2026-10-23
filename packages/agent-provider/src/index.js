@@ -33,6 +33,7 @@ module.exports = Object.freeze({
   ...require("./runtime/tool-permission-coordinator"),
   ...require("./runtime/tool-orchestration"),
   ...require("./runtime/tool-registry"),
+  ...require("./runtime/tool-definition"),
   ...require("./runtime/client-session"),
   ...require("./runtime/client-session-manager"),
   ...require("./runtime/provider-connections"),

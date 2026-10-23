@@ -25,6 +25,7 @@ const {
   isSubagent,
   SubagentRunner,
   ToolRegistry,
+  buildTool,
   executeToolCall,
   prepareToolInput,
   resolveToolPermission,
@@ -146,6 +147,13 @@ async function main() {
     { name: 'read', isConcurrencySafe: () => true, execute: async ({ value }) => value },
     { name: 'write', mutatesState: true, execute: async () => events.push('write') },
   ]);
+  const defaultedTool = buildTool({ name: 'defaulted', execute: async () => 'ok' });
+  assert.deepStrictEqual(await defaultedTool.validateInput({}), { result: true });
+  assert.deepStrictEqual(await defaultedTool.checkPermissions({ value: 1 }), { behavior: 'allow', updatedInput: { value: 1 } });
+  assert.strictEqual(defaultedTool.isConcurrencySafe({}), false);
+  const registeredDefaultedTool = new ToolRegistry([defaultedTool]).get('defaulted');
+  assert.strictEqual(registeredDefaultedTool.name, 'defaulted');
+  assert.strictEqual(await registeredDefaultedTool.validateInput({}).then((result) => result.result), true);
   assert.deepStrictEqual(parsePermissionRule('Bash(npm install:*)'), { toolName: 'Bash', ruleContent: 'npm install:*' });
   assert.deepStrictEqual(evaluatePermissionRules([
     { ruleBehavior: 'deny', ruleValue: { toolName: 'write' } },

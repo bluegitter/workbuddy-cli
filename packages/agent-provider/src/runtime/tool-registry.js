@@ -1,5 +1,7 @@
 'use strict';
 
+const { buildTool } = require('./tool-definition');
+
 class ToolRegistry {
   constructor(tools = []) {
     this.tools = new Map();
@@ -7,10 +9,8 @@ class ToolRegistry {
   }
 
   register(tool) {
-    if (!tool || typeof tool.name !== 'string' || typeof tool.execute !== 'function') {
-      throw new TypeError('tool must define a name and execute function');
-    }
-    this.tools.set(tool.name, tool);
+    const normalized = buildTool(tool);
+    this.tools.set(normalized.name, normalized);
     return this;
   }
 
