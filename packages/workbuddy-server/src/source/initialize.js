@@ -23,6 +23,11 @@ const sidecarUtilsRuntime = require("../runtime/sidecar-utils.js");
 const stdioFramingRuntime = require("../runtime/stdio-framing.js");
 const agentCliArgsRuntime = require("../runtime/agent-cli-args.js");
 const agentCliProcessRuntime = require("../runtime/agent-cli-process.js");
+const automationDedupeRuntime = require("../runtime/automation-dedupe.js");
+const automationErrorRuntime = require("../runtime/automation-error.js");
+const automationOwnerRuntime = require("../runtime/automation-owner.js");
+const automationToolPolicyRuntime = require("../runtime/automation-tool-policy.js");
+const mediaLifecycleRuntime = require("../runtime/media-lifecycle-utils.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -65760,6 +65765,27 @@ function sanitizeErrorForNotification(error) {
 	const cleaned = (error.split("\n").find((line) => line.trim().length > 0) ?? error).replace(/(?:\/(?:Users|root|home|tmp|var|opt|app|data|mnt|private))(?:\/[\w.@+-]+){2,}/g, "<path>").replace(/[A-Z]:\\(?:[\w.-]+\\){2,}[\w.-]*/g, "<path>").trim();
 	return cleaned.length > 200 ? `${cleaned.slice(0, 197)}...` : cleaned;
 }
+normalizeText = automationDedupeRuntime.normalizeText;
+normalizePath = automationDedupeRuntime.normalizePath;
+normalizeGeneratedWorkspacePath = automationDedupeRuntime.normalizeGeneratedWorkspacePath;
+normalizeStringList = automationDedupeRuntime.normalizeStringList;
+normalizeCwds = automationDedupeRuntime.normalizeCwds;
+getAutomationRunIdentity = automationDedupeRuntime.getAutomationRunIdentity;
+compareAutomationCanonicalOrder = automationDedupeRuntime.compareAutomationCanonicalOrder;
+findEquivalentActiveAutomation = automationDedupeRuntime.findEquivalentActiveAutomation;
+normalizeOwnerUserId$1 = automationOwnerRuntime.normalizeOwnerUserId;
+normalizeOwnerStatus = automationOwnerRuntime.normalizeOwnerStatus;
+isAutomationVisibleToUser = automationOwnerRuntime.isAutomationVisibleToUser;
+collectConversationIdsFromRunsJson = automationOwnerRuntime.collectConversationIdsFromRunsJson;
+decideAutomationOwner = automationOwnerRuntime.decideAutomationOwner;
+normalizeAutomationToolName = automationToolPolicyRuntime.normalizeAutomationToolName;
+isAutomationBookkeepingToolName = automationToolPolicyRuntime.isAutomationBookkeepingToolName;
+isReadOnlyAutomationToolName = automationToolPolicyRuntime.isReadOnlyAutomationToolName;
+isLocalFileMutationToolName = automationToolPolicyRuntime.isLocalFileMutationToolName;
+isExternalActionToolName = automationToolPolicyRuntime.isExternalActionToolName;
+isDeliveryToolName = automationToolPolicyRuntime.isDeliveryToolName;
+isRetryBlockingToolName = automationToolPolicyRuntime.isRetryBlockingToolName;
+sanitizeErrorForNotification = automationErrorRuntime.sanitizeErrorForNotification;
 //#endregion
 //#region ../../packages/workbuddy-server/src/automation/scheduler-engine.ts
 var RUN_TICK_MS = 3e4;
@@ -100429,6 +100455,12 @@ function extractPreviewUrlLocalMediaPath(url) {
 	if (!ext || !MEDIA_EXTENSIONS.has(ext)) return;
 	return filePath;
 }
+normalizeToolName = mediaLifecycleRuntime.normalizeToolName;
+visitNestedToolResult = mediaLifecycleRuntime.visitNestedToolResult;
+extractImageToolLocalPaths = mediaLifecycleRuntime.extractImageToolLocalPaths;
+extractArtifactPathsFromEvents = mediaLifecycleRuntime.extractArtifactPathsFromEvents;
+extractMediaPathsFromCommand = mediaLifecycleRuntime.extractMediaPathsFromCommand;
+extractPreviewUrlLocalMediaPath = mediaLifecycleRuntime.extractPreviewUrlLocalMediaPath;
 function resumeSessionExecuting(sessionId, mediaService) {
 	if (!mediaService) return;
 	const cwd = mediaService.getSessionCwd(sessionId);
