@@ -49,6 +49,8 @@ const { configureWorkbuddyLogger, createWorkbuddyScopedLogger, getWorkbuddyLogge
 const promptTraceSource = require('../packages/telemetry/src/source/prompt-trace-reporter.js');
 const { reportPromptDoneEvent, reportPromptForwardingEvent, reportPromptTrace, setDesktopMonitorServiceResolver } = require('../packages/telemetry/src');
 const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValueList } = require('../packages/telemetry/src');
+const startupPerfSource = require('../packages/telemetry/src/source/startup-perf-exporters.js');
+const { buildStartupSpans: buildStartupSpansFromPackage } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
@@ -916,6 +918,7 @@ async function main() {
   assert.strictEqual(promptEvents[0][0], 'wb_main_prompt_forwarding');
   assert.strictEqual(promptEvents[1][0], 'wb_main_prompt_failed');
   assert.strictEqual(promptTraceSource.reportPromptTrace, reportPromptTrace);
+  assert.strictEqual(startupPerfSource.buildStartupSpans, buildStartupSpansFromPackage);
   assert.strictEqual(logAclSource.computeCutoff, computeCutoff);
   assert.strictEqual(computeCutoff('2026-01-07'), '2026-01-01');
   assert.strictEqual(DATE_DIR_PATTERN.test('2026-01-02'), true);
