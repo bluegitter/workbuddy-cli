@@ -408,6 +408,7 @@ const {
   fetchRemoteEtag,
   ConnectorMarketplaceService,
   ConnectorService,
+  createConnectorServiceFacade,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1934,6 +1935,20 @@ async function main() {
   await mcpPool.disconnect('mail');
   assert(poolEvents.includes('close:mail'));
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, true);
+  const facadeCalls = [];
+  const rpcFacade = createConnectorServiceFacade({
+    connectorService: {
+      init: async () => facadeCalls.push('init'),
+      disconnect: async (id) => facadeCalls.push(`disconnect:${id}`),
+      listMcpServers: () => [{ id: 'docs' }],
+    },
+    connectorUiAdapter: { connect: async (id) => facadeCalls.push(`connect:${id}`), getStates: () => ({ docs: 'connected' }) },
+  });
+  await rpcFacade.init();
+  await rpcFacade.connect('docs');
+  await rpcFacade.disconnect('docs');
+  assert.deepStrictEqual(facadeCalls, ['init', 'connect:docs', 'disconnect:docs']);
+  assert.deepStrictEqual(rpcFacade.listMcpServers(), [{ id: 'docs' }]);
   fs.rmSync(facadeRoot, { recursive: true, force: true });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
