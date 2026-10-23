@@ -15,7 +15,9 @@ const commonSource = fs.readFileSync(
 );
 
 assert.strictEqual(manifest.dependencies['reflect-metadata'], '^0.1.13');
+assert.strictEqual(manifest.dependencies.semver, '^7.7.2');
 assert.match(commonSource, /require\("reflect-metadata"\)/);
+assert.match(commonSource, /module\.exports = require\("semver"\)/);
 assert.match(
   commonSource,
   /require\("reflect-metadata"\);[\s\S]*?Reflect\$1 = typeof globalThis/,

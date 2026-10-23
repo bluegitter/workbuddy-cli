@@ -70434,6 +70434,11 @@ var require_subset = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, modu
 //#endregion
 //#region ../../node_modules/semver/index.js
 var require_semver = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, module) => {
+	// Use the workspace dependency for all live semver checks. The generated
+	// implementation below remains as migration evidence until its region is
+	// removed from the source artifact.
+	module.exports = require("semver");
+	return;
 	var internalRe = require_re();
 	var constants = require_constants();
 	var SemVer = require_semver$1();
