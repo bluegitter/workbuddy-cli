@@ -13,6 +13,7 @@ const edgeSyncJsonlRuntime = require("../runtime/edge-sync-jsonl.js");
 const edgeSyncApiRuntime = require("../runtime/edge-sync-api.js");
 const edgeSyncChannelRuntime = require("../runtime/edge-sync-channel.js");
 const edgeSyncBasicHandlersRuntime = require("../runtime/edge-sync-basic-handlers.js");
+const edgeSyncArtifactsRuntime = require("../runtime/edge-sync-artifacts.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
@@ -221934,6 +221935,7 @@ var CACHE_EXPIRE_BUFFER_MS = 60 * 1e3;
 * （原 §5.2 POST /callbacks/artifact-uploaded 已废弃，见文末注释）
 */
 async function handleGetArtifact(ctx, cmd) {
+	return edgeSyncArtifactsRuntime.handleGetArtifact(ctx, cmd);
 	const filePath = cmd.filePath;
 	const commandId = cmd.commandId;
 	ctx.logger.info(`[EdgeSync] §7 ARTIFACT: file=${filePath} commandId=${commandId}`);

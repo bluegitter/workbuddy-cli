@@ -250,6 +250,8 @@ const {
   handleToolAnswer,
   handleToolCancel,
   handlePermissionResolve,
+  handleGetArtifact,
+  guessContentType,
   handleGetAutomations,
   handleGetTaskArtifacts,
   handleGetModels,
@@ -2534,6 +2536,9 @@ async function main() {
   assert.deepStrictEqual(await handleToolCancel(toolCtx, { sessionId: 's1', toolCallId: 't1' }), { success: true });
   assert.deepStrictEqual(await handlePermissionResolve(toolCtx, { sessionId: 's1', toolCallId: 't1', decision: 'deny' }), { success: true });
   assert.deepStrictEqual(toolCall, ['resolve', 's1', 't1', 'deny']);
+  assert.strictEqual(guessContentType('report.pdf'), 'application/pdf');
+  const artifactDenied = await handleGetArtifact({ logger: { warn() {} }, deps: {}, getArtifactCache() {} }, { commandId: 'artifact-1', filePath: '../secret.txt' });
+  assert.deepStrictEqual(artifactDenied, { requestId: 'artifact-1', status: 'failed' });
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });
