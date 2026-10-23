@@ -44,6 +44,8 @@ const {
   AuthenticationType,
 } = require('../packages/authentication/src');
 const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger, formatLocalIsoTimestamp, formatLine, buildLifecycleLine, buildStartupPerfFields } = require('../packages/telemetry/src');
+const telemetryLoggerSource = require('../packages/telemetry/src/source/logger.js');
+const { configureWorkbuddyLogger, createWorkbuddyScopedLogger, getWorkbuddyLogger } = require('../packages/telemetry/src');
 const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValueList } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
@@ -897,6 +899,13 @@ async function main() {
   assert.strictEqual(deriveAccountContext({ enterpriseId: 'e1' }).kind, 'enterprise');
   assert.strictEqual(gatewaySecretEnv().CODEBUDDY_GATEWAY_PASSWORD, getGatewaySecret());
   assert.strictEqual(gatewaySecretHeaders().Authorization, `Bearer ${getGatewaySecret()}`);
+  const telemetryMessages = [];
+  configureWorkbuddyLogger({ info: (message, ...args) => telemetryMessages.push([message, ...args]) });
+  const scopedTelemetryLogger = createWorkbuddyScopedLogger('test');
+  scopedTelemetryLogger.info('message', 1);
+  assert.strictEqual(telemetryMessages[0][0], '[test] message');
+  assert.strictEqual(telemetryLoggerSource.getWorkbuddyLogger(), getWorkbuddyLogger());
+  configureWorkbuddyLogger(console);
   assert.strictEqual(logAclSource.computeCutoff, computeCutoff);
   assert.strictEqual(computeCutoff('2026-01-07'), '2026-01-01');
   assert.strictEqual(DATE_DIR_PATTERN.test('2026-01-02'), true);

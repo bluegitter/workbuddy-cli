@@ -6,6 +6,7 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/telemetry",
   artifactRoot: __dirname + "/compiled",
+  ...require("./runtime/logger"),
   ...require("./runtime/event-buffer"),
   ...require("./runtime/log-sampler"),
   ...require("./runtime/structured-logger"),
