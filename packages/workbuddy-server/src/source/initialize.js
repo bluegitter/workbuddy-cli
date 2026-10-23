@@ -6,6 +6,7 @@ const { createSystemOpenLocalFileHandler: createSystemOpenLocalFileHandlerRuntim
 const localDocsHelpersRuntime = require("../runtime/local-docs-helpers.js");
 const { createLocalDocsHostFacade: createLocalDocsHostFacadeRuntime } = require("../runtime/local-docs-facade.js");
 const codebuddyBackendUtilsRuntime = require("../runtime/codebuddy-backend-utils.js");
+const edgeSyncTranslateRuntime = require("../runtime/edge-sync-translate.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -220935,6 +220936,7 @@ function sanitizeBackendLogValue(value, depth = 0) {
 * - 其余 sessionUpdate 值 Cloud/Desktop 一致，原样透传
 */
 function translateDesktopToCloudPayload(payload) {
+	return edgeSyncTranslateRuntime.translateDesktopToCloudPayload(payload);
 	const inner = payload.update || payload;
 	const sessionUpdate = inner.sessionUpdate || payload.sessionUpdate || void 0;
 	if (!sessionUpdate) return payload;
@@ -220959,6 +220961,7 @@ function translateDesktopToCloudPayload(payload) {
 * 不认 `session_end`，所以必须翻译成 `session_end_turn`。
 */
 function translateStateUpdate(payload, inner) {
+	return edgeSyncTranslateRuntime.translateStateUpdate(payload, inner);
 	const meta = payload._meta || inner._meta || {};
 	const codebuddyMeta = meta["codebuddy.ai"] || {};
 	const currentState = inner.currentState || codebuddyMeta.currentState || codebuddyMeta.state || "completed";
@@ -220998,6 +221001,7 @@ function translateStateUpdate(payload, inner) {
 * 补充 stopReason，从 _meta['codebuddy.ai'].stopReason 取，确保 Web 端能正确判定终态。
 */
 function translateSessionEndTurn(payload, inner) {
+	return edgeSyncTranslateRuntime.translateSessionEndTurn(payload, inner);
 	const meta = payload._meta || inner._meta || {};
 	const stopReason = (meta["codebuddy.ai"] || {}).stopReason || "end_turn";
 	return {
@@ -221015,6 +221019,7 @@ function translateSessionEndTurn(payload, inner) {
 * Cloud 端标题更新走 session_info_update，不用单独的 topic_update。
 */
 function translateTopicUpdate(payload, inner) {
+	return edgeSyncTranslateRuntime.translateTopicUpdate(payload, inner);
 	const title = inner.title || inner.topic || payload.title || payload.topic || "";
 	return {
 		...payload,
@@ -221029,6 +221034,7 @@ function translateTopicUpdate(payload, inner) {
 * 简单重写 sessionUpdate 值（如 assistant_message_chunk → agent_message_chunk）。
 */
 function rewriteSessionUpdate(payload, inner, newSessionUpdate) {
+	return edgeSyncTranslateRuntime.rewriteSessionUpdate(payload, inner, newSessionUpdate);
 	const newInner = {
 		...inner,
 		sessionUpdate: newSessionUpdate
