@@ -574,6 +574,9 @@ const {
   collectJsonChangedPaths,
   hasRemoteProductPayload,
   hostedCliRotationKeyOfNormalized,
+  normalizeDesiredConfig,
+  buildSessionRestartFingerprint,
+  buildFallbackRuntimeConfig,
   stripSignedDownloadUrl,
   normalizeJsonValue,
   redactProductSnapshotLogValue,
@@ -2595,6 +2598,17 @@ async function main() {
   assert.deepStrictEqual(collectJsonChangedPaths({ a: 1, b: 2 }, { a: 1, b: 3, c: 4 }), ['$.b', '$.c']);
   assert.strictEqual(stripSignedDownloadUrl('https://example.test/a?sign=x&t=1&stable=yes'), 'https://example.test/a?stable=yes');
   assert.strictEqual(hostedCliRotationKeyOfNormalized({ download_url: 'https://example.test/a?sign=x', value: 1 }), hostedCliRotationKeyOfNormalized({ download_url: 'https://example.test/a?sign=y', value: 1 }));
+  assert.strictEqual(resolveModeTools('ask').includes('Write'), false);
+  const normalizedSessionConfig = normalizeDesiredConfig({ mode: 'plan', permissionMode: 'default', welcomeMode: 'design', sessionSettings: { b: 2 } });
+  assert.deepStrictEqual(normalizedSessionConfig, {
+    mode: 'plan', expertId: undefined, expertMarketplace: undefined, locale: undefined,
+    runtimeIdentity: undefined, model: undefined, systemPrompt: undefined, tools: undefined,
+    permissionMode: 'plan', permissionModeBeforePlan: undefined, useSandboxCLI: undefined,
+    sandboxDisabledReason: undefined, welcomeMode: 'design', sessionSettings: { b: 2 },
+  });
+  const sessionFingerprint = buildSessionRestartFingerprint({ mode: 'craft', tools: 'Read', cwd: '/tmp/project' });
+  assert.strictEqual(sessionFingerprint.includes('"cwd":"/tmp/project"'), true);
+  assert.strictEqual(buildFallbackRuntimeConfig({ mode: 'ask' }).permissionMode, 'default');
   const databaseSessions = new Map([['s1', { id: 's1', status: 'Pending', title: 'Old', userId: 'u1' }]]);
   const sessionDb = {
     initialize() {}, getSession: (id) => databaseSessions.get(id), getSessions: () => [...databaseSessions.values()],

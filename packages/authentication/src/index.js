@@ -31,4 +31,5 @@ module.exports = Object.freeze({
   ...require("./runtime/document-context-utils"),
   ...require("./runtime/tencent-docs-context-manager"),
   ...require("./runtime/product-snapshot"),
+  ...require("./runtime/session-config"),
 });

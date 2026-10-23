@@ -3,6 +3,7 @@ const { DocumentEditContext: DocumentEditContextRuntime } = require("../runtime/
 const documentContextUtils = require("../runtime/document-context-utils.js");
 const { TencentDocsContextManager: TencentDocsContextManagerRuntime } = require("../runtime/tencent-docs-context-manager.js");
 const productSnapshotRuntime = require("../runtime/product-snapshot.js");
+const sessionConfigRuntime = require("../runtime/session-config.js");
 const { normalizeJsonValue, redactProductSnapshotLogValue, collectJsonChangedPaths, hostedCliRotationKeyOfNormalized } = productSnapshotRuntime;
 const require_common$2 = require("./common.js");
 const require_logger = require("./logger.js");
@@ -27641,8 +27642,7 @@ var MODE_TOOLS_CONFIG = {
 	expert: PLAN_TOOLS.join(",")
 };
 function resolveModeTools(mode) {
-	if (!mode) return MODE_TOOLS_CONFIG.craft;
-	return MODE_TOOLS_CONFIG[mode] ?? MODE_TOOLS_CONFIG.craft;
+	return sessionConfigRuntime.resolveModeTools(mode);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/session/runtime-config.ts
@@ -27653,7 +27653,7 @@ var SESSION_SANDBOX_DISABLED_REASONS = [
 	"background-automation-no-approval-ui"
 ];
 function normalizeSessionSandboxDisabledReason(value) {
-	return typeof value === "string" && SESSION_SANDBOX_DISABLED_REASONS.includes(value) ? value : void 0;
+	return sessionConfigRuntime.normalizeSessionSandboxDisabledReason(value);
 }
 /**
 * Welcome-screen task mode. Picked on the welcome screen (coding vs. daily office work)
@@ -27687,7 +27687,7 @@ var SESSION_WELCOME_MODES = [
 * whether to pass it through or drop it.
 */
 function isSessionWelcomeMode(value) {
-	return typeof value === "string" && SESSION_WELCOME_MODES.includes(value);
+	return sessionConfigRuntime.isSessionWelcomeMode(value);
 }
 var DEFAULT_MODE_PERMISSION_CONFIG = {
 	craft: "bypassPermissions",
@@ -27696,19 +27696,13 @@ var DEFAULT_MODE_PERMISSION_CONFIG = {
 	expert: "bypassPermissions"
 };
 function cloneDesiredConfig(config) {
-	return config ? { ...config } : {};
+	return sessionConfigRuntime.cloneDesiredConfig(config);
 }
 function cloneResolvedRuntimeConfig(config) {
-	return config ? { ...config } : {};
+	return sessionConfigRuntime.cloneResolvedRuntimeConfig(config);
 }
 function normalizeSceneMode(mode) {
-	switch (mode) {
-		case "craft":
-		case "ask":
-		case "plan":
-		case "expert": return mode;
-		default: return;
-	}
+	return sessionConfigRuntime.normalizeSceneMode(mode);
 }
 /**
 * Validate a raw welcome-mode string (e.g. from a renderer `useState<string>`)
@@ -27720,48 +27714,22 @@ function normalizeSceneMode(mode) {
 * does not require editing this function.
 */
 function normalizeWelcomeMode(mode) {
-	return isSessionWelcomeMode(mode) ? mode : void 0;
+	return sessionConfigRuntime.normalizeWelcomeMode(mode);
 }
 function normalizePermissionMode(mode) {
-	switch (mode) {
-		case "acceptEdits":
-		case "bypassPermissions":
-		case "fullAccess":
-		case "default":
-		case "plan": return mode;
-		default: return;
-	}
+	return sessionConfigRuntime.normalizePermissionMode(mode);
 }
 function normalizeNonPlanPermissionMode(mode) {
-	const normalized = normalizePermissionMode(mode);
-	return normalized && normalized !== "plan" ? normalized : void 0;
+	return sessionConfigRuntime.normalizeNonPlanPermissionMode(mode);
 }
 function normalizeRuntimeIdentity(identity) {
-	return typeof identity === "string" && identity.trim() !== "" ? identity : void 0;
+	return sessionConfigRuntime.normalizeRuntimeIdentity(identity);
 }
 function normalizeSessionSettings(settings) {
-	if (!settings || typeof settings !== "object" || Array.isArray(settings)) return;
-	return { ...settings };
+	return sessionConfigRuntime.normalizeSessionSettings(settings);
 }
 function normalizeDesiredConfig(config) {
-	const rawPermissionMode = normalizePermissionMode(config.permissionMode);
-	const normalizedPermissionMode = config.mode === "plan" ? "plan" : rawPermissionMode === "plan" ? normalizeNonPlanPermissionMode(config.permissionModeBeforePlan) ?? "bypassPermissions" : rawPermissionMode;
-	return {
-		mode: normalizeSceneMode(config.mode),
-		expertId: config.expertId,
-		expertMarketplace: config.expertMarketplace,
-		locale: config.locale,
-		runtimeIdentity: normalizeRuntimeIdentity(config.runtimeIdentity),
-		model: config.model,
-		systemPrompt: config.systemPrompt,
-		tools: config.tools,
-		permissionMode: normalizedPermissionMode,
-		permissionModeBeforePlan: normalizeNonPlanPermissionMode(config.permissionModeBeforePlan),
-		useSandboxCLI: config.useSandboxCLI,
-		sandboxDisabledReason: config.useSandboxCLI === false ? normalizeSessionSandboxDisabledReason(config.sandboxDisabledReason) : void 0,
-		welcomeMode: normalizeWelcomeMode(config.welcomeMode),
-		sessionSettings: normalizeSessionSettings(config.sessionSettings)
-	};
+	return sessionConfigRuntime.normalizeDesiredConfig(config);
 }
 /**
 * Builds the cold-restart identity from structural inputs only.
@@ -27773,51 +27741,16 @@ function normalizeDesiredConfig(config) {
 * template, tools, or identity semantics and therefore require a fresh CLI.
 */
 function buildSessionRestartFingerprint(input) {
-	return JSON.stringify({
-		v: 1,
-		mode: input.mode,
-		expertId: input.expertId,
-		expertMarketplace: input.expertMarketplace,
-		locale: input.locale,
-		runtimeIdentity: input.runtimeIdentity,
-		explicitSystemPrompt: input.explicitSystemPrompt,
-		tools: input.tools,
-		welcomeMode: input.welcomeMode,
-		cwd: input.cwd,
-		permissionModeBeforePlan: input.permissionModeBeforePlan
-	});
+	return sessionConfigRuntime.buildSessionRestartFingerprint(input);
 }
 function buildFallbackRuntimeConfig(desiredConfig) {
-	const runtimeIdentity = normalizeRuntimeIdentity(desiredConfig.runtimeIdentity);
-	const tools = desiredConfig.tools ?? resolveDefaultTools(desiredConfig.mode);
-	return {
-		model: desiredConfig.model,
-		systemPrompt: desiredConfig.systemPrompt,
-		restartFingerprint: buildSessionRestartFingerprint({
-			mode: desiredConfig.mode ?? "craft",
-			expertId: desiredConfig.expertId,
-			expertMarketplace: desiredConfig.expertMarketplace,
-			locale: desiredConfig.locale,
-			runtimeIdentity,
-			explicitSystemPrompt: desiredConfig.systemPrompt,
-			tools,
-			welcomeMode: desiredConfig.welcomeMode,
-			cwd: void 0,
-			permissionModeBeforePlan: desiredConfig.permissionModeBeforePlan
-		}),
-		tools,
-		permissionMode: desiredConfig.permissionMode ?? resolveDefaultPermissionMode(desiredConfig.mode),
-		...desiredConfig.permissionModeBeforePlan ? { permissionModeBeforePlan: desiredConfig.permissionModeBeforePlan } : {},
-		...runtimeIdentity ? { runtimeIdentity } : {},
-		...desiredConfig.welcomeMode ? { welcomeMode: desiredConfig.welcomeMode } : {},
-		...desiredConfig.sessionSettings ? { sessionSettings: desiredConfig.sessionSettings } : {}
-	};
+	return sessionConfigRuntime.buildFallbackRuntimeConfig(desiredConfig);
 }
 function resolveDefaultPermissionMode(mode) {
-	return DEFAULT_MODE_PERMISSION_CONFIG[mode ?? "craft"];
+	return sessionConfigRuntime.resolveDefaultPermissionMode(mode);
 }
 function resolveDefaultTools(mode) {
-	return resolveModeTools(mode);
+	return sessionConfigRuntime.resolveDefaultTools(mode);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/mode/default-mode-handler.ts
