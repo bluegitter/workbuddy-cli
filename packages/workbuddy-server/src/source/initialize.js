@@ -553,43 +553,12 @@ require_common$3.init_common$3();
 /** 在预览 URL 上追加来源标记 `wb_source`。失败静默降级返回原 URL。 */
 function appendWbSource(url, source) {
 	return localDocsHelpersRuntime.appendWbSource(url, source);
-	try {
-		const u = new URL(url);
-		u.searchParams.set("wb_source", source);
-		return u.toString();
-	} catch {
-		return url;
-	}
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/docs/preview/local-file-open-check-open.ts
 /** 将冲突预检结果映射为 localDocs.checkOpen RPC 返回值（不含 UI 副作用）。 */
 function mapConflictToCheckOpenResult(conflict, requestSessionId) {
 	return localDocsHelpersRuntime.mapConflictToCheckOpenResult(conflict, requestSessionId, require_workbuddy_auth_product_coordinator.shouldBlockLocalDocumentOpenAttempt);
-	if (conflict.kind === "owned-by-other" && conflict.sessionId) {
-		const title = conflict.filePath.split(/[\\/]/).pop() || conflict.filePath;
-		return {
-			success: true,
-			status: "owned-by-other",
-			filePath: conflict.filePath,
-			sessionId: conflict.sessionId,
-			...conflict.sessionTitle ? { sessionTitle: conflict.sessionTitle } : {},
-			message: `Document is already active in another task: ${title}`,
-			shouldBlockOpen: require_workbuddy_auth_product_coordinator.shouldBlockLocalDocumentOpenAttempt(conflict, requestSessionId)
-		};
-	}
-	if (conflict.kind === "owned-by-self") return {
-		success: true,
-		status: "owned-by-self",
-		filePath: conflict.filePath,
-		...conflict.sessionId ? { sessionId: conflict.sessionId } : {},
-		shouldBlockOpen: require_workbuddy_auth_product_coordinator.shouldBlockLocalDocumentOpenAttempt(conflict, requestSessionId)
-	};
-	return {
-		success: true,
-		status: "none",
-		filePath: conflict.filePath
-	};
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/docs/local-docs-facade.ts
@@ -616,13 +585,6 @@ function isSupportedExtension$1(filePath) {
 /** 在 URL 上追加对话场景标记 `_wbchat=1`。失败时静默降级返回原 URL。 */
 function appendChatMarker(url) {
 	return localDocsHelpersRuntime.appendChatMarker(url);
-	try {
-		const u = new URL(url);
-		u.searchParams.set("_wbchat", "1");
-		return u.toString();
-	} catch {
-		return url;
-	}
 }
 /**
 * 创建本地文档预览领域 Facade（host 无关）。
