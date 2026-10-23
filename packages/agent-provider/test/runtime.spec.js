@@ -25,6 +25,13 @@ const {
   runAgentLoop,
   runAgentTurn,
   isTerminalStopReason,
+  AssistantMessage,
+  ToolResponseMessage,
+  MessageType,
+  chatResponse,
+  generation,
+  isToolCallResponse,
+  usage,
   LRUCache,
   runWithConcurrencySettled,
   CommodityCode,
@@ -249,6 +256,11 @@ async function main() {
   assert.strictEqual(singleTurnResult.completed, true);
   assert.strictEqual(singleTurnResult.reason, 'end_turn');
   assert.strictEqual(singleTurn.messages.at(-1).content, 'finished');
+  const assistant = new AssistantMessage('use tool', [], {}, [{ id: 'tool-1', name: 'read', input: {} }]);
+  assert.strictEqual(assistant.messageType, MessageType.ASSISTANT);
+  assert.strictEqual(new ToolResponseMessage([{ id: 'tool-1' }]).messageType, MessageType.TOOL);
+  assert.deepStrictEqual(usage(2, 3), { promptTokens: 2, generationTokens: 3, totalTokens: 5 });
+  assert.strictEqual(isToolCallResponse(chatResponse([generation({ toolCalls: [{ name: 'read' }] }, 'tool_calls')])), true);
 
   const denied = await new PermissionController({ mode: PermissionMode.PLAN })
     .canUse(tools.get('write'), {}, {});
