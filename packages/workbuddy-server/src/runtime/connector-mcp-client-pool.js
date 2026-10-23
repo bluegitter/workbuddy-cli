@@ -105,6 +105,32 @@ class ConnectorMcpClientPool {
 
   registerBuiltinTool(tool) { this.builtinTools.set(tool.name, tool); this.onToolsChanged(); }
   unregisterBuiltinTool(name) { const removed = this.builtinTools.delete(name); if (removed) this.onToolsChanged(); return removed; }
+
+  resolveToolConfigId(toolName, options) {
+    const routing = new ToolRoutingTable({ clients: this.clients, builtinTools: this.builtinTools, disabledTools: new Map([...this.clients.keys()].map((id) => [id, this.getDisabledTools(id)])) });
+    return routing.resolve(toolName, options);
+  }
+
+  async callTool(toolName, args = {}, context = {}, onProgress) {
+    const builtin = this.builtinTools.get(toolName);
+    if (builtin) return builtin.handler(args, context);
+    const configId = this.resolveToolConfigId(toolName, context);
+    if (!configId) throw new Error(`Tool "${toolName}" not found in any connected connector`);
+    if (new Set(this.getDisabledTools(configId) || []).has(toolName)) throw new Error(`Tool "${toolName}" is disabled by user`);
+    const entry = this.clients.get(configId);
+    if (!entry || entry.status !== 'connected') throw new Error(`Connector "${configId}" is not connected`);
+    const shortName = configId.replace(/^(connector|plugin-mcp|custom-mcp|project-mcp):/, '');
+    const originalName = toolName.startsWith(`${shortName}_`) ? toolName.slice(shortName.length + 1) : toolName;
+    if (typeof entry.client.callTool !== 'function') throw new Error(`Connector "${configId}" does not support tools/call`);
+    return entry.client.callTool({ name: originalName, arguments: args }, { onProgress, ...context });
+  }
+
+  async readResourceForConnector(configId, uri) {
+    const entry = this.clients.get(configId);
+    if (!entry || entry.status !== 'connected') throw new Error(`Connector "${configId}" is not connected`);
+    if (typeof entry.client.readResource !== 'function') throw new Error(`Connector "${configId}" does not support resources/read`);
+    return entry.client.readResource({ uri });
+  }
 }
 
 function sameConfig(left, right) { return JSON.stringify(left) === JSON.stringify(right); }

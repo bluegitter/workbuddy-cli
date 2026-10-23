@@ -1913,7 +1913,7 @@ async function main() {
   assert.deepStrictEqual(syncPlan.unchanged.map(({ id }) => id), ['keep']);
   const poolEvents = [];
   const mcpPool = new ConnectorMcpClientPool({
-    createClient: (id) => ({ id }),
+    createClient: (id) => ({ id, callTool: async (request) => ({ content: [{ type: 'text', text: request.name }] }), readResource: async ({ uri }) => ({ contents: [{ uri }] }) }),
     connectClient: async (client) => { poolEvents.push(`connect:${client.id}`); },
     listClientTools: async (client) => ({ tools: [{ name: `${client.id}-tool` }] }),
     closeClient: async (client) => { poolEvents.push(`close:${client.id}`); },
@@ -1924,6 +1924,8 @@ async function main() {
   mcpPool.registerBuiltinTool({ name: 'builtin', description: 'built-in', inputSchema: { type: 'object' } });
   assert.strictEqual(mcpPool.listAllTools().some(({ name }) => name === 'builtin'), true);
   assert.strictEqual(mcpPool.getToolServerMap()['docs_docs-tool'], 'docs');
+  assert.deepStrictEqual(await mcpPool.callTool('docs_docs-tool', {}), { content: [{ type: 'text', text: 'docs-tool' }] });
+  assert.deepStrictEqual(await mcpPool.readResourceForConnector('docs', 'docs://resource'), { contents: [{ uri: 'docs://resource' }] });
   const poolSync = await mcpPool.sync({ mail: { url: 'https://mail' }, docs: { url: 'https://docs-2' } });
   assert.deepStrictEqual(poolSync.added, ['mail']);
   assert.deepStrictEqual(poolSync.reconnected, ['docs']);
