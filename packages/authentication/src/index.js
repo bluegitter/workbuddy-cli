@@ -14,6 +14,7 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-variant"),
   ...require("./runtime/product-config"),
   ...require("./runtime/oauth-utils"),
+  ...require("./runtime/oauth-client"),
   ...require("./runtime/authentication-protocol"),
   ...require("./runtime/account-utils"),
   ...require("./runtime/product-env"),

@@ -16,6 +16,7 @@ const { CommandPolicy } = require('../packages/sandbox-cli/src');
 const runtimeCliProcessEnv = require('../packages/runtime/src/source/cli-process-env.js');
 const runtimeContextSource = require('../packages/runtime/src/source/runtime-context.js');
 const runtimeHttpSource = require('../packages/runtime/src/source/runtime-http.js');
+const oauthSource = require('../packages/authentication/src/source/auth.js');
 const {
   AuthSession,
   CredentialStore,
@@ -532,6 +533,10 @@ async function main() {
   assert.strictEqual(runtimeCliProcessEnv.buildCliProcessEnv({ SERVER__PORT: '1234' }, { CODEBUDDY_SECRET: 'drop', PATH: '/bin' }).SERVER__PORT, '1234');
   assert.strictEqual(typeof runtimeContextSource.configureWorkbuddyRuntimeContext, 'function');
   assert.strictEqual(typeof runtimeHttpSource.createRuntimeHttp, 'function');
+  assert.strictEqual(typeof oauthSource.auth, 'function');
+  assert.strictEqual(typeof oauthSource.auth_exports.refreshAuthorization, 'function');
+  assert.strictEqual(new oauthSource.UnauthorizedError().name, 'UnauthorizedError');
+  assert.strictEqual(oauthSource.buildDiscoveryUrls('https://oauth.test/api').length, 3);
   assert.strictEqual(acpNode.PROTOCOL_VERSION, 1);
   assert.strictEqual(acpRenderer.PROTOCOL_VERSION, 1);
   assert.strictEqual(typeof acpNode.RpcConnection, 'function');
