@@ -20,12 +20,13 @@ const DEFAULTS = Object.freeze({
 
 class SidecarClient {
   constructor(socketPath, deps = {}) {
-    this.socketPath = socketPath;
+    this.socketPath = socketPath || deps.controlSocketPath?.() || deps.socketPath;
     this.deps = deps;
     this.socket = null;
     this.nextId = 1;
     this.pending = new Map();
     this.closeHandler = null;
+    this.notificationHandler = null;
     this.buffer = '';
   }
   get isConnected() { return Boolean(this.socket); }
@@ -53,6 +54,10 @@ class SidecarClient {
         if (!line) continue;
         let message;
         try { message = JSON.parse(line); } catch { continue; }
+        if (message.id === undefined || message.id === null) {
+          this.notificationHandler?.(message.method, message.params);
+          continue;
+        }
         const pending = this.pending.get(message.id);
         if (!pending) continue;
         this.pending.delete(message.id);
@@ -74,6 +79,8 @@ class SidecarClient {
       try { this.socket.write(`${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`); } catch (error) { clearTimeout(timer); this.pending.delete(id); reject(error); }
     });
   }
+  sendRequest(method, params, timeoutMs) { return this.request(method, params, timeoutMs); }
+  onNotification(handler) { this.notificationHandler = handler; }
   ping() { return this.request('sidecar.ping'); }
   createSession(params) { return this.request('session.create', params, this.deps.sessionCreateTimeoutMs || DEFAULTS.sessionCreateTimeoutMs); }
   reconnectSession(sessionId, cols, rows) { return this.request('session.reconnect', { sessionId, cols, rows }); }
@@ -81,6 +88,15 @@ class SidecarClient {
   resizeSession(sessionId, cols, rows) { return this.request('session.resize', { sessionId, cols, rows }); }
   listSessions() { return this.request('session.list'); }
   captureSession(sessionId, lines) { return this.request('session.capture', { sessionId, lines }).then((result) => result?.text); }
+  async shutdown() {
+    await this.request('sidecar.shutdown');
+    const socket = this.socket;
+    if (!socket) return true;
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => { socket.destroy(); resolve(false); }, this.deps.gracefulExitTimeoutMs || 10_000);
+      socket.once('close', () => { clearTimeout(timer); resolve(true); });
+    });
+  }
   attachDataSocket(sessionId) { return net.createConnection(this.deps.dataSocketPath(sessionId)); }
   onClose(handler) { this.closeHandler = handler; }
   _rejectPending(error) { for (const pending of this.pending.values()) { clearTimeout(pending.timer); pending.reject(error); } this.pending.clear(); }

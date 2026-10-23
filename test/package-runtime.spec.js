@@ -268,6 +268,7 @@ const {
   validateActivateReadyResponse,
   CliPrewarmPool,
   SidecarManager,
+  SidecarClient,
   createWorkbuddySidecarManager,
   parseToolUsage,
   createToolUsageBridge,
@@ -2360,6 +2361,10 @@ async function main() {
   assert.strictEqual(sidecarOutput, 'sidecar');
   assert.strictEqual(sidecars.capture('session-1'), undefined);
   assert.strictEqual(sidecars.list().length, 0);
+  const sidecarClient = new SidecarClient('/tmp/workbuddy-sidecar-test.sock', { dataSocketPath: () => '/tmp/workbuddy-data.sock' });
+  assert.strictEqual(typeof sidecarClient.sendRequest, 'function');
+  assert.strictEqual(typeof sidecarClient.onNotification, 'function');
+  sidecarClient.dispose();
   assert.deepStrictEqual(translateDesktopToCloudPayload({ update: { sessionUpdate: 'state_update', currentState: 'error' } }).update, { sessionUpdate: 'session_end_turn', stopReason: 'refusal' });
   assert.strictEqual(translateDesktopToCloudPayload({ sessionUpdate: 'assistant_message_chunk' }).sessionUpdate, 'agent_message_chunk');
   assert.deepStrictEqual(resolveDesktopSpanPlan({ traceId: 'a'.repeat(32), spanId: 'b'.repeat(16), parentSpanId: 'c'.repeat(16) }).parentSpanId, 'c'.repeat(16));
