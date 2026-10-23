@@ -17,4 +17,5 @@ module.exports = Object.freeze({
   ...require("./runtime/window-policy"),
   ...require("./runtime/deep-link"),
   ...require("./runtime/pending-open-queue"),
+  ...require("./runtime/shortcut-state"),
 });

@@ -118,6 +118,9 @@ const {
   getOpenUrlFromCommandLine,
   createPendingOpenUrlQueue,
   createPendingFileQueue,
+  DEFAULT_TOGGLE_WINDOW_ACCELERATOR,
+  loadToggleWindowAccelerator,
+  saveToggleWindowAccelerator,
 } = require('../packages/workbuddy-app/src');
 const {
   CancellationTokenSource,
@@ -1369,6 +1372,21 @@ async function main() {
   let handledUrls = [];
   assert.strictEqual(await consumePendingDesktopOpenUrls(async () => [{ url: 'workbuddy://home' }, 'workbuddy://chat', { bad: true }], (url) => handledUrls.push(url)), 2);
   assert.deepStrictEqual(handledUrls, ['workbuddy://home', 'workbuddy://chat']);
+  const shortcutStatePath = path.join(root, 'shortcut-state', 'state.json');
+  assert.strictEqual(loadToggleWindowAccelerator(path.join(root, 'missing-shortcut.json')), DEFAULT_TOGGLE_WINDOW_ACCELERATOR);
+  fs.mkdirSync(path.dirname(shortcutStatePath), { recursive: true });
+  fs.writeFileSync(shortcutStatePath, JSON.stringify({ version: 2, toggleWindowAccelerator: 'Alt+W' }));
+  assert.strictEqual(loadToggleWindowAccelerator(shortcutStatePath), DEFAULT_TOGGLE_WINDOW_ACCELERATOR);
+  fs.writeFileSync(shortcutStatePath, JSON.stringify({ version: 1, toggleWindowAccelerator: 42 }));
+  assert.strictEqual(loadToggleWindowAccelerator(shortcutStatePath), DEFAULT_TOGGLE_WINDOW_ACCELERATOR);
+  saveToggleWindowAccelerator(shortcutStatePath, 'Alt+Shift+W');
+  assert.strictEqual(loadToggleWindowAccelerator(shortcutStatePath), 'Alt+Shift+W');
+  const shortcutWarnings = [];
+  saveToggleWindowAccelerator(shortcutStatePath, 'Alt+W', {
+    writeFileSync() { throw new Error('read-only'); },
+    logger: { warn: (...args) => shortcutWarnings.push(args) },
+  });
+  assert.strictEqual(shortcutWarnings.length, 1);
   assert.strictEqual(new WindowState().show().visible, true);
   assert.strictEqual(resolveAppConfig(root, { WORKBUDDY_CONFIG_DIR: '/tmp/config' }).config, '/tmp/config');
   assert.strictEqual(deriveDisplayStatus('working', {}), 'working');

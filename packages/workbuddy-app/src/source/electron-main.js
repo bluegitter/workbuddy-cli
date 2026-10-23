@@ -1,6 +1,10 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const require_chunk = require("./chunk.js");
 const { clampBoundsToWorkArea, isVisibleOnAnyDisplay: isVisibleOnAnyDisplayRuntime } = require("../runtime/window-policy.js");
+const {
+	loadToggleWindowAccelerator: loadShortcutState,
+	saveToggleWindowAccelerator: saveShortcutState,
+} = require("../runtime/shortcut-state.js");
 require("./fs-protection.js");
 const require_common$1 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
@@ -16960,7 +16964,6 @@ var RendererLoadGuard = class RendererLoadGuard {
 * file in userData so the main process can read it on startup — before
 * the renderer (and its localStorage) is available.
 */
-var DEFAULT_TOGGLE_WINDOW_ACCELERATOR = "Shift+Alt+W";
 function stateFilePath$1() {
 	return path.join(electron.app.getPath("userData"), "shortcut-state.json");
 }
@@ -16970,30 +16973,14 @@ function stateFilePath$1() {
 * file is corrupted.
 */
 function loadToggleWindowAccelerator() {
-	try {
-		const raw = fs.readFileSync(stateFilePath$1(), "utf-8");
-		const state = JSON.parse(raw);
-		if (state.version !== 1 || typeof state.toggleWindowAccelerator !== "string") return DEFAULT_TOGGLE_WINDOW_ACCELERATOR;
-		return state.toggleWindowAccelerator;
-	} catch {
-		return DEFAULT_TOGGLE_WINDOW_ACCELERATOR;
-	}
+	return loadShortcutState(stateFilePath$1(), { logger: require_logger.windowLog });
 }
 /**
 * Persist the toggle-window accelerator.
 * Called after a successful registration or when the user clears the binding.
 */
 function saveToggleWindowAccelerator(accelerator) {
-	try {
-		const state = {
-			version: 1,
-			toggleWindowAccelerator: accelerator
-		};
-		fs.mkdirSync(path.dirname(stateFilePath$1()), { recursive: true });
-		fs.writeFileSync(stateFilePath$1(), JSON.stringify(state));
-	} catch (err) {
-		require_logger.windowLog.warn("[shortcut-state] Failed to save shortcut state:", err);
-	}
+	saveShortcutState(stateFilePath$1(), accelerator, { logger: require_logger.windowLog });
 }
 //#endregion
 //#region src/main/window/strip-frame-embedding-headers.ts
