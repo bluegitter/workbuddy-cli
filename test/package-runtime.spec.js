@@ -568,6 +568,7 @@ const {
   collectJsonChangedPaths,
   hasRemoteProductPayload,
   hostedCliRotationKeyOfNormalized,
+  stripSignedDownloadUrl,
   normalizeJsonValue,
   redactProductSnapshotLogValue,
   applyClientAuthentication,
@@ -2534,6 +2535,12 @@ async function main() {
     role: 'creator', conversationOrigin: 'local', isCollaborative: false,
   });
   assert.strictEqual(sessionRecordToTaskConversation({}).lastActivityAt, '1970-01-01T00:00:00.000Z');
+  assert.deepStrictEqual(normalizeJsonValue({ b: undefined, a: 1, nested: { z: 2, a: 0 } }), { a: 1, nested: { a: 0, z: 2 } });
+  assert.strictEqual(redactProductSnapshotLogValue('client_token', 'secret'), '<redacted>');
+  assert.strictEqual(redactProductSnapshotLogValue('download_url', 'https://example.test/a?token=abc#frag'), 'https://example.test/a');
+  assert.deepStrictEqual(collectJsonChangedPaths({ a: 1, b: 2 }, { a: 1, b: 3, c: 4 }), ['$.b', '$.c']);
+  assert.strictEqual(stripSignedDownloadUrl('https://example.test/a?sign=x&t=1&stable=yes'), 'https://example.test/a?stable=yes');
+  assert.strictEqual(hostedCliRotationKeyOfNormalized({ download_url: 'https://example.test/a?sign=x', value: 1 }), hostedCliRotationKeyOfNormalized({ download_url: 'https://example.test/a?sign=y', value: 1 }));
   const databaseSessions = new Map([['s1', { id: 's1', status: 'Pending', title: 'Old', userId: 'u1' }]]);
   const sessionDb = {
     initialize() {}, getSession: (id) => databaseSessions.get(id), getSessions: () => [...databaseSessions.values()],

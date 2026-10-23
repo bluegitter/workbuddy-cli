@@ -2,6 +2,8 @@ const require_chunk = require("./chunk.js");
 const { DocumentEditContext: DocumentEditContextRuntime } = require("../runtime/document-edit-context.js");
 const documentContextUtils = require("../runtime/document-context-utils.js");
 const { TencentDocsContextManager: TencentDocsContextManagerRuntime } = require("../runtime/tencent-docs-context-manager.js");
+const productSnapshotRuntime = require("../runtime/product-snapshot.js");
+const { normalizeJsonValue, redactProductSnapshotLogValue, collectJsonChangedPaths, hostedCliRotationKeyOfNormalized } = productSnapshotRuntime;
 const require_common$2 = require("./common.js");
 const require_logger = require("./logger.js");
 const require_log_acl_guard = require("./log-acl-guard.js");
@@ -59281,120 +59283,6 @@ var REMOTE_CONFIG_EXCLUDE_FIELDS = [
 	"productName",
 	"defaultFolderName"
 ];
-function normalizeJsonValue(value) {
-	if (Array.isArray(value)) return value.map((item) => normalizeJsonValue(item));
-	if (value && typeof value === "object") {
-		const maybeJsonValue = value;
-		if (typeof maybeJsonValue.toJSON === "function") return normalizeJsonValue(maybeJsonValue.toJSON());
-		const source = value;
-		const result = {};
-		for (const key of Object.keys(source).sort()) {
-			const normalized = normalizeJsonValue(source[key]);
-			if (normalized !== void 0) result[key] = normalized;
-		}
-		return result;
-	}
-	if (typeof value === "undefined" || typeof value === "function" || typeof value === "symbol") return;
-	return value;
-}
-/** 后缀规则覆盖不到的精确 key（归一化后）。 */
-var SENSITIVE_PRODUCT_LOG_KEYS = new Set([
-	"authorization",
-	"cookie",
-	"passwordhash",
-	"signature"
-]);
-/**
-* 归一化后以这些词结尾的 key 一律脱敏。用后缀而不是逐个枚举，
-* 避免远端配置新增 appSecret/clientToken 之类字段时黑名单漏网。
-*/
-var SENSITIVE_PRODUCT_LOG_KEY_SUFFIX = /(?:token|secret|password|passwd|credentials?|apikey|accesskey|secretkey|sessionkey|privatekey|publickey)$/;
-function isSensitiveProductLogKey(normalizedKey) {
-	return SENSITIVE_PRODUCT_LOG_KEYS.has(normalizedKey) || SENSITIVE_PRODUCT_LOG_KEY_SUFFIX.test(normalizedKey);
-}
-function normalizeSensitiveProductLogKey(key) {
-	return key.toLowerCase().replace(/[_-]/g, "");
-}
-function isDownloadUrlKey(key) {
-	return !!key && normalizeSensitiveProductLogKey(key) === "downloadurl";
-}
-function tryParseUrl(value) {
-	try {
-		return new URL(value);
-	} catch {
-		return;
-	}
-}
-function stripProductLogUrlParams(value) {
-	const url = tryParseUrl(value);
-	if (!url || !url.search && !url.hash) return value;
-	url.search = "";
-	url.hash = "";
-	return url.toString();
-}
-function redactProductSnapshotLogValue(key, value) {
-	if (!key) return value;
-	const normalizedKey = normalizeSensitiveProductLogKey(key);
-	if (isSensitiveProductLogKey(normalizedKey)) return "<redacted>";
-	if (normalizedKey === "downloadurl" && typeof value === "string") return stripProductLogUrlParams(value);
-	return value;
-}
-function isJsonObject(value) {
-	return !!value && typeof value === "object" && !Array.isArray(value);
-}
-function appendJsonPath(path, key) {
-	return /^[A-Za-z_$][\w$]*$/.test(key) ? `${path}.${key}` : `${path}[${JSON.stringify(key)}]`;
-}
-function collectJsonChangedPaths(previous, next, path = "$", result = []) {
-	if (Object.is(previous, next)) return result;
-	if (Array.isArray(previous) && Array.isArray(next)) {
-		const length = Math.max(previous.length, next.length);
-		for (let i = 0; i < length; i += 1) collectJsonChangedPaths(previous[i], next[i], `${path}[${i}]`, result);
-		return result;
-	}
-	if (isJsonObject(previous) && isJsonObject(next)) {
-		const keys = new Set([...Object.keys(previous), ...Object.keys(next)]);
-		for (const key of [...keys].sort()) collectJsonChangedPaths(previous[key], next[key], appendJsonPath(path, key), result);
-		return result;
-	}
-	result.push(path);
-	return result;
-}
-/**
-* download_url 上跟签名轮换一起变化的易变参数（腾讯 CDN 的 sign/t、COS 的 q-* 签名族、
-* 临时密钥 token）。轮转键要剥掉它们，否则任一参数轮换都会被误判成语义变更、
-* 重新触发 hosted CLI 重启——正是本修复要压住的抖动。
-*/
-var VOLATILE_DOWNLOAD_URL_PARAMS = new Set([
-	"sign",
-	"t",
-	"expires",
-	"x-cos-security-token"
-]);
-function isVolatileDownloadUrlParam(name) {
-	const normalized = name.toLowerCase();
-	return VOLATILE_DOWNLOAD_URL_PARAMS.has(normalized) || normalized.startsWith("q-");
-}
-function stripSignedDownloadUrl(value) {
-	const url = tryParseUrl(value);
-	if (!url) return value;
-	const volatileParams = [...url.searchParams.keys()].filter(isVolatileDownloadUrlParam);
-	if (!volatileParams.length) return value;
-	for (const name of volatileParams) url.searchParams.delete(name);
-	return url.toString();
-}
-function normalizeHostedCliRotationValue(key, value) {
-	if (isDownloadUrlKey(key) && typeof value === "string") return stripSignedDownloadUrl(value);
-	return value;
-}
-/**
-* 从 normalizeJsonValue 的产物派生 hosted CLI 轮转键。输入必须已规范化
-* （键有序、无 toJSON/undefined），这样 JSON.stringify 的 replacer 一遍
-* 就能完成 download_url 易变参数的剥离，无需再走一次树遍历。
-*/
-function hostedCliRotationKeyOfNormalized(normalizedSnapshot) {
-	return JSON.stringify(normalizedSnapshot, (key, value) => normalizeHostedCliRotationValue(key, value));
-}
 var WorkbuddyAuthProductCoordinator = class WorkbuddyAuthProductCoordinator {
 	logger;
 	authenticationManager;
