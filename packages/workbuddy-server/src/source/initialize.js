@@ -219445,15 +219445,6 @@ var CodeBuddyCodeSessionBackend = class {
 */
 function buildPrewarmActivateArgs(coldStartArgs, port) {
 	return codebuddyBackendUtilsRuntime.buildPrewarmActivateArgs(coldStartArgs, port);
-	const out = [
-		...coldStartArgs.slice(1),
-		"--port",
-		String(port)
-	];
-	const hasPort = out.includes("--port");
-	const hasServe = out.includes("--serve");
-	if (hasPort && !hasServe) out.unshift("--serve");
-	return out;
 }
 /**
 * 把 prewarm activate 透传的 args 摘要成一行字符串，供日志使用。
@@ -219480,28 +219471,6 @@ function buildPrewarmActivateArgs(coldStartArgs, port) {
 */
 function summarizePrewarmArgs(args) {
 	return codebuddyBackendUtilsRuntime.summarizePrewarmArgs(args);
-	const sensitiveValueFlags = new Set([
-		"--system-prompt",
-		"--append-system-prompt",
-		"--settings"
-	]);
-	const out = [];
-	for (let i = 0; i < args.length; i++) {
-		const tok = args[i];
-		if (!tok.startsWith("-")) {
-			out.push(`<positional:${tok}>`);
-			continue;
-		}
-		const next = args[i + 1];
-		if (next === void 0 || next.startsWith("-")) {
-			out.push(tok);
-			continue;
-		}
-		if (sensitiveValueFlags.has(tok)) out.push(`${tok}=<len=${next.length}>`);
-		else out.push(`${tok}=${next}`);
-		i++;
-	}
-	return out.join(" ");
 }
 /**
 * Build CLI arguments from session resolved runtime config.
