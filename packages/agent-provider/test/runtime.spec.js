@@ -58,12 +58,21 @@ const {
   initAppProviders,
   getFacades,
   getConnectorManager,
+  extractToolCalls,
+  normalizeModelResponse,
+  normalizeToolInput,
   getBackendErrorPayload,
   normalizeProjectInvitationDetail,
   normalizeAcceptProjectInvitationResult,
 } = require('../src');
 
 async function main() {
+  assert.deepStrictEqual(normalizeToolInput('{"path":"/tmp/a"}'), { path: '/tmp/a' });
+  assert.deepStrictEqual(normalizeToolInput('not-json'), {});
+  assert.deepStrictEqual(extractToolCalls([{ type: 'tool_use', id: 'tool-1', name: 'Read', arguments: '{"path":"/tmp/a"}' }]), [
+    { id: 'tool-1', name: 'Read', input: { path: '/tmp/a' } },
+  ]);
+  assert.strictEqual(normalizeModelResponse({ content: 'done', stop_reason: 'end_turn' }).stopReason, 'end_turn');
   const providerRegistry = new ProviderRegistry();
   const manager = { name: 'connector-manager' };
   providerRegistry.initialize({ facades: { chat: { complete: true } }, connectorManager: manager });
