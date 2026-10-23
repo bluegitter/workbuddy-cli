@@ -27591,67 +27591,12 @@ require_common$2.__decorate([(0, import_common.Autowired)(AuthService), require_
 InspirationService = _InspirationService = require_common$2.__decorate([(0, import_common.Component)({ id: InspirationServiceToken })], InspirationService);
 //#endregion
 //#region ../../packages/workbuddy-server/src/mode/mode-tools-config.ts
-var CRAFT_TOOLS = [
-	"Read",
-	"Write",
-	"Edit",
-	"MultiEdit",
-	"Glob",
-	"Grep",
-	"Bash",
-	"PowerShell",
-	"TaskCreate",
-	"TaskGet",
-	"TaskUpdate",
-	"TaskList",
-	"TaskStop",
-	"TaskOutput",
-	"WebFetch",
-	"WebSearch",
-	"Skill",
-	"SkillManage",
-	"AskUserQuestion",
-	"LSP",
-	"ImageGen",
-	"VideoGen",
-	"Agent",
-	"TeamCreate",
-	"TeamDelete",
-	"SendMessage",
-	"ToolSearch",
-	"DeferExecuteTool",
-	"ListMcpResources",
-	"ReadMcpResource"
-];
-var PLAN_TOOLS = [
-	...CRAFT_TOOLS,
-	"EnterPlanMode",
-	"ExitPlanMode"
-];
-var MODE_TOOLS_CONFIG = {
-	craft: CRAFT_TOOLS.join(","),
-	ask: [
-		"Read",
-		"AskUserQuestion",
-		"WebFetch",
-		"WebSearch",
-		"Glob",
-		"Grep"
-	].join(","),
-	plan: PLAN_TOOLS.join(","),
-	expert: PLAN_TOOLS.join(",")
-};
 function resolveModeTools(mode) {
 	return sessionConfigRuntime.resolveModeTools(mode);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/session/runtime-config.ts
 /** Sandbox 显式关闭的主要代码来源 ID。次要入口由 CLI 归入其他配置关闭。 */
-var SESSION_SANDBOX_DISABLED_REASONS = [
-	"security-center-setting-disabled",
-	"session-local-environment-selected",
-	"background-automation-no-approval-ui"
-];
 function normalizeSessionSandboxDisabledReason(value) {
 	return sessionConfigRuntime.normalizeSessionSandboxDisabledReason(value);
 }
@@ -27675,11 +27620,6 @@ function normalizeSessionSandboxDisabledReason(value) {
 *
 * No other narrow code (adapters, `selectTemplateKind`, etc.) needs to change.
 */
-var SESSION_WELCOME_MODES = [
-	"coding",
-	"working",
-	"design"
-];
 /**
 * Type guard for raw strings → {@link SessionWelcomeMode}. Backed by
 * {@link SESSION_WELCOME_MODES} so it always stays in sync with the union.
@@ -27689,12 +27629,6 @@ var SESSION_WELCOME_MODES = [
 function isSessionWelcomeMode(value) {
 	return sessionConfigRuntime.isSessionWelcomeMode(value);
 }
-var DEFAULT_MODE_PERMISSION_CONFIG = {
-	craft: "bypassPermissions",
-	ask: "default",
-	plan: "plan",
-	expert: "bypassPermissions"
-};
 function cloneDesiredConfig(config) {
 	return sessionConfigRuntime.cloneDesiredConfig(config);
 }
@@ -27704,15 +27638,6 @@ function cloneResolvedRuntimeConfig(config) {
 function normalizeSceneMode(mode) {
 	return sessionConfigRuntime.normalizeSceneMode(mode);
 }
-/**
-* Validate a raw welcome-mode string (e.g. from a renderer `useState<string>`)
-* and narrow it to {@link SessionWelcomeMode}. Unknown values return `undefined`
-* rather than falling back to a default — the default is applied at the selection
-* site so the intent ("caller didn't set it" vs "caller sent garbage") is preserved.
-*
-* Backed by {@link SESSION_WELCOME_MODES}; adding a new welcome-mode value
-* does not require editing this function.
-*/
 function normalizeWelcomeMode(mode) {
 	return sessionConfigRuntime.normalizeWelcomeMode(mode);
 }
