@@ -221220,6 +221220,7 @@ async function handleSessionCreate(ctx, cmd) {
 * 传输方式：sendRecv（Web 端会等待响应确认 Desktop 已收到并开始执行）。
 */
 async function handlePromptSubmit(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handlePromptSubmit(ctx, cmd, { edgeLog, localizeRemoteImages, publishPromptError });
 	const contentBlocks = Array.isArray(cmd.content) && cmd.content.length > 0 ? cmd.content : [{
 		type: "text",
 		text: cmd.prompt || ""

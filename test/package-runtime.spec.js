@@ -240,6 +240,7 @@ const {
   handleGetPage,
   handleSessionStop,
   handleSessionCreate,
+  handlePromptSubmit,
   handleGetAutomations,
   handleGetTaskArtifacts,
   handleGetModels,
@@ -2490,6 +2491,18 @@ async function main() {
   }, { cwd: '/tmp/project', model: 'sonnet', sessionOptions: { sessionId: 'reserved' } });
   assert.deepStrictEqual(createResponse, { success: true, sessionId: 'created-1' });
   assert.strictEqual(createdOptions.sessionId !== 'reserved', true);
+  let submittedPrompt;
+  const promptResponse = await handlePromptSubmit({
+    deps: { submitPrompt: async (...args) => { submittedPrompt = args; return { sessionId: 's2', userMessageId: 'u2' }; } },
+    logger: { info() {}, warn() {} },
+    markRemoteCreatedSession() {},
+    bindTurnTraceSession() {},
+    bindTurnTraceMessages() {},
+    pushToRenderer() {},
+  }, { prompt: 'hello', model: 'sonnet' });
+  assert.deepStrictEqual(promptResponse, { success: true, sessionId: 's2' });
+  assert.strictEqual(submittedPrompt[0], undefined);
+  assert.strictEqual(submittedPrompt[3].model, 'sonnet');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });

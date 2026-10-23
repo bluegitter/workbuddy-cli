@@ -32,6 +32,63 @@ async function handleSessionCreate(ctx, cmd) {
   }
 }
 
+async function handlePromptSubmit(ctx, cmd, options = {}) {
+  const log = logger(ctx);
+  const edgeLog = options.edgeLog || (() => {});
+  const localizeRemoteImages = options.localizeRemoteImages || (async () => {});
+  const publishPromptError = options.publishPromptError || (() => {});
+  const contentBlocks = Array.isArray(cmd.content) && cmd.content.length > 0 ? cmd.content : [{ type: 'text', text: cmd.prompt || '' }];
+  await localizeRemoteImages(contentBlocks, cmd.sessionId || '', ctx);
+  const promptPreview = contentBlocks.filter((block) => block.type === 'text' && block.text).map((block) => block.text).join(' ').slice(0, 100);
+  const promptOpts = {};
+  for (const key of ['mode', 'attachments', 'expertId', 'expertMarketplace', 'locale', 'model', 'systemPrompt', 'tools', 'permissionMode', 'disabledTools', 'env', 'backendId', 'projectId']) if (cmd[key] !== undefined) promptOpts[key] = cmd[key];
+  const cwd = cmd.cwd || cmd.workDir;
+  if (cwd) promptOpts.cwd = cwd;
+  if (!cwd) promptOpts.isPlayground = true;
+  else if (cmd.isPlayground !== undefined) promptOpts.isPlayground = cmd.isPlayground;
+  if (cmd.sessionOptions && typeof cmd.sessionOptions === 'object') {
+    const { sessionId: _sessionId, preGeneratedSessionId: _preGeneratedSessionId, ...safeOptions } = cmd.sessionOptions;
+    promptOpts.sessionOptions = safeOptions;
+  }
+  if (!cmd.sessionId) {
+    promptOpts.preGeneratedSessionId = crypto.randomUUID();
+    ctx.markRemoteCreatedSession?.(promptOpts.preGeneratedSessionId);
+    ctx.bindTurnTraceSession?.(promptOpts.preGeneratedSessionId);
+  }
+  log.info(`[EdgeSync] PROMPT.SUBMIT: sid=${cmd.sessionId || '(auto-create)'} prompt="${promptPreview}"`);
+  edgeLog('PROMPT_SUBMIT_ENTER', `sid=${cmd.sessionId || '(auto)'} promptLen=${promptPreview.length}`);
+  try {
+    if (!ctx.deps.submitPrompt) return { success: true };
+    const preGeneratedUserMessageId = crypto.randomUUID();
+    const traceSessionId = cmd.sessionId || promptOpts.preGeneratedSessionId;
+    if (traceSessionId) ctx.bindTurnTraceMessages?.(traceSessionId, [preGeneratedUserMessageId]);
+    const echo = (sessionId, messageId) => {
+      if (!sessionId || !ctx.pushToRenderer) return;
+      const echoBlocks = contentBlocks.map((block) => block.type === 'image' && block.uri ? { type: 'image', uri: block.uri, mimeType: block.mimeType } : block);
+      ctx.pushToRenderer(sessionId, { sessionId, update: { sessionUpdate: 'user_message_chunk', messageId, content: echoBlocks, _meta: { 'codebuddy.ai': { chunkSeq: 0, emitSyntheticUserPromptLive: true } } }, _meta: { messageId, 'codebuddy.ai': { messageId, synthetic: true, source: 'edge-sync-submit-prompt', emitSyntheticUserPromptLive: true, timestamp: new Date().toISOString() } } });
+      ctx.pushToRenderer(sessionId, { sessionId, id: sessionId, name: promptPreview.slice(0, 30) || '新任务' }, 'session:upserted');
+    };
+    if (cmd.sessionId) try { echo(cmd.sessionId, preGeneratedUserMessageId); } catch (error) { log.warn(`[EdgeSync] PROMPT.ECHO(pre) failed: ${errorText(error)}`); }
+    const metaWithSource = { ...(cmd._meta || {}), 'codebuddy.ai/promptSource': 'edge-sync', 'codebuddy.ai/userMessageId': preGeneratedUserMessageId, 'codebuddy.ai': { ...(cmd._meta?.['codebuddy.ai'] || {}), userMessageId: preGeneratedUserMessageId } };
+    const result = await ctx.deps.submitPrompt(cmd.sessionId, contentBlocks, metaWithSource, promptOpts);
+    const effectiveSessionId = result && typeof result === 'object' && 'sessionId' in result ? result.sessionId : cmd.sessionId;
+    const cliUserMessageId = result && typeof result === 'object' && 'userMessageId' in result ? result.userMessageId : undefined;
+    if (effectiveSessionId) ctx.bindTurnTraceMessages?.(effectiveSessionId, cliUserMessageId ? [preGeneratedUserMessageId, cliUserMessageId] : [preGeneratedUserMessageId]);
+    if (!cmd.sessionId && effectiveSessionId) try { echo(effectiveSessionId, cliUserMessageId || preGeneratedUserMessageId); } catch (error) { edgeLog('AUTO_CREATE_ECHO_FAIL', `err=${errorText(error)}`); }
+    edgeLog('PROMPT_SUBMIT_OK', `sid=${effectiveSessionId || '(none)'} userMessageId=${cliUserMessageId || '(none)'}`);
+    return { success: true, sessionId: effectiveSessionId };
+  } catch (error) {
+    log.warn(`[EdgeSync] PROMPT.SUBMIT failed: ${errorText(error)}`);
+    const errorCode = typeof error?.code === 'number' ? error.code : typeof error?.bizCode === 'number' ? error.bizCode : undefined;
+    const errorInfo = { message: errorText(error) };
+    if (errorCode !== undefined) errorInfo.code = errorCode;
+    if (error?.data !== undefined) errorInfo.details = error.data;
+    publishPromptError(ctx, cmd.sessionId, error);
+    edgeLog('PROMPT_SUBMIT_FAIL', `err=${errorText(error)}`);
+    return { success: false, error: errorInfo };
+  }
+}
+
 async function handleSessionStop(ctx, cmd) {
   const log = logger(ctx);
   log.info(`[EdgeSync] STOP: sid=${cmd.sessionId} commandId=${cmd.commandId}`);
@@ -75,4 +132,4 @@ async function handleGetSkills(ctx, cmd) {
   catch (error) { log.warn(`[EdgeSync] GET_SKILLS failed: ${errorText(error)}`); return { success: false }; }
 }
 
-module.exports = Object.freeze({ handleSessionCreate, handleSessionStop, handleGetAutomations, handleGetTaskArtifacts, handleGetModels, handleGetSessionConfig, handleGetSkills });
+module.exports = Object.freeze({ handleSessionCreate, handlePromptSubmit, handleSessionStop, handleGetAutomations, handleGetTaskArtifacts, handleGetModels, handleGetSessionConfig, handleGetSkills });
