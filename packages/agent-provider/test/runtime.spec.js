@@ -32,6 +32,7 @@ const {
   beginAgentTurn,
   finishAgentLoop,
   normalizeMaxTurns,
+  compactAgentContext,
   runAgentTurn,
   isTerminalStopReason,
   AssistantMessage,
@@ -85,6 +86,18 @@ async function main() {
   loopSession.status = 'running';
   assert.strictEqual(finishAgentLoop(loopState), undefined);
   assert.strictEqual(loopSession.status, 'max_turns');
+  const compactSession = new AgentSession({ messages: [
+    { role: 'user', content: 'a'.repeat(120) },
+    { role: 'assistant', content: 'b'.repeat(120) },
+    { role: 'user', content: 'latest' },
+  ] });
+  const compactResult = await compactAgentContext(compactSession, {
+    contextWindow: 80, reserveTokens: 0, compactionThreshold: 0.5, keepRecentMessages: 1,
+    summarizeContext: async (messages) => ({ role: 'assistant', type: 'summary', content: `summary:${messages.length}` }),
+  });
+  assert.strictEqual(compactResult.compacted, true);
+  assert.strictEqual(compactResult.boundary.type, 'compact_boundary');
+  assert.strictEqual(compactSession.messages[0].type, 'summary');
   assert.strictEqual(normalizeProjectInvitationRole('admin'), 'admin');
   assert.strictEqual(normalizeProjectInvitationRole('unknown'), 'viewer');
   assert.strictEqual(normalizeProjectInvitationStatus('approved'), 'approved');

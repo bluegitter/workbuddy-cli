@@ -2,6 +2,7 @@
 
 const { HookEvent } = require('./hook-registry');
 const { runAgentTurn } = require('./agent-turn');
+const { compactAgentContext } = require('./agent-compaction');
 const {
   beginAgentTurn,
   createAgentLoopState,
@@ -15,9 +16,10 @@ async function runAgentLoop(session, runtime) {
   await runtime.hooks?.run(HookEvent.SESSION_START, { session });
   try {
     while (beginAgentTurn(state)) {
-      if (typeof runtime.compactContext === 'function') {
-        await runtime.compactContext(session, runtime);
-      }
+      const compact = typeof runtime.compactContext === 'function'
+        ? await runtime.compactContext(session, runtime)
+        : await compactAgentContext(session, runtime);
+      if (compact?.boundary) session.metadata.lastCompaction = compact.boundary;
       const turnResult = await runAgentTurn(session, runtime);
       recordAgentTurn(state, turnResult);
       if (turnResult.completed) {

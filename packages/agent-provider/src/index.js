@@ -12,6 +12,7 @@ module.exports = Object.freeze({
   ...require("./source/provider-registry.js"),
   ...require("./runtime/agent-loop"),
   ...require("./runtime/agent-loop-state"),
+  ...require("./runtime/agent-compaction"),
   ...require("./runtime/agent-turn"),
   ...require("./runtime/agent-session"),
   ...require("./runtime/context-builder"),
