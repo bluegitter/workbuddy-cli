@@ -10,4 +10,8 @@ module.exports = Object.freeze({
   ...require("./runtime/serialization"),
   ...require("./runtime/async-utils"),
   ...require("./runtime/schema-helpers"),
+  ...require("./runtime/event"),
+  ...require("./runtime/emitter"),
+  ...require("./runtime/disposable"),
+  ...require("./runtime/promise-util"),
 });

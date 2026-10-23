@@ -99,6 +99,12 @@ const {
   cloneSerializable,
   raceCancellationError,
   retry,
+  Event,
+  Emitter,
+  AsyncEmitter,
+  Disposable,
+  DisposableCollection,
+  Deferred,
   getLiteralValue,
   getObjectShape,
   getParseErrorMessage,
@@ -1176,6 +1182,31 @@ async function main() {
   const deferred = new DeferredPromise();
   deferred.complete('done');
   assert.strictEqual(await deferred.promise, 'done');
+  const emitter = new Emitter();
+  const emitted = [];
+  const subscription = emitter.event((value) => emitted.push(value));
+  emitter.fire('one');
+  subscription.dispose();
+  emitter.fire('two');
+  assert.deepStrictEqual(emitted, ['one']);
+  const mapped = [];
+  const mappedEmitter = new Emitter();
+  Event.map(mappedEmitter.event, (value) => value * 2)((value) => mapped.push(value));
+  mappedEmitter.fire(3);
+  assert.deepStrictEqual(mapped, [6]);
+  const asyncEmitter = new AsyncEmitter();
+  const asyncEvents = [];
+  asyncEmitter.event((event) => { asyncEvents.push(event.value); event.waitUntil(Promise.resolve()); });
+  await asyncEmitter.fire({ value: 'async' });
+  assert.deepStrictEqual(asyncEvents, ['async']);
+  const collection = new DisposableCollection();
+  let disposed = 0;
+  collection.push(Disposable.create(() => { disposed += 1; }));
+  collection.dispose();
+  assert.strictEqual(disposed, 1);
+  const deferredValue = new Deferred();
+  deferredValue.resolve('value');
+  assert.strictEqual(await deferredValue.promise, 'value');
 
   const serverEvents = [];
   const sessions = new SessionStore({ clock: (() => { let now = 100; return () => ++now; })() });
