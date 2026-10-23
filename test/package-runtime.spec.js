@@ -62,6 +62,7 @@ const { FileBackedLegacyLocalStorageMigrationService, createAppServerDesktopHost
 const { markDaemon, resolveProductName, resolveStoredSessionTitle } = require('../packages/workbuddy-server/src');
 const { configureDaemonNetworkProxy } = require('../packages/workbuddy-server/src');
 const { createTencentDocsEngineProvider } = require('../packages/workbuddy-server/src');
+const { OnlineDocPreviewRegistry, OnlineDocumentSelectionStore, truncateForBroadcast } = require('../packages/workbuddy-server/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
@@ -1077,6 +1078,19 @@ async function main() {
   const engineProvider = createTencentDocsEngineProvider({ documentService: { canEnsureEngineStart: async () => true, isEngineStarted: () => engineStarted, ensureEngineStarted: async () => { engineStarted = true; }, getEnginePort: () => 4321 }, buildLocalMcpEnv: (port) => ({ MCP_PORT: String(port) }), logger: { info: (_message, details) => engineLogs.push(details) } });
   assert.deepStrictEqual(await engineProvider.resolveAgentEnv(), { MCP_PORT: '4321', editor_sdk_port: '4321' });
   assert.strictEqual(engineLogs[0].engineStarted, true);
+  const previewRegistry = new OnlineDocPreviewRegistry({ logger: { debug: () => {} } });
+  previewRegistry.register('file-1', ' session-1 ');
+  assert.deepStrictEqual(previewRegistry.getRecordByFileId('file-1'), { sessionId: 'session-1' });
+  previewRegistry.clearSession('session-1');
+  assert.strictEqual(previewRegistry.getSessionByFileId('file-1'), undefined);
+  assert.strictEqual(truncateForBroadcast('x'.repeat(300)).length, 241);
+  const selectionEvents = [];
+  const selectionStore = new OnlineDocumentSelectionStore({ isTencentOnlineFilePath: (value) => value.startsWith('tdoc://'), logger: { warn: () => {}, info: () => {}, debug: () => {} } });
+  selectionStore.onSelectionChange((event) => selectionEvents.push(event));
+  selectionStore.reportSelection({ filePath: 'tdoc://file-1', sessionId: 'session-1', fileType: 'doc', selection: { text: 'hello', rangeId: 'r1' } });
+  assert.strictEqual(selectionStore.getActiveSelection('session-1').selection.text, 'hello');
+  selectionStore.reportSelection({ filePath: 'tdoc://file-1', sessionId: 'session-1', fileType: 'doc', selection: null });
+  assert.strictEqual(selectionEvents.length, 2);
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });

@@ -1,4 +1,6 @@
 const require_chunk = require("./chunk.js");
+const { getOnlineDocPreviewRegistry: getOnlineDocPreviewRegistryRuntime } = require("../runtime/online-doc-preview-registry.js");
+const { getOnlineDocumentSelectionStore: getOnlineDocumentSelectionStoreRuntime } = require("../runtime/online-document-selection-store.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -143,6 +145,7 @@ var OnlineDocPreviewRegistry = class {
 };
 var sharedRegistry = null;
 function getOnlineDocPreviewRegistry() {
+	return getOnlineDocPreviewRegistryRuntime({ logger: require_workbuddy_auth_product_coordinator.windowLog });
 	sharedRegistry ??= new OnlineDocPreviewRegistry();
 	return sharedRegistry;
 }
@@ -266,6 +269,10 @@ function truncateSelectionTextForBroadcast(selection) {
 }
 var sharedStore = null;
 function getOnlineDocumentSelectionStore() {
+	return getOnlineDocumentSelectionStoreRuntime({
+		isTencentOnlineFilePath: require_workbuddy_auth_product_coordinator.isTencentOnlineFilePath,
+		logger: require_workbuddy_auth_product_coordinator.windowLog
+	});
 	sharedStore ??= new OnlineDocumentSelectionStore();
 	return sharedStore;
 }

@@ -160,4 +160,6 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-desired-configs"),
   ...require("./runtime/connector-sync"),
   ...require("./runtime/connector-mcp-client-pool"),
+  ...require("./runtime/online-doc-preview-registry"),
+  ...require("./runtime/online-document-selection-store"),
 });
