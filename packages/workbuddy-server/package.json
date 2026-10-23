@@ -1,1 +1,1 @@
-{"name":"@workbuddy/workbuddy-server","private":true,"version":"5.3.8","main":"src/index.js","dependencies":{"@larksuiteoapi/node-sdk":"^1.60.0","@tencent/tencent-docs-ai-engine":"0.2.112-wb","@wecom/aibot-node-sdk":"1.0.2","better-sqlite3":"^12.8.0"}}
+{"name":"@workbuddy/workbuddy-server","private":true,"version":"5.3.8","main":"src/index.js","dependencies":{"@larksuiteoapi/node-sdk":"^1.60.0","@modelcontextprotocol/sdk":"1.32.1","@tencent/tencent-docs-ai-engine":"0.2.112-wb","@wecom/aibot-node-sdk":"1.0.2","better-sqlite3":"^12.8.0","zod":"^4.0.0"}}
