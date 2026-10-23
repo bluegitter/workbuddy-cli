@@ -413,6 +413,19 @@ async function main() {
   assert.strictEqual(childResult.session.project.id, 'project');
   assert.strictEqual(childResult.session.status, 'completed');
 
+  let failedSubagentStop;
+  hooks.register(HookEvent.SUBAGENT_STOP, (payload) => {
+    if (payload.child.agentType === 'failing-worker') failedSubagentStop = payload;
+  });
+  const failingSubagents = new SubagentRunner({
+    sessions,
+    hooks,
+    runtimeFactory: async () => ({ model: { complete: async () => { throw new Error('child failure'); } }, tools, permissions: new PermissionController() }),
+  });
+  await assert.rejects(() => failingSubagents.run(parent, { name: 'failing-worker' }, 'fail'));
+  assert.strictEqual(failedSubagentStop.child.status, 'failed');
+  assert.strictEqual(failedSubagentStop.error.message, 'child failure');
+
   assert.strictEqual(require('../src').safeFilenameId('../session:a'), '___session_a');
   assert.strictEqual(require('../src').toolSummary('Read', { file_path: '/tmp/a.js' }), 'Reading /tmp/a.js');
   assert.deepStrictEqual(

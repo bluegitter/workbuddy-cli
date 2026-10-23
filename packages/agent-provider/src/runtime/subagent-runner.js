@@ -25,11 +25,18 @@ class SubagentRunner {
       child.abort(startHook.reason);
       return { session: child, result: undefined, stopped: true, reason: startHook.reason };
     }
+    let result;
+    let error;
     try {
-      const result = await runAgentLoop(child, await this.runtimeFactory({ parent, child, definition }));
-      await this.hooks?.run(HookEvent.SUBAGENT_STOP, { parent, child, definition, result });
+      result = await runAgentLoop(child, await this.runtimeFactory({ parent, child, definition }));
       return { session: child, result };
+    } catch (caught) {
+      error = caught;
+      child.status = 'failed';
+      child.error = caught;
+      throw caught;
     } finally {
+      await this.hooks?.run(HookEvent.SUBAGENT_STOP, { parent, child, definition, result, error });
       parent.abortController.signal.removeEventListener('abort', abortChild);
     }
   }
