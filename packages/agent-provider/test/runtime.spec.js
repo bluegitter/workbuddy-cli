@@ -21,6 +21,8 @@ const {
   parsePermissionRule,
   evaluatePermissionRules,
   SessionManager,
+  buildSessionLineage,
+  isSubagent,
   SubagentRunner,
   ToolRegistry,
   mapWithConcurrency,
@@ -110,6 +112,12 @@ async function main() {
   ], conservative).map((batch) => batch.concurrent), [false, true]);
 
   const session = new AgentSession({ messages: [{ role: 'user', content: 'read' }] });
+  const lineageManager = new SessionManager();
+  const lineageParent = lineageManager.create({ id: 'parent' });
+  const lineageChild = lineageManager.create({ id: 'child', parentSessionId: lineageParent.id, agentType: 'worker' });
+  assert.strictEqual(isSubagent(lineageChild), true);
+  assert.deepStrictEqual(buildSessionLineage(lineageChild, lineageManager.sessions).map(({ id }) => id), ['parent', 'child']);
+  assert.deepStrictEqual(lineageManager.childrenOf('parent').map(({ id }) => id), ['child']);
   const connectionListeners = new Map();
   const connection = {
     isInitialized: true, state: 'ready', transport: 'local', capabilities: { prompt: true },

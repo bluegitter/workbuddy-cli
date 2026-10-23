@@ -15,12 +15,16 @@ class SubagentRunner {
       messages: [{ type: 'user', role: 'user', content: prompt }],
       project: parent.project,
       permissionMode: definition.permissionMode || parent.permissionMode,
+      parentSessionId: parent.id,
+      agentType: definition.agentType || definition.name || 'general-purpose',
     });
-    child.parentSessionId = parent.id;
-    child.agentType = definition.name || definition.agentType || 'general-purpose';
     const abortChild = () => child.abort('parent cancelled');
     parent.abortController.signal.addEventListener('abort', abortChild, { once: true });
-    await this.hooks?.run(HookEvent.SUBAGENT_START, { parent, child, definition });
+    const startHook = await this.hooks?.run(HookEvent.SUBAGENT_START, { parent, child, definition });
+    if (startHook?.stopped) {
+      child.abort(startHook.reason);
+      return { session: child, result: undefined, stopped: true, reason: startHook.reason };
+    }
     try {
       const result = await runAgentLoop(child, await this.runtimeFactory({ parent, child, definition }));
       await this.hooks?.run(HookEvent.SUBAGENT_STOP, { parent, child, definition, result });
