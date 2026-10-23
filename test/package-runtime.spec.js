@@ -388,6 +388,8 @@ const {
   escapeHtml,
   ConnectorServiceState,
   ConnectorAuthCoordinator,
+  calculateMcpConfigHash,
+  listMcpServers,
   normalizePersistentState,
   buildEnabledPluginIndex,
   discoverPluginMcpConfigs,
@@ -1866,6 +1868,18 @@ async function main() {
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, undefined);
   await connectorFacade.disconnect('docs');
   assert.deepStrictEqual(coordinatorEvents.slice(-1), ['stop:docs']);
+  const listing = listMcpServers({
+    customConfig: { mcpServers: { docs: { url: 'https://docs', disabledTools: ['write'] } } },
+    pluginConfigs: { demo: { config: { command: 'node', args: ['server.js'] }, sourcePluginId: 'demo@market' } },
+    getClientEntry: (id) => ({ status: 'connected', tools: [{ name: id.endsWith('docs') ? 'write' : 'run' }] }),
+    isApproved: () => true,
+    resolveDisabledToolNames: (_name, names) => new Set(names || []),
+  });
+  assert.strictEqual(listing.length, 2);
+  assert.strictEqual(listing[0].tools[0].enabled, false);
+  assert.strictEqual(listing[0].trustLevel, 'gray');
+  assert.strictEqual(listing[1].configSource, 'plugin');
+  assert.strictEqual(typeof calculateMcpConfigHash({ url: 'https://docs/path' }), 'string');
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, true);
   fs.rmSync(facadeRoot, { recursive: true, force: true });
   proxyServer.stop();

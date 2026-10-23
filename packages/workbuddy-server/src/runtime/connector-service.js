@@ -5,6 +5,7 @@ const { mergeConnectorMcpServers, writeConnectorMcpConfig } = require('./connect
 const { ConnectorServiceState } = require('./connector-service-state');
 const { disableConnectorSkills } = require('./connector-skill-state');
 const { ConnectorAuthCoordinator } = require('./connector-auth-coordinator');
+const { listMcpServers } = require('./mcp-server-listing');
 
 /**
  * Readable composition root for connector operations. The concrete auth/MCP
@@ -35,6 +36,13 @@ class ConnectorService {
       logger: this.logger,
     });
     this.marketplace = options.marketplace || (options.marketplaceCache ? new ConnectorMarketplaceService({ cache: options.marketplaceCache, ...options.marketplaceOptions }) : undefined);
+    this.readCustomMcpConfig = options.readCustomMcpConfig || (() => ({ mcpServers: {} }));
+    this.readPluginMcpConfigs = options.readPluginMcpConfigs || (() => ({}));
+    this.getClientEntry = options.getClientEntry || (() => undefined);
+    this.getTrustLists = options.getTrustLists || (() => ({ whitelist: [], blacklist: [] }));
+    this.isUserServerApproved = options.isUserServerApproved || (() => false);
+    this.getLastApprovedAt = options.getLastApprovedAt || (() => undefined);
+    this.resolveDisabledToolNames = options.resolveDisabledToolNames || ((name, configured) => new Set([...(Array.isArray(configured) ? configured : []), ...(this.persistentState.disabledToolsOverrides?.[name] || [])]));
   }
 
   async init() {
@@ -64,6 +72,21 @@ class ConnectorService {
   }
 
   async sync(desiredConfigs) { return this.state.sync(desiredConfigs); }
+
+  listMcpServers() {
+    const trust = this.getTrustLists() || {};
+    return listMcpServers({
+      customConfig: this.readCustomMcpConfig(),
+      pluginConfigs: this.readPluginMcpConfigs(),
+      getClientEntry: this.getClientEntry,
+      customPrefix: 'custom-mcp:',
+      whitelist: trust.whitelist || trust.WHITELIST_HASHES,
+      blacklist: trust.blacklist || trust.BLACKLIST_HASHES,
+      isApproved: this.isUserServerApproved,
+      lastApprovedAt: this.getLastApprovedAt,
+      resolveDisabledToolNames: this.resolveDisabledToolNames,
+    });
+  }
 
   writeConnectorMcpConfig() {
     if (!this.connectorMcpConfigPath) return undefined;
