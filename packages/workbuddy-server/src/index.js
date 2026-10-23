@@ -51,6 +51,7 @@ module.exports = Object.freeze({
   ...require("./runtime/app-server-runtime"),
   ...require("./runtime/edge-sync-channel"),
   ...require("./runtime/task-status"),
+  ...require("./runtime/task-conversation"),
   ...require("./runtime/session-paths"),
   ...require("./runtime/edsdk-parser"),
   ...require("./runtime/log-details"),

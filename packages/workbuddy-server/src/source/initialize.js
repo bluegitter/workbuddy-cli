@@ -28,6 +28,7 @@ const automationErrorRuntime = require("../runtime/automation-error.js");
 const automationOwnerRuntime = require("../runtime/automation-owner.js");
 const automationToolPolicyRuntime = require("../runtime/automation-tool-policy.js");
 const mediaLifecycleRuntime = require("../runtime/media-lifecycle-utils.js");
+const taskConversationRuntime = require("../runtime/task-conversation.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -57325,21 +57326,7 @@ var ProjectService = class {
 *   用于来源筛选 dropdown、来源标识展示和打开/删除/重命名分流。
 * - `createdBy` 为空字符串：本地任务无 uid，仅作为展示字段兜底，不作为任务类型判据。
 */
-function sessionRecordToTaskConversation(record) {
-	const createdAt = typeof record.createdAt === "number" ? new Date(record.createdAt).toISOString() : (/* @__PURE__ */ new Date(0)).toISOString();
-	const lastActivityAt = typeof record.lastActivityAt === "number" ? new Date(record.lastActivityAt).toISOString() : typeof record.updatedAt === "number" ? new Date(record.updatedAt).toISOString() : createdAt;
-	return {
-		conversationId: record.id,
-		title: record.name ?? "",
-		status: record.status ?? "pending",
-		createdBy: "",
-		createdAt,
-		lastActivityAt,
-		role: "creator",
-		conversationOrigin: "local",
-		isCollaborative: false
-	};
-}
+const sessionRecordToTaskConversation = taskConversationRuntime.sessionRecordToTaskConversation;
 //#endregion
 //#region ../../packages/workbuddy-server/src/project/handlers.ts
 function registerProjectHandlers(registry, deps) {

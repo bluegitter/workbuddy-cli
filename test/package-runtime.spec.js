@@ -55,6 +55,7 @@ const { buildStartupSpans: buildStartupSpansFromPackage } = require('../packages
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const projectHttpSource = require('../packages/workbuddy-server/src/source/http.js');
 const { HANDOFF_CANARY_HEADERS, ROUTE_PREFIX, withAcceptLanguageHeader } = require('../packages/workbuddy-server/src');
+const { sessionRecordToTaskConversation } = require('../packages/workbuddy-server/src');
 const mcpSchemaSource = require('../packages/workbuddy-server/src/runtime/mcp-schema.js');
 const { EMPTY_COMPLETION_RESULT, createCompletionResult, getZodSchemaObject, isZodRawShapeCompat, isZodSchemaInstance, isZodTypeLike, promptArgumentsFromSchema } = require('../packages/workbuddy-server/src');
 const { startDaemonAppServerEntry } = require('../packages/workbuddy-server/src');
@@ -2526,6 +2527,12 @@ async function main() {
   assert.deepStrictEqual(extractMediaPathsFromCommand('python render.py /tmp/out.png', '/tmp'), ['/tmp/out.png']);
   assert.deepStrictEqual(extractImageToolLocalPaths({ type: 'image_gen_tool_result', images: [{ localPath: '/tmp/a.png' }] }), ['/tmp/a.png']);
   assert.strictEqual(extractPreviewUrlLocalMediaPath('file:///tmp/a.png'), '/tmp/a.png');
+  assert.deepStrictEqual(sessionRecordToTaskConversation({ id: 'local-1', name: 'Draft', status: 'working', createdAt: 1000, updatedAt: 2000 }), {
+    conversationId: 'local-1', title: 'Draft', status: 'working', createdBy: '',
+    createdAt: '1970-01-01T00:00:01.000Z', lastActivityAt: '1970-01-01T00:00:02.000Z',
+    role: 'creator', conversationOrigin: 'local', isCollaborative: false,
+  });
+  assert.strictEqual(sessionRecordToTaskConversation({}).lastActivityAt, '1970-01-01T00:00:00.000Z');
   const persistence = createWorkbuddySessionPersistence({
     celljs: { name: 'cell' },
     createRecordStore: (_celljs, options) => ({ kind: 'record', user: options.getCurrentUserId() }),
