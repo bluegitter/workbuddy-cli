@@ -363,6 +363,8 @@ const {
   normalizeArgs,
   resolveSessionUpdate,
 } = require('../packages/workbuddy-server/src');
+const acpNode = require('../packages/agent-client-protocol/src/source/acp.js');
+const acpRenderer = require('../packages/agent-client-protocol/src/source/acp-renderer.js');
 const { OAuthCipher, createHeader, isCipherEnvelope, ConnectorOAuthMasterKeyStore, readOAuthV3, writeOAuthV3, ConnectorOAuthStore, buildQueryString, callConnectorOauthApi, mapUserConnector: mapOauthUserConnector, verifyFileAcl, tryRepairAcl, parseIcaclsPrincipals, isBroadPrincipal } = require('../packages/authentication/src');
 const {
   ArtifactIndex,
@@ -521,6 +523,10 @@ const {
 } = require('../packages/authentication/src');
 
 async function main() {
+  assert.strictEqual(acpNode.PROTOCOL_VERSION, 1);
+  assert.strictEqual(acpRenderer.PROTOCOL_VERSION, 1);
+  assert.strictEqual(typeof acpNode.RpcConnection, 'function');
+  assert.strictEqual(typeof acpRenderer.ndJsonStream, 'function');
   assert.strictEqual(resolveSessionUpdate('message', 'assistant'), 'agent_message_chunk');
   assert.deepStrictEqual(normalizeArgs('{"command":"echo hi"}'), { command: 'echo hi' });
   assert.deepStrictEqual(normalizeArgs('{bad json'), {});
