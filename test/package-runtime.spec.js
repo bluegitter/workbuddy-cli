@@ -1926,6 +1926,8 @@ async function main() {
   assert.strictEqual(mcpPool.getToolServerMap()['docs_docs-tool'], 'docs');
   assert.deepStrictEqual(await mcpPool.callTool('docs_docs-tool', {}), { content: [{ type: 'text', text: 'docs-tool' }] });
   assert.deepStrictEqual(await mcpPool.readResourceForConnector('docs', 'docs://resource'), { contents: [{ uri: 'docs://resource' }] });
+  assert.deepStrictEqual(mcpPool.getMcpInvokeDims('docs_docs-tool'), { mcpServer: 'docs', isBuiltin: false });
+  assert.deepStrictEqual(mcpPool.getMcpInvokeDims('builtin'), { mcpServer: 'builtin', isBuiltin: true });
   const poolSync = await mcpPool.sync({ mail: { url: 'https://mail' }, docs: { url: 'https://docs-2' } });
   assert.deepStrictEqual(poolSync.added, ['mail']);
   assert.deepStrictEqual(poolSync.reconnected, ['docs']);

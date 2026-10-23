@@ -138,6 +138,15 @@ class ConnectorMcpClientPool {
     if (typeof entry.client.readResource !== 'function') throw new Error(`Connector "${configId}" does not support resources/read`);
     return entry.client.readResource({ uri });
   }
+
+  getMcpInvokeDims(toolName) {
+    const builtin = this.builtinTools.has(toolName);
+    const configId = builtin ? undefined : this.resolveToolConfigId(toolName);
+    return {
+      mcpServer: builtin ? 'builtin' : configId?.replace(/^(connector|plugin-mcp|custom-mcp|project-mcp):/, '') || 'unknown',
+      isBuiltin: builtin,
+    };
+  }
 }
 
 function sameConfig(left, right) { return JSON.stringify(left) === JSON.stringify(right); }
