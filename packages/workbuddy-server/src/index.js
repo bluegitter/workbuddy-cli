@@ -135,4 +135,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-reconnect-runner"),
   ...require("./runtime/connector-token-refresh-service"),
   ...require("./runtime/connector-confirmation"),
+  ...require("./runtime/connector-proxy-sessions"),
 });

@@ -382,6 +382,7 @@ const {
   ToolRoutingTable,
   shouldHideToolsFromCli,
   runConnectorReconnect,
+  ConnectorProxySessionRegistry,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1670,6 +1671,15 @@ async function main() {
     onStatus: (_id, status) => reconnectAuthEvents.push(status),
   }), false);
   assert.deepStrictEqual(reconnectAuthEvents, ['invalid_grant', 'unauthorized']);
+  const sessionEvents = [];
+  const sentNotifications = [];
+  const sessionRegistry = new ConnectorProxySessionRegistry({ logger: { info: (message) => sessionEvents.push(message), warn: () => {} } });
+  sessionRegistry.add('mcp-1', { transport: { send: (value) => sentNotifications.push(value), close: () => sessionEvents.push('transport-close') }, server: { close: () => sessionEvents.push('server-close') } });
+  assert.strictEqual(sessionRegistry.size, 1);
+  assert.strictEqual(sessionRegistry.broadcast({ method: 'notifications/tools/list_changed' }), 1);
+  assert.strictEqual(sentNotifications[0].method, 'notifications/tools/list_changed');
+  assert.strictEqual(sessionRegistry.remove('mcp-1'), true);
+  assert.strictEqual(sessionRegistry.size, 0);
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
   await expertCache.saveManifest(cachedManifest, 'source-1');
