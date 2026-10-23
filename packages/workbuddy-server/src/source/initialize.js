@@ -10,6 +10,7 @@ const edgeSyncTranslateRuntime = require("../runtime/edge-sync-translate.js");
 const edgeSyncTracingRuntime = require("../runtime/edge-sync-tracing.js");
 const edgeSyncJsonlRuntime = require("../runtime/edge-sync-jsonl.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
+const appServerRuntime = require("../runtime/app-server-runtime.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -216744,7 +216745,7 @@ function createMediaLifecycleLogger(logger) {
 //#endregion
 //#region ../../packages/workbuddy-server/src/server/app-server-entry-runtime.ts
 function assertWorkbuddyAppServerStdioMode(argv) {
-	if (!argv.includes("--stdio")) throw new Error("Missing --stdio");
+	return appServerRuntime.assertWorkbuddyAppServerStdioMode(argv);
 }
 function configureWorkbuddyAppServerRuntimeContextFromEnv(platform) {
 	require_runtime_context.configureWorkbuddyRuntimeContext({
@@ -216756,41 +216757,22 @@ function configureWorkbuddyAppServerRuntimeContextFromEnv(platform) {
 	});
 }
 function createWorkbuddyAppServerPlatformFromEnv(options = {}) {
-	const execPath = options.execPath ?? process.execPath;
-	const resourcesPath = process.env.WORKBUDDY_RESOURCES_PATH?.trim() || options.processResourcesPath || node_path.dirname(execPath);
-	return {
-		appRootPath: require_runtime_context.getWorkbuddyRuntimeAppPath(),
-		resourcesPath,
-		dataDir: require_runtime_context.getWorkbuddyRuntimeUserDataDir(),
-		configDir: require_runtime_context.getWorkbuddyRuntimeConfigDir(),
-		isPackaged: readBooleanEnv("WORKBUDDY_IS_PACKAGED"),
-		appVersion: require_runtime_context.getWorkbuddyRuntimeAppVersion() || "0.0.0",
-		osPlatform: options.osPlatform ?? process.platform,
-		appLocale: () => require_runtime_context.getWorkbuddyRuntimeLocale(),
-		openExternal: async () => {
-			throw new Error("WorkBuddy app-server platform openExternal is not available; use DesktopHost IPC bridge");
-		},
-		openPath: async () => {
-			throw new Error("WorkBuddy app-server platform openPath is not available; use DesktopHost IPC bridge");
-		},
-		showItemInFolder: () => {
-			throw new Error("WorkBuddy app-server platform showItemInFolder is not available; use DesktopHost IPC bridge");
-		},
-		showOpenDialog: async () => ({
-			canceled: true,
-			filePaths: []
-		}),
-		showSaveDialog: async () => ({ canceled: true }),
-		showMessageBox: async () => ({ response: 0 }),
-		readClipboard: () => ""
-	};
+	return appServerRuntime.createWorkbuddyAppServerPlatformFromEnv({
+		...options,
+		runtime: {
+			appRootPath: require_runtime_context.getWorkbuddyRuntimeAppPath(),
+			dataDir: require_runtime_context.getWorkbuddyRuntimeUserDataDir(),
+			configDir: require_runtime_context.getWorkbuddyRuntimeConfigDir(),
+			appVersion: require_runtime_context.getWorkbuddyRuntimeAppVersion(),
+			locale: require_runtime_context.getWorkbuddyRuntimeLocale()
+		}
+	});
 }
 function createNoopWorkbuddyAppServerWindowManager() {
-	return { broadcast() {} };
+	return appServerRuntime.createNoopWorkbuddyAppServerWindowManager();
 }
 function readBooleanEnv(key) {
-	const value = process.env[key]?.trim().toLowerCase();
-	return value === "1" || value === "true" || value === "yes";
+	return appServerRuntime.readBooleanEnv(process.env[key]);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/server/app-server-stdio-lifecycle.ts
