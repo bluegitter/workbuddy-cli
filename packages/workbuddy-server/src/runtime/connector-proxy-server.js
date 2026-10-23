@@ -4,7 +4,7 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 const { ConnectorProxySessionRegistry } = require('./connector-proxy-sessions');
 const { extractHostname, isAllowedLoopbackHost, isValidProxyBearer, validateOrigin } = require('./connector-proxy-security');
-const { readHeader } = require('./connector-proxy-utils');
+const { matchesUriTemplate, readHeader } = require('./connector-proxy-utils');
 
 /**
  * Readable MCP proxy server boundary. The MCP SDK constructors and request
@@ -73,13 +73,56 @@ class ConnectorProxyServer {
 
   async registerHandlers(mcpServer, getContext) {
     const server = mcpServer.server || mcpServer;
-    const { ListToolsRequestSchema, CallToolRequestSchema } = this.schemas;
+    const { ListToolsRequestSchema, CallToolRequestSchema, ListResourcesRequestSchema, ListResourceTemplatesRequestSchema, ReadResourceRequestSchema } = this.schemas;
     if (ListToolsRequestSchema) server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: this.proxy.listAllTools?.(getContext()) || [] }));
     if (CallToolRequestSchema) server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
       const { name, arguments: args, _meta: meta } = request.params || {};
       const result = await this.proxy.callTool(name, args || {}, { ...getContext(), meta }, extra?.onProgress);
       return normalizeToolResult(result, this.proxy.getMcpInvokeDims?.(name));
     });
+    if (ListResourcesRequestSchema) server.setRequestHandler(ListResourcesRequestSchema, async () => ({ resources: this.listResources() }));
+    if (ListResourceTemplatesRequestSchema) server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({ resourceTemplates: this.listResourceTemplates() }));
+    if (ReadResourceRequestSchema) server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      const uri = request.params?.uri;
+      if (typeof uri !== 'string' || !uri) throw new Error('resources/read: missing uri');
+      const configId = this.findConfigIdForResourceUri(uri);
+      if (!configId) throw new Error(`resources/read: no connector owns resource URI "${uri}"`);
+      return this.proxy.readResourceForConnector(configId, uri);
+    });
+  }
+
+  listResources() {
+    const resources = [];
+    for (const entry of this.proxy.getAllClientEntries?.() || []) {
+      const value = Array.isArray(entry) ? entry[1] : entry;
+      if (value?.status !== 'connected') continue;
+      for (const resource of value.resources || []) resources.push({ uri: resource.uri, name: resource.name || resource.uri, description: resource.description, mimeType: resource.mimeType });
+    }
+    return resources;
+  }
+
+  listResourceTemplates() {
+    const templates = [];
+    for (const entry of this.proxy.getAllClientEntries?.() || []) {
+      const value = Array.isArray(entry) ? entry[1] : entry;
+      if (value?.status !== 'connected') continue;
+      for (const template of value.resourceTemplates || []) templates.push({ uriTemplate: template.uriTemplate, name: template.name || template.uriTemplate, description: template.description, mimeType: template.mimeType });
+    }
+    return templates;
+  }
+
+  findConfigIdForResourceUri(uri) {
+    const entries = this.proxy.getAllClientEntries?.() || [];
+    for (const item of entries) {
+      const [configId, entry] = Array.isArray(item) ? item : [item.configId, item];
+      if (entry?.status === 'connected' && entry.resources?.some((resource) => resource.uri === uri)) return configId;
+    }
+    for (const item of entries) {
+      const [configId, entry] = Array.isArray(item) ? item : [item.configId, item];
+      if (entry?.status !== 'connected') continue;
+      if (entry.resourceTemplates?.some((template) => matchesUriTemplate(uri, template.uriTemplate))) return configId;
+    }
+    return undefined;
   }
 
   async handleRequest(req, res) {

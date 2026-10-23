@@ -1699,8 +1699,8 @@ async function main() {
   const proxyServer = new ConnectorProxyServer({
     McpServerCtor: FakeMcpServer,
     TransportCtor: FakeTransport,
-    schemas: { ListToolsRequestSchema: 'tools/list', CallToolRequestSchema: 'tools/call' },
-    proxy: { listAllTools: () => [{ name: 'search' }], callTool: async () => 'result', getMcpInvokeDims: () => ({ mcpServer: 'docs' }) },
+    schemas: { ListToolsRequestSchema: 'tools/list', CallToolRequestSchema: 'tools/call', ListResourcesRequestSchema: 'resources/list', ListResourceTemplatesRequestSchema: 'resources/templates/list', ReadResourceRequestSchema: 'resources/read' },
+    proxy: { listAllTools: () => [{ name: 'search' }], callTool: async () => 'result', getMcpInvokeDims: () => ({ mcpServer: 'docs' }), getAllClientEntries: () => new Map([['connector:docs', { status: 'connected', resources: [{ uri: 'docs://a', name: 'A' }], resourceTemplates: [{ uriTemplate: 'docs://items/{id}', name: 'Item' }] }]]), readResourceForConnector: async (configId, uri) => ({ contents: [{ uri, text: configId }] }) },
     randomBytes: () => Buffer.from('proxy-secret'),
     randomUUID: () => 'transport-1',
     createServer: () => ({ close() {} }),
@@ -1714,6 +1714,9 @@ async function main() {
   assert.strictEqual(proxyServer.sessions.has('session-1'), true);
   assert.deepStrictEqual(await handlerMap.get('tools/list')(), { tools: [{ name: 'search' }] });
   assert.deepStrictEqual(await handlerMap.get('tools/call')({ params: { name: 'search', arguments: {} } }), { content: [{ type: 'text', text: 'result' }], _meta: { 'workbuddy.ai/connectorServer': 'docs' } });
+  assert.deepStrictEqual(await handlerMap.get('resources/list')(), { resources: [{ uri: 'docs://a', name: 'A', description: undefined, mimeType: undefined }] });
+  assert.deepStrictEqual(await handlerMap.get('resources/templates/list')(), { resourceTemplates: [{ uriTemplate: 'docs://items/{id}', name: 'Item', description: undefined, mimeType: undefined }] });
+  assert.deepStrictEqual(await handlerMap.get('resources/read')({ params: { uri: 'docs://items/42' } }), { contents: [{ uri: 'docs://items/42', text: 'connector:docs' }] });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
