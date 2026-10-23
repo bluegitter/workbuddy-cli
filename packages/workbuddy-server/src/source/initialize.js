@@ -220999,6 +220999,7 @@ async function readJsonlPageByParentChain(jsonlPath, lastMessageId, limitTurns, 
 * 病态场景（末尾巨行）—— 最坏读全文件,几十 MB 也就几百 ms,远远好过"直接返回空"。
 */
 async function findLastMessageIdFromFile(jsonlPath) {
+	return edgeSyncJsonlRuntime.findLastMessageIdFromFile(jsonlPath);
 	const fsPromises = await import("node:fs/promises");
 	const fileSize = (await fsPromises.stat(jsonlPath)).size;
 	if (fileSize === 0) return;
@@ -221038,6 +221039,7 @@ async function findLastMessageIdFromFile(jsonlPath) {
 * 找到 id 返回字符串，否则返回 undefined（客户端翻页时 fallback 到文件末尾 lastMessageId）。
 */
 async function readIdAtBytePos(jsonlPath, bytePos) {
+	return edgeSyncJsonlRuntime.readIdAtBytePos(jsonlPath, bytePos);
 	const fsPromises = await import("node:fs/promises");
 	const stat = await fsPromises.stat(jsonlPath);
 	if (bytePos < 0 || bytePos >= stat.size) return;

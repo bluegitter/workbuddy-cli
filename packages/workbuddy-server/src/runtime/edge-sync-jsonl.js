@@ -91,6 +91,53 @@ async function extendToLineEnd(jsonlPath, startBytePos) {
   }
 }
 
+async function findLastMessageIdFromFile(jsonlPath) {
+  const fsPromises = require('fs').promises;
+  const fileSize = (await fsPromises.stat(jsonlPath)).size;
+  if (fileSize === 0) return undefined;
+  const fd = await fsPromises.open(jsonlPath, 'r');
+  let foundId;
+  try {
+    await iterateChunksBackward(fd, fileSize, ({ line }) => {
+      if (!line || isLikelyCustomItemLine(line)) return undefined;
+      const match = line.match(ID_REGEX);
+      if (match?.[1]) {
+        foundId = match[1];
+        return { stop: true };
+      }
+      return undefined;
+    }, ({ line }) => {
+      if (foundId || !line || isLikelyCustomItemLine(line)) return;
+      foundId = line.match(ID_REGEX)?.[1];
+    });
+    return foundId;
+  } finally {
+    await fd.close();
+  }
+}
+
+async function readIdAtBytePos(jsonlPath, bytePos) {
+  const fsPromises = require('fs').promises;
+  const stat = await fsPromises.stat(jsonlPath);
+  if (bytePos < 0 || bytePos >= stat.size) return undefined;
+  const backPad = 16;
+  const readStart = Math.max(0, bytePos - backPad);
+  const readLen = Math.min(32 * 1024, stat.size - readStart);
+  const fd = await fsPromises.open(jsonlPath, 'r');
+  try {
+    const buf = Buffer.alloc(readLen);
+    await fd.read(buf, 0, readLen, readStart);
+    const text = buf.toString('utf-8');
+    const anchor = Math.min(backPad, text.length);
+    const previousNewline = text.lastIndexOf('\n', anchor);
+    const lineStart = previousNewline >= 0 ? previousNewline + 1 : 0;
+    const newline = text.indexOf('\n', lineStart);
+    return (newline >= 0 ? text.slice(lineStart, newline) : text.slice(lineStart)).match(ID_REGEX)?.[1];
+  } finally {
+    await fd.close();
+  }
+}
+
 function estimateItemPayloadBytes(item, line) { return item && typeof item === 'object' && item._lazyLoad === true ? 512 : line.length; }
 function parseLineWithLazyLoad(line) {
   if (line.length <= LARGE_LINE_THRESHOLD) return JSON.parse(line);
@@ -104,4 +151,4 @@ function isLikelyUserMessageLine(line) { const head = line.length > 200 ? line.s
 function isLikelyCustomItemLine(line) { for (const type of CUSTOM_ITEM_TYPES) if (line.includes(`"type":"${type}"`)) return true; return false; }
 function checkPrevLineTombstone(prevLine) { if (!prevLine || !prevLine.includes(TOMBSTONE_MARK)) return { isTombstone: false }; return { isTombstone: true, forkPoint: prevLine.match(RE_TOMBSTONE_PARENT)?.[1] }; }
 
-module.exports = Object.freeze({ CHUNK_SIZE, MAX_ITEMS, MAX_BYTES, LARGE_LINE_THRESHOLD, LAZY_LOAD_TYPES, CUSTOM_ITEM_TYPES, ID_REGEX, estimateItemPayloadBytes, parseLineWithLazyLoad, computeLineByteStarts, isLikelyUserMessageLine, isLikelyCustomItemLine, checkPrevLineTombstone, iterateChunksBackward, findBytePosByMessageId, peekIdAtBytePos, extendToLineEnd });
+module.exports = Object.freeze({ CHUNK_SIZE, MAX_ITEMS, MAX_BYTES, LARGE_LINE_THRESHOLD, LAZY_LOAD_TYPES, CUSTOM_ITEM_TYPES, ID_REGEX, estimateItemPayloadBytes, parseLineWithLazyLoad, computeLineByteStarts, isLikelyUserMessageLine, isLikelyCustomItemLine, checkPrevLineTombstone, iterateChunksBackward, findBytePosByMessageId, peekIdAtBytePos, extendToLineEnd, findLastMessageIdFromFile, readIdAtBytePos });
