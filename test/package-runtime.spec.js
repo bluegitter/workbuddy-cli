@@ -386,6 +386,8 @@ const {
   ConnectorProxyServer,
   normalizeToolResult,
   escapeHtml,
+  ConnectorServiceState,
+  normalizePersistentState,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1728,6 +1730,24 @@ async function main() {
   await callbackProxyServer.handleOAuthCallback(new URL('http://127.0.0.1/oauth/callback?state=state-1&code=code-1'), callbackResponse);
   assert.strictEqual(callbackResponse.status, 200);
   assert.deepStrictEqual(callbackResponses, [['state-1', 'code-1', 'connector:docs']]);
+  assert.deepStrictEqual(normalizePersistentState({ userDisabled: ['docs'] }).userDisabled, { docs: true });
+  const stateEvents = [];
+  const operationOrder = [];
+  const connectorState = new ConnectorServiceState({
+    persistentState: { enabled: ['docs'] },
+    connect: async (id) => { operationOrder.push(`connect:${id}`); await new Promise((resolve) => setTimeout(resolve, 2)); return { success: true }; },
+    disconnect: async (id) => { operationOrder.push(`disconnect:${id}`); },
+    onStateChanged: (id, state) => stateEvents.push([id, state.status]),
+  });
+  await Promise.all([
+    connectorState.connect('docs', { url: 'https://docs' }),
+    connectorState.disconnect('docs'),
+  ]);
+  assert.deepStrictEqual(operationOrder, ['connect:docs', 'disconnect:docs']);
+  await connectorState.sync({ mail: { url: 'https://mail' } });
+  assert.strictEqual(connectorState.activeConfigs.has('mail'), true);
+  assert.strictEqual(connectorState.activeConfigs.has('docs'), false);
+  assert(stateEvents.some(([id, status]) => id === 'mail' && status === 'connected'));
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
