@@ -5,9 +5,11 @@ const MIGRATE_BATCH_SIZE = 500;
 const noopLogger = { info() {}, warn() {} };
 function logger(ctx) { return ctx.logger || noopLogger; }
 function errorText(error) { return error?.message || String(error); }
+function trace(ctx, tag, detail) { ctx.edgeLog?.(tag, detail); }
 
 async function migrateOnStartup(ctx, sessions) {
   if (!sessions.length) return;
+  trace(ctx, 'MIGRATE_ENTER', `sessions=${sessions.length} sampleSids=${sessions.slice(0, 3).map((session) => session.id).join(',')}`);
   const deviceId = ctx.deps.getDeviceId();
   const msgChannel = `convmsg:${ctx.deps.getAccount()?.uid || ''}`;
   const all = [];
@@ -33,6 +35,7 @@ async function migrateOnStartup(ctx, sessions) {
 }
 
 async function syncCreateConversation(ctx, session) {
+  trace(ctx, 'CREATE_ENTER', `sid=${session.id} title=${session.title || ''} cwd=${session.cwd || '(empty)'} projectId=${session.projectId || '(none)'}`);
   try {
     const body = { type: 'local', sessionId: session.id, name: session.customTitle || session.title || '新任务', conversationOrigin: 'legacy_workbuddy_local', workDir: session.cwd || '', isPlayground: session.isPlayground != null ? (session.isPlayground ? 1 : 0) : (session.cwd ? 0 : 1), clientContext: { localStatus: 'active', hostId: ctx.deps.getDeviceId(), sessionKind: session.isBackgroundAutomation ? 'automation' : 'manual', model: session.model || '', sourceMode: session.sourceMode || '', permissionMode: session.permissionMode || '', expert: { id: session.expertId || '', locale: session.expertLocale || '', runtimeIdentity: session.expertRuntimeIdentity || '', marketplace: session.expertMarketplace || '' } } };
     if (session.projectId) body.projectId = session.projectId;

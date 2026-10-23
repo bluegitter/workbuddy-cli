@@ -10,6 +10,7 @@ const codebuddyBackendEnvRuntime = require("../runtime/codebuddy-backend-env.js"
 const edgeSyncTranslateRuntime = require("../runtime/edge-sync-translate.js");
 const edgeSyncTracingRuntime = require("../runtime/edge-sync-tracing.js");
 const edgeSyncJsonlRuntime = require("../runtime/edge-sync-jsonl.js");
+const edgeSyncApiRuntime = require("../runtime/edge-sync-api.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
@@ -219797,6 +219798,7 @@ function rewriteSessionUpdate(payload, inner, newSessionUpdate) {
 var ROUTE_PREFIX = "/console/as/conversation-sync";
 var MIGRATE_BATCH_SIZE = 500;
 async function migrateOnStartup(ctx, sessions) {
+	return edgeSyncApiRuntime.migrateOnStartup(ctx, sessions);
 	edgeLog("MIGRATE_ENTER", ` sessions=${sessions.length} sampleSids=${sessions.slice(0, 3).map((s) => s.id).join(",")}`);
 	try {
 		if (sessions.length === 0) {
@@ -219910,6 +219912,7 @@ async function migrateOnStartup(ctx, sessions) {
 	}
 }
 async function syncCreateConversation(ctx, session) {
+	return edgeSyncApiRuntime.syncCreateConversation(ctx, session);
 	edgeLog("CREATE_ENTER", `sid=${session.id} title=${session.title || ""} cwd=${session.cwd || "(empty)"} projectId=${session.projectId || "(none)"}`);
 	try {
 		const sourceDeviceId = ctx.deps.getDeviceId();
@@ -219959,6 +219962,7 @@ async function syncCreateConversation(ctx, session) {
 	}
 }
 async function listConversations(ctx, opts) {
+	return edgeSyncApiRuntime.listConversations(ctx, opts);
 	const params = new URLSearchParams();
 	if (opts?.type) params.set("type", opts.type);
 	if (opts?.sourceDeviceId) params.set("sourceDeviceId", opts.sourceDeviceId);
@@ -219992,6 +219996,7 @@ async function listConversations(ctx, opts) {
 	}
 }
 async function getConversationDetail(ctx, conversationId) {
+	return edgeSyncApiRuntime.getConversationDetail(ctx, conversationId);
 	ctx.logger.info(`[EdgeSync] §3.3 DETAIL: cid=${conversationId}`);
 	try {
 		const raw = await ctx.deps.http.get(`${ROUTE_PREFIX}/conversations/${conversationId}`);
@@ -220004,6 +220009,7 @@ async function getConversationDetail(ctx, conversationId) {
 	}
 }
 async function getOnlineDevices(ctx) {
+	return edgeSyncApiRuntime.getOnlineDevices(ctx);
 	ctx.logger.info("[EdgeSync] §3.8 DEVICES/ONLINE");
 	try {
 		const raw = await ctx.deps.http.get(`${ROUTE_PREFIX}/devices/online`);
@@ -220024,6 +220030,7 @@ async function getOnlineDevices(ctx) {
 * 返回：成功→cid（供 caller 触发 `conversation.renamed` 广播）；失败/无映射→undefined。
 */
 async function syncRenameConversation(ctx, sessionId, title, isUserDefined = false) {
+	return edgeSyncApiRuntime.syncRenameConversation(ctx, sessionId, title, isUserDefined);
 	const conversationId = ctx.getConversationId(sessionId);
 	if (!conversationId) return;
 	try {
@@ -220046,6 +220053,7 @@ async function syncRenameConversation(ctx, sessionId, title, isUserDefined = fal
 * 需要一个可判定的成功信号，这里回填 cid，不改变异常吞并的既有行为。
 */
 async function syncDeleteConversation(ctx, sessionId) {
+	return edgeSyncApiRuntime.syncDeleteConversation(ctx, sessionId);
 	const conversationId = ctx.getConversationId(sessionId);
 	if (!conversationId) return;
 	try {
@@ -220065,6 +220073,7 @@ async function syncDeleteConversation(ctx, sessionId) {
 * 返回：成功→cid（供 caller 触发 `conversation.archived` 广播）；失败/无映射→undefined。
 */
 async function syncArchiveConversation(ctx, sessionId) {
+	return edgeSyncApiRuntime.syncArchiveConversation(ctx, sessionId);
 	const conversationId = ctx.getConversationId(sessionId);
 	if (!conversationId) return;
 	try {
@@ -220082,6 +220091,7 @@ async function syncArchiveConversation(ctx, sessionId) {
 * 返回：成功→cid（供 caller 触发 `conversation.unarchived` 广播）；失败/无映射→undefined。
 */
 async function syncUnarchiveConversation(ctx, sessionId) {
+	return edgeSyncApiRuntime.syncUnarchiveConversation(ctx, sessionId);
 	const conversationId = ctx.getConversationId(sessionId);
 	if (!conversationId) return;
 	try {
@@ -220107,6 +220117,7 @@ async function syncUnarchiveConversation(ctx, sessionId) {
 * @returns 成功→ { conversationId, needFullReload }；失败/无映射→ undefined
 */
 async function syncPinConversation(ctx, sessionId, op, beforeWhichId) {
+	return edgeSyncApiRuntime.syncPinConversation(ctx, sessionId, op, beforeWhichId);
 	const conversationId = ctx.getConversationId(sessionId);
 	if (!conversationId) return;
 	try {
@@ -220139,6 +220150,7 @@ async function syncPinConversation(ctx, sessionId, op, beforeWhichId) {
 * @returns 成功→ { migrated, skipped }；失败→ undefined
 */
 async function syncMigratePins(ctx, sessionIds, deviceId) {
+	return edgeSyncApiRuntime.syncMigratePins(ctx, sessionIds, deviceId);
 	if (!sessionIds.length) return {
 		migrated: 0,
 		skipped: 0
@@ -222889,6 +222901,7 @@ var EdgeSyncService = class {
 		return {
 			deps: this.deps,
 			logger: this.logger,
+			edgeLog,
 			migratedFlagPath: this.migratedFlagPath,
 			setMapping: (sid, cid, ch) => {
 				this.sessionToConversation.set(sid, cid);
