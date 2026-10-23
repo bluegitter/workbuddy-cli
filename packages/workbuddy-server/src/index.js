@@ -142,4 +142,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-mcp-config-writer"),
   ...require("./runtime/connector-skill-state"),
   ...require("./runtime/marketplace-cache"),
+  ...require("./runtime/marketplace-download"),
 });

@@ -398,6 +398,8 @@ const {
   markSkillFileDisabled,
   MarketplaceCache,
   normalizeEtag,
+  downloadBufferWithHeaders,
+  fetchRemoteEtag,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1807,6 +1809,14 @@ async function main() {
   assert.strictEqual(marketplace.replaceDirectory(sourceMarketplace), true);
   assert(fs.existsSync(path.join(marketplaceRoot, 'current', 'marketplace.json')));
   fs.rmSync(marketplaceRoot, { recursive: true, force: true });
+  const fakeGetResponse = { statusCode: 200, headers: { etag: 'W/"download-1"' }, on(event, listener) { if (event === 'data') listener(Buffer.from('hello')); if (event === 'end') queueMicrotask(listener); return this; }, resume() {} };
+  const fakeRequest = (_url, _options, callback) => { callback(fakeGetResponse); return { on() { return this; }, end() {} }; };
+  const downloaded = await downloadBufferWithHeaders('https://market.example/archive.zip', { request: fakeRequest });
+  assert.strictEqual(downloaded.buffer.toString(), 'hello');
+  assert.strictEqual(downloaded.etag, 'download-1');
+  const fakeHeadResponse = { statusCode: 200, headers: { etag: '"head-1"' }, resume() {} };
+  const fakeHeadRequest = (_url, _options, callback) => { queueMicrotask(() => callback(fakeHeadResponse)); return { on() { return this; }, setTimeout() {}, end() {} }; };
+  assert.strictEqual(await fetchRemoteEtag('https://market.example/archive.zip', { request: fakeHeadRequest }), 'head-1');
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
