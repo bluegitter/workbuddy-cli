@@ -269,6 +269,7 @@ const {
   CliPrewarmPool,
   SidecarManager,
   SidecarClient,
+  buildSidecarCliEnv,
   createWorkbuddySidecarManager,
   parseToolUsage,
   createToolUsageBridge,
@@ -2367,6 +2368,20 @@ async function main() {
   assert.strictEqual(typeof sidecarClient.sendRequest, 'function');
   assert.strictEqual(typeof sidecarClient.onNotification, 'function');
   sidecarClient.dispose();
+  const runtimeCliEnv = await buildSidecarCliEnv({ EXTRA_FLAG: '1' }, { HTTPS_PROXY: 'http://proxy.test' }, {
+    getRuntimeConfigDir: () => path.join(root, 'cli-config'),
+    getRuntimeUserDataDir: () => path.join(root, 'cli-user-data'),
+    getRuntimeAppVersion: () => 'test-version',
+    resolveAsset: () => path.join(root, 'builtin-skills'),
+    gatewaySecretEnv: () => ({ CODEBUDDY_SECRET: 'secret' }),
+    resolveProductEnvAsync: async () => ({ productConfigEnv: '{"endpoint":"test"}', hostedCliInternetEnv: 'test' }),
+    buildClientInfoEnv: () => ({ CODEBUDDY_CLIENT_INFO: 'test' }),
+    getRegisteredBinaryTypes: () => ['node', 'python'],
+    processEnv: { PATH: '/bin', NODE_ENV: 'test' },
+  });
+  assert.strictEqual(runtimeCliEnv.EXTRA_FLAG, '1');
+  assert.strictEqual(runtimeCliEnv.ACC_PRODUCT_CONFIG_V3, '{"endpoint":"test"}');
+  assert.strictEqual(runtimeCliEnv.HTTPS_PROXY, 'http://proxy.test');
   assert.deepStrictEqual(translateDesktopToCloudPayload({ update: { sessionUpdate: 'state_update', currentState: 'error' } }).update, { sessionUpdate: 'session_end_turn', stopReason: 'refusal' });
   assert.strictEqual(translateDesktopToCloudPayload({ sessionUpdate: 'assistant_message_chunk' }).sessionUpdate, 'agent_message_chunk');
   assert.deepStrictEqual(resolveDesktopSpanPlan({ traceId: 'a'.repeat(32), spanId: 'b'.repeat(16), parentSpanId: 'c'.repeat(16) }).parentSpanId, 'c'.repeat(16));

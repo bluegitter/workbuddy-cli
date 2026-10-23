@@ -99,6 +99,7 @@ module.exports = Object.freeze({
   ...require("./runtime/ima-upload-service"),
   ...require("./runtime/tencent-docs"),
   ...require("./runtime/agent-cli-runtime"),
+  ...require("./runtime/sidecar-cli-env"),
   ...require("./runtime/connector-mapping"),
   ...require("./runtime/deeplink-parser"),
   ...require("./runtime/deeplink-guard"),

@@ -31,6 +31,7 @@ const mediaLifecycleRuntime = require("../runtime/media-lifecycle-utils.js");
 const taskConversationRuntime = require("../runtime/task-conversation.js");
 const sessionRecordRuntime = require("../runtime/session-record-store.js");
 const { SidecarClient: SidecarClientRuntime } = require("../runtime/sidecar-manager.js");
+const { buildSidecarCliEnv } = require("../runtime/sidecar-cli-env.js");
 const SidecarClient = class extends SidecarClientRuntime {
 	constructor(socketPath) {
 		super(socketPath, {
@@ -9603,107 +9604,20 @@ async function unlinkFileSafeAsync(filePath) {
 	} catch {}
 }
 async function buildCliEnvAsync(extra, proxyEnv, options = {}) {
-	const context = createBuildCliEnvContext(options);
-	return buildCliEnvFromResolved(extra, proxyEnv, context, await resolveBuildCliEnvIoAsync(context));
-}
-function createBuildCliEnvContext(options = {}) {
-	const getRuntimeAppVersion = options.getRuntimeAppVersion ?? require_runtime_context.getWorkbuddyRuntimeAppVersion;
-	const getRuntimeConfigDir = options.getRuntimeConfigDir ?? require_runtime_context.getWorkbuddyRuntimeConfigDir;
-	const getRuntimeUserDataDir = options.getRuntimeUserDataDir ?? require_runtime_context.getWorkbuddyRuntimeUserDataDir;
-	return {
-		runtimeAppVersion: getRuntimeAppVersion(),
-		runtimeConfigDir: getRuntimeConfigDir(),
-		runtimeUserDataDir: getRuntimeUserDataDir(),
+	return buildSidecarCliEnv(extra, proxyEnv, {
+		...options,
+		getRuntimeConfigDir: options.getRuntimeConfigDir ?? require_runtime_context.getWorkbuddyRuntimeConfigDir,
+		getRuntimeUserDataDir: options.getRuntimeUserDataDir ?? require_runtime_context.getWorkbuddyRuntimeUserDataDir,
+		getRuntimeAppVersion: options.getRuntimeAppVersion ?? require_runtime_context.getWorkbuddyRuntimeAppVersion,
 		resolveAsset: options.resolveBundledAsset ?? defaultResolveBundledAsset$1,
 		getBootstrapProductConfigEnv: options.getBootstrapProductConfigEnv ?? defaultGetBootstrapProductConfigEnv$1,
-		hostId: options.hostId ?? "workbuddy-server"
-	};
-}
-async function resolveBuildCliEnvIoAsync(context) {
-	const [pluginDirs, productEnv, rtConfig] = await Promise.all([
-		listAgentCliEnabledPluginDirsAsync(context.runtimeConfigDir),
-		require_workbuddy_product_config.resolveAgentCliProductEnvAsync({
-			processEnv: process.env,
-			fallbackProductConfigEnv: process.env.ACC_PRODUCT_CONFIG_V3 ? void 0 : context.getBootstrapProductConfigEnv()
-		}),
-		readAgentCliBundledRuntimeConfigAsync(context.runtimeUserDataDir)
-	]);
-	const rtEnabled = rtConfig.enabled !== false;
-	const [managedNodeBinDirs, managedPythonBinDirs] = await Promise.all([rtEnabled && rtConfig.tools?.node !== false ? listAgentCliManagedBinDirsAsync({
-		homeDir: (0, os.homedir)(),
-		platform: process.platform,
-		binaryType: "node"
-	}) : Promise.resolve([]), rtEnabled && rtConfig.tools?.python !== false ? listAgentCliManagedBinDirsAsync({
-		homeDir: (0, os.homedir)(),
-		platform: process.platform,
-		binaryType: "python"
-	}) : Promise.resolve([])]);
-	return {
-		pluginDirs: pluginDirs.join(path.delimiter),
-		productEnv,
-		rtConfig,
-		managedNodeBinDirs,
-		managedPythonBinDirs
-	};
-}
-function buildCliEnvFromResolved(extra, proxyEnv, context, resolved) {
-	const env = {
-		DISABLE_AUTOUPDATER: "1",
-		ELECTRON_RUN_AS_NODE: "1",
-		CODEBUDDY_GIT_REPO_SCAN_DISABLED: "1",
-		CODEBUDDY_PROMPT_SUGGESTION_DISABLED: "1",
-		CODEBUDDY_CONFIG_DIR: context.runtimeConfigDir,
-		WORKBUDDY_CONFIG_DIR: context.runtimeConfigDir,
-		WORKBUDDY_DATA_FOLDER_NAME: process.env.WORKBUDDY_DATA_FOLDER_NAME?.trim() || ".workbuddy",
-		...require_workbuddy_auth_product_coordinator.gatewaySecretEnv(),
-		CODEBUDDY_DISABLE_REQUEST_VALIDATION: "1",
-		CODEBUDDY_SKIP_GIT_BASH_CHECK: "1",
-		CODEBUDDY_HOST: context.hostId,
-		CODEBUDDY_DISABLE_EXTENDED_PLUGIN_HOOKS: "1",
-		CODEBUDDY_DISABLE_SESSION_HISTORY_CLEANUP: "1",
-		CODEBUDDY_INCLUDE_TOPIC_MESSAGE: "1",
-		CODEBUDDY_CODE_DISABLE_SESSION_SUMMARY: "1",
-		CODEBUDDY_BUILTIN_SKILLS_DIR: context.resolveAsset?.("builtin-skills") ?? path.join(process.cwd(), "builtin-skills"),
-		CODEBUDDY_POWERSHELL_USE_PTY: "1",
-		CODEBUDDY_REPLAY_SHOW_PRE_COMPACT: "1",
-		CODEBUDDY_SKILL_TOOL_CHAR_BUDGET: "30000",
-		CODEBUDDY_DISABLE_FORK_SUBAGENT: "1",
-		CODEBUDDY_ENABLE_SECURITY_AUDIT: "1",
-		WORKBUDDY_NODE_ENV: process.env.NODE_ENV || "production",
-		...require_log_acl_guard.buildWorkbuddyClientInfoEnv({
-			getAppVersion: () => context.runtimeAppVersion,
-			resolveBundledAsset: context.resolveAsset
-		})
-	};
-	if (resolved.pluginDirs) env.CODEBUDDY_PLUGIN_DIRS = resolved.pluginDirs;
-	if (resolved.productEnv.productConfigPathEnv) env.ACC_PRODUCT_CONFIG_PATH = resolved.productEnv.productConfigPathEnv;
-	else if (resolved.productEnv.productConfigEnv) env.ACC_PRODUCT_CONFIG_V3 = resolved.productEnv.productConfigEnv;
-	if (resolved.productEnv.hostedCliInternetEnv) env[require_workbuddy_product_config.AGENT_CLI_HOSTED_INTERNET_ENVIRONMENT_KEY] = resolved.productEnv.hostedCliInternetEnv;
-	const rtConfig = resolved.rtConfig;
-	const rtEnabled = rtConfig.enabled !== false;
-	if (rtEnabled && rtConfig.tools?.gitBash !== false && process.env.CODEBUDDY_CODE_GIT_BASH_PATH) env.CODEBUDDY_CODE_GIT_BASH_PATH = process.env.CODEBUDDY_CODE_GIT_BASH_PATH;
-	if (process.env.CODEBUDDY_PRE_MESSAGE_COMPACT_PCT) env.CODEBUDDY_PRE_MESSAGE_COMPACT_PCT = process.env.CODEBUDDY_PRE_MESSAGE_COMPACT_PCT;
-	if (process.env.CODEBUDDY_AUTOCOMPACT_PCT_OVERRIDE) env.CODEBUDDY_AUTOCOMPACT_PCT_OVERRIDE = process.env.CODEBUDDY_AUTOCOMPACT_PCT_OVERRIDE;
-	if (process.env.CODEBUDDY_ENGINEERING_COMPACT_SUFFICIENCY_PCT) env.CODEBUDDY_ENGINEERING_COMPACT_SUFFICIENCY_PCT = process.env.CODEBUDDY_ENGINEERING_COMPACT_SUFFICIENCY_PCT;
-	if (proxyEnv) Object.assign(env, proxyEnv);
-	const cliConnectorBin = resolveAgentCliConnectorBin({
-		homeDir: (0, os.homedir)(),
-		platform: process.platform
+		hostId: options.hostId ?? "workbuddy-server",
+		gatewaySecretEnv: require_workbuddy_auth_product_coordinator.gatewaySecretEnv,
+		resolveProductEnvAsync: (input) => require_workbuddy_product_config.resolveAgentCliProductEnvAsync(input),
+		buildClientInfoEnv: (input) => require_log_acl_guard.buildWorkbuddyClientInfoEnv(input),
+		getRegisteredBinaryTypes: () => require_log_acl_guard.getRegisteredBinaryTypes(),
+		processEnv: process.env,
 	});
-	const extraPathParts = [];
-	const managedNodeBinDirs = rtEnabled && rtConfig.tools?.node !== false ? resolved.managedNodeBinDirs : [];
-	extraPathParts.push(...managedNodeBinDirs);
-	if (rtEnabled && rtConfig.tools?.python !== false) extraPathParts.push(...resolved.managedPythonBinDirs);
-	extraPathParts.push(cliConnectorBin);
-	env.WORKBUDDY_EXTRA_PATHS = extraPathParts.filter(Boolean).join(process.platform === "win32" ? ";" : ":");
-	prependDirsToEnvPath(env, managedNodeBinDirs, process.env, path.delimiter);
-	const disabledTypes = [];
-	if (!rtEnabled) disabledTypes.push(...require_log_acl_guard.getRegisteredBinaryTypes());
-	else for (const type of require_log_acl_guard.getRegisteredBinaryTypes()) if (rtConfig.tools?.[type] === false) disabledTypes.push(type);
-	if (disabledTypes.length > 0) env.WORKBUDDY_MANAGED_RUNTIME_DISABLED = disabledTypes.join(",");
-	env.CODEBUDDY_HOST_CAPABILITIES = "elicitation.form,weixinpay.interception";
-	if (extra) Object.assign(env, extra);
-	return env;
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/shared/error-codes.ts
