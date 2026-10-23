@@ -1,6 +1,8 @@
 require("./chunk.js");
 const require_helpers = require("./helpers.js");
 const require_types = require("./types.js");
+const require_mcp_schema = require("../runtime/mcp-schema.js");
+const { EMPTY_COMPLETION_RESULT, EMPTY_OBJECT_JSON_SCHEMA, createCompletionResult, getMethodValue, getZodSchemaObject, isZodRawShapeCompat, promptArgumentsFromSchema } = require_mcp_schema;
 //#region ../../node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/server.js
 /**
 * Experimental server task features for MCP SDK.
@@ -1233,80 +1235,5 @@ var McpServer = class {
 		if (this.isConnected()) this.server.sendPromptListChanged();
 	}
 };
-var EMPTY_OBJECT_JSON_SCHEMA = {
-	type: "object",
-	properties: {}
-};
-/**
-* Checks if a value looks like a Zod schema by checking for parse/safeParse methods.
-*/
-function isZodTypeLike(value) {
-	return value !== null && typeof value === "object" && "parse" in value && typeof value.parse === "function" && "safeParse" in value && typeof value.safeParse === "function";
-}
-/**
-* Checks if an object is a Zod schema instance (v3 or v4).
-*
-* Zod schemas have internal markers:
-* - v3: `_def` property
-* - v4: `_zod` property
-*
-* This includes transformed schemas like z.preprocess(), z.transform(), z.pipe().
-*/
-function isZodSchemaInstance(obj) {
-	return "_def" in obj || "_zod" in obj || isZodTypeLike(obj);
-}
-/**
-* Checks if an object is a "raw shape" - a plain object where values are Zod schemas.
-*
-* Raw shapes are used as shorthand: `{ name: z.string() }` instead of `z.object({ name: z.string() })`.
-*
-* IMPORTANT: This must NOT match actual Zod schema instances (like z.preprocess, z.pipe),
-* which have internal properties that could be mistaken for schema values.
-*/
-function isZodRawShapeCompat(obj) {
-	if (typeof obj !== "object" || obj === null) return false;
-	if (isZodSchemaInstance(obj)) return false;
-	if (Object.keys(obj).length === 0) return true;
-	return Object.values(obj).some(isZodTypeLike);
-}
-/**
-* Converts a provided Zod schema to a Zod object if it is a ZodRawShapeCompat,
-* otherwise returns the schema as is. Throws if the value is not a valid Zod schema.
-*/
-function getZodSchemaObject(schema) {
-	if (!schema) return;
-	if (isZodRawShapeCompat(schema)) return require_helpers.objectFromShape(schema);
-	if (!isZodSchemaInstance(schema)) throw new Error("inputSchema must be a Zod schema or raw shape, received an unrecognized object");
-	return schema;
-}
-function promptArgumentsFromSchema(schema) {
-	const shape = require_helpers.getObjectShape(schema);
-	if (!shape) return [];
-	return Object.entries(shape).map(([name, field]) => {
-		return {
-			name,
-			description: require_helpers.getSchemaDescription(field),
-			required: !require_helpers.isSchemaOptional(field)
-		};
-	});
-}
-function getMethodValue(schema) {
-	const methodSchema = require_helpers.getObjectShape(schema)?.method;
-	if (!methodSchema) throw new Error("Schema is missing a method literal");
-	const value = require_helpers.getLiteralValue(methodSchema);
-	if (typeof value === "string") return value;
-	throw new Error("Schema method literal must be a string");
-}
-function createCompletionResult(suggestions) {
-	return { completion: {
-		values: suggestions.slice(0, 100),
-		total: suggestions.length,
-		hasMore: suggestions.length > 100
-	} };
-}
-var EMPTY_COMPLETION_RESULT = { completion: {
-	values: [],
-	hasMore: false
-} };
 //#endregion
 exports.McpServer = McpServer;

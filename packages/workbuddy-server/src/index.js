@@ -22,6 +22,7 @@ module.exports = Object.freeze({
   ...require("./runtime/tool-routing"),
   ...require("./runtime/expert-cache"),
   ...require("./runtime/http-contract"),
+  ...require("./runtime/mcp-schema"),
   ...require("./runtime/client-info-provider"),
   ...require("./runtime/channel-branding"),
   ...require("./runtime/proxy-env"),

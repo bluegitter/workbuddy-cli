@@ -55,6 +55,8 @@ const { buildStartupSpans: buildStartupSpansFromPackage } = require('../packages
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const projectHttpSource = require('../packages/workbuddy-server/src/source/http.js');
 const { HANDOFF_CANARY_HEADERS, ROUTE_PREFIX, withAcceptLanguageHeader } = require('../packages/workbuddy-server/src');
+const mcpSchemaSource = require('../packages/workbuddy-server/src/runtime/mcp-schema.js');
+const { EMPTY_COMPLETION_RESULT, createCompletionResult, getZodSchemaObject, isZodRawShapeCompat, isZodSchemaInstance, isZodTypeLike, promptArgumentsFromSchema } = require('../packages/workbuddy-server/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
@@ -999,6 +1001,15 @@ async function main() {
   assert.strictEqual(coreContractSource.AUTH_RPC_CHANNELS, AUTH_RPC_CHANNELS);
   assert.strictEqual(AUTH_RPC_CHANNELS.LOGIN, 'auth:login');
   assert.strictEqual(AUTH_RPC_CHANNELS.LOAD_PENDING_INPUT, 'auth:loadPendingInput');
+  assert.strictEqual(mcpSchemaSource.createCompletionResult, createCompletionResult);
+  assert.deepStrictEqual(createCompletionResult(Array.from({ length: 102 }, (_, index) => `s${index}`)).completion, { values: Array.from({ length: 100 }, (_, index) => `s${index}`), total: 102, hasMore: true });
+  assert.deepStrictEqual(EMPTY_COMPLETION_RESULT, { completion: { values: [], hasMore: false } });
+  const zodLike = { parse: (value) => value, safeParse: (value) => ({ success: true, data: value }) };
+  assert.strictEqual(isZodTypeLike(zodLike), true);
+  assert.strictEqual(isZodSchemaInstance(zodLike), true);
+  assert.strictEqual(isZodRawShapeCompat({ name: zodLike }), true);
+  assert.strictEqual(getZodSchemaObject(zodLike), zodLike);
+  assert.deepStrictEqual(promptArgumentsFromSchema({ shape: { name: { description: 'Name', isOptional: () => false } } }), [{ name: 'name', description: 'Name', required: true }]);
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });
