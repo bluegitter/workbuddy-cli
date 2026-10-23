@@ -23,6 +23,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 }) : target, mod));
 //#endregion
 let electron = require("electron");
+const { getIsMainFramePreload, getIsTopWindow, resolveIsMainFramePreload, installLocalFileDragBridge } = require("../runtime/preload-helpers");
 //#region src/preload/frame-context.ts
 /**
 * Decide which preload branch should run for the current frame.
@@ -33,53 +34,9 @@ let electron = require("electron");
 * subframe-only preload path instead of accidentally bootstrapping the full
 * WorkBuddy renderer bridge.
 */
-function resolveIsMainFramePreload(params) {
-	if (typeof params.processIsMainFrame === "boolean") return params.processIsMainFrame;
-	return params.isTopWindow;
-}
-function getIsTopWindow() {
-	try {
-		return window.top === window;
-	} catch {
-		return false;
-	}
-}
-function getIsMainFramePreload() {
-	const maybeProcess = globalThis.process;
-	return resolveIsMainFramePreload({
-		processIsMainFrame: maybeProcess?.isMainFrame,
-		isTopWindow: getIsTopWindow()
-	});
-}
 var init_frame_context = __esmMin((() => {}));
-function isFiniteNumber(value) {
-	return typeof value === "number" && Number.isFinite(value);
-}
-function isDragImageRect(value) {
-	return Boolean(value && typeof value === "object" && isFiniteNumber(value.x) && isFiniteNumber(value.y) && isFiniteNumber(value.width) && isFiniteNumber(value.height));
-}
-function isBytesLike(value) {
-	return value instanceof ArrayBuffer || ArrayBuffer.isView(value);
-}
-function isLocalFileDragInfo(value) {
-	if (!value || typeof value !== "object") return false;
-	const fileInfo = value;
-	return typeof fileInfo.filePath === "string" || isBytesLike(fileInfo.bytes);
-}
-var LOCAL_FILE_DRAG_CHANNEL;
 var init_local_file_drag = __esmMin((() => {
-	LOCAL_FILE_DRAG_CHANNEL = "artifact:start-drag-local-file";
-	electron.contextBridge.exposeInMainWorld("__workbuddyStartDragLocalFile", (fileInfo) => {
-		if (!isLocalFileDragInfo(fileInfo)) return;
-		electron.ipcRenderer.send(LOCAL_FILE_DRAG_CHANNEL, {
-			filePath: typeof fileInfo.filePath === "string" ? fileInfo.filePath : void 0,
-			fileName: typeof fileInfo.fileName === "string" ? fileInfo.fileName : void 0,
-			bytes: isBytesLike(fileInfo.bytes) ? fileInfo.bytes : void 0,
-			mimeType: typeof fileInfo.mimeType === "string" ? fileInfo.mimeType : void 0,
-			cacheKey: typeof fileInfo.cacheKey === "string" ? fileInfo.cacheKey : void 0,
-			dragImageRect: isDragImageRect(fileInfo.dragImageRect) ? fileInfo.dragImageRect : void 0
-		});
-	});
+	installLocalFileDragBridge(electron);
 })), WORKBUDDY_DESKTOP_INVOKE_CHANNEL, WORKBUDDY_DESKTOP_EVENT_CHANNEL_PREFIX, LOCAL_DAEMON_TRANSPORT_PORT_CHANNEL, WORKBUDDY_WINDOW_MINIMIZE_CHANNEL, WORKBUDDY_WINDOW_MAXIMIZE_CHANNEL, WORKBUDDY_WINDOW_CLOSE_CHANNEL, WORKBUDDY_WINDOW_IS_MAXIMIZED_CHANNEL, WORKBUDDY_WINDOW_IS_FULLSCREEN_CHANNEL, WORKBUDDY_WINDOW_SET_FULLSCREEN_CHANNEL, WORKBUDDY_WINDOW_TOGGLE_FULLSCREEN_CHANNEL, WORKBUDDY_WINDOW_OPEN_STARTUP_ANALYSIS_CHANNEL, WORKBUDDY_WINDOW_GET_STARTUP_TRACE_ID_CHANNEL, WORKBUDDY_OPENER_OPEN_URL_CHANNEL, WORKBUDDY_LOCAL_FILE_OPEN_CHANNEL, WORKBUDDY_DIALOG_OPEN_CHANNEL, WORKBUDDY_CLIPBOARD_READ_TEXT_CHANNEL, WORKBUDDY_CLIPBOARD_WRITE_TEXT_CHANNEL, WORKBUDDY_CLIPBOARD_WRITE_IMAGE_CHANNEL, WORKBUDDY_NOTIFICATION_IS_SUPPORTED_CHANNEL, WORKBUDDY_NOTIFICATION_REQUEST_REGISTRATION_CHANNEL, WORKBUDDY_NOTIFICATION_SEND_CHANNEL, WORKBUDDY_MACHINE_ID_CHANNEL, WORKBUDDY_WINDOW_MAXIMIZE_CHANGED_EVENT, WORKBUDDY_WINDOW_FOCUS_CHANGED_EVENT, WORKBUDDY_WINDOW_FULLSCREEN_CHANGED_EVENT, WORKBUDDY_GLOBAL_SHORTCUT_UPDATE_TOGGLE_WINDOW_CHANNEL, WORKBUDDY_GLOBAL_SHORTCUT_REGISTRATION_STATUS_EVENT;
 var init_host = __esmMin((() => {
 	WORKBUDDY_DESKTOP_INVOKE_CHANNEL = "workbuddy:invoke";

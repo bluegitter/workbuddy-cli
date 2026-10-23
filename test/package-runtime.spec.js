@@ -91,6 +91,10 @@ const {
   applyLocalStorageMigrationPayload,
   readLocalFilePath,
   resolveIsMainFramePreload,
+  getIsMainFramePreload,
+  getIsTopWindow,
+  installLocalFileDragBridge,
+  isLocalFileDragInfo,
   toFileResourceUri,
   validateBootstrapInfo,
   clampBoundsToWorkArea,
@@ -980,6 +984,15 @@ async function main() {
   assert.ok(buildDiscoveryUrls('https://example.test/mcp').some((url) => url.includes('oauth-authorization-server')));
   assert.strictEqual(resolveIsMainFramePreload({ processIsMainFrame: false, isTopWindow: true }), false);
   assert.strictEqual(readLocalFilePath('workbuddy://open?localFilePath=%2Ftmp%2Fa.txt'), '/tmp/a.txt');
+  assert.strictEqual(getIsMainFramePreload({ processObject: { isMainFrame: true }, windowObject: {} }), true);
+  assert.strictEqual(getIsTopWindow({ top: null }), false);
+  assert.strictEqual(isLocalFileDragInfo({ filePath: '/tmp/a.txt' }), true);
+  assert.strictEqual(isLocalFileDragInfo({}), false);
+  const dragBridgeCalls = [];
+  let dragBridgeHandler;
+  installLocalFileDragBridge({ contextBridge: { exposeInMainWorld: (_name, handler) => { dragBridgeHandler = handler; } }, ipcRenderer: { send: (...args) => dragBridgeCalls.push(args) } });
+  dragBridgeHandler({ filePath: '/tmp/a.txt', fileName: 'a.txt', dragImageRect: { x: 1, y: 2, width: 3, height: 4 } });
+  assert.strictEqual(dragBridgeCalls[0][0], 'artifact:start-drag-local-file');
   assert.strictEqual(toFileResourceUri('/tmp/a b.txt'), 'file:///tmp/a%20b.txt');
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);

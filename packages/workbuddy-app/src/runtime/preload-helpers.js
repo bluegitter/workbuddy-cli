@@ -11,6 +11,14 @@ function resolveIsMainFramePreload({ processIsMainFrame, isTopWindow } = {}) {
   return typeof processIsMainFrame === 'boolean' ? processIsMainFrame : Boolean(isTopWindow);
 }
 
+function getIsTopWindow(windowObject = globalThis.window) {
+  try { return windowObject.top === windowObject; } catch { return false; }
+}
+
+function getIsMainFramePreload({ processObject = globalThis.process, windowObject = globalThis.window } = {}) {
+  return resolveIsMainFramePreload({ processIsMainFrame: processObject?.isMainFrame, isTopWindow: getIsTopWindow(windowObject) });
+}
+
 function isFiniteNumber(value) { return typeof value === 'number' && Number.isFinite(value); }
 function isDragImageRect(value) {
   return Boolean(value && typeof value === 'object' && isFiniteNumber(value.x) && isFiniteNumber(value.y) && isFiniteNumber(value.width) && isFiniteNumber(value.height));
@@ -18,6 +26,20 @@ function isDragImageRect(value) {
 function isBytesLike(value) { return value instanceof ArrayBuffer || ArrayBuffer.isView(value); }
 function isLocalFileDragInfo(value) {
   return Boolean(value && typeof value === 'object' && (typeof value.filePath === 'string' || isBytesLike(value.bytes)));
+}
+
+function installLocalFileDragBridge(electron) {
+  electron.contextBridge.exposeInMainWorld('__workbuddyStartDragLocalFile', (fileInfo) => {
+    if (!isLocalFileDragInfo(fileInfo)) return;
+    electron.ipcRenderer.send('artifact:start-drag-local-file', {
+      filePath: typeof fileInfo.filePath === 'string' ? fileInfo.filePath : undefined,
+      fileName: typeof fileInfo.fileName === 'string' ? fileInfo.fileName : undefined,
+      bytes: isBytesLike(fileInfo.bytes) ? fileInfo.bytes : undefined,
+      mimeType: typeof fileInfo.mimeType === 'string' ? fileInfo.mimeType : undefined,
+      cacheKey: typeof fileInfo.cacheKey === 'string' ? fileInfo.cacheKey : undefined,
+      dragImageRect: isDragImageRect(fileInfo.dragImageRect) ? fileInfo.dragImageRect : undefined,
+    });
+  });
 }
 
 function getDedupeKey(item, field) { return item && typeof item === 'object' ? String(item[field] ?? '') : String(item); }
@@ -95,6 +117,9 @@ module.exports = {
   isDragImageRect,
   isFiniteNumber,
   isLocalFileDragInfo,
+  getIsMainFramePreload,
+  getIsTopWindow,
+  installLocalFileDragBridge,
   mergeJsonArrays,
   readLocalFilePath,
   resolveIsMainFramePreload,
