@@ -12,4 +12,5 @@ module.exports = Object.freeze({
   ...require("./runtime/team-runtime"),
   ...require("./runtime/share-artifacts"),
   ...require("./runtime/deep-link-coordinator"),
+  ...require("./runtime/share-moderation"),
 });

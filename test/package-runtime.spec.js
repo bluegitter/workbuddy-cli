@@ -84,6 +84,10 @@ const {
   createDesktopOpenUrlHandler,
   consumePendingDesktopOpenUrls,
   normalizePendingOpenUrlPayload,
+  isInfraError,
+  normalizeModerationResult,
+  probeShareText,
+  checkShareTextsModeration,
 } = require('../packages/agent-ui/src');
 const {
   QueueSnapshotStore,
@@ -1361,6 +1365,16 @@ async function main() {
   assert.deepStrictEqual(parseTeammateMessage('<teammate-message teammate_id="researcher" summary="Done">ok</teammate-message>'), { teammateId: 'researcher', summary: 'Done', content: 'ok' });
   assert.strictEqual(formatTeammateContent('{"type":"shutdown_response","approve":true}'), 'Shutdown accepted');
   assert.strictEqual(normalizePendingOpenUrlPayload({ url: 'workbuddy://home' }), 'workbuddy://home');
+  assert.strictEqual(isInfraError('Network timeout while checking content'), true);
+  assert.strictEqual(isInfraError('content rejected'), false);
+  assert.deepStrictEqual(normalizeModerationResult({ pass: false, error: 'fetch failed' }, 'hello'), { pass: false, reason: 'serviceUnavailable', blockedText: 'hello', error: 'fetch failed' });
+  const moderationCalls = [];
+  const moderationAdapter = { checkModeration: async (payload) => { moderationCalls.push(payload); return { pass: payload.text !== 'blocked' }; } };
+  assert.deepStrictEqual(await probeShareText(moderationAdapter, '  hello  '), { pass: true });
+  const moderationResult = await checkShareTextsModeration(moderationAdapter, ['hello', 'blocked']);
+  assert.strictEqual(moderationResult.reason, 'blocked');
+  assert.strictEqual(moderationResult.blockedText, 'blocked');
+  assert.strictEqual(moderationCalls[0].scene, 'nickname');
   const classified = classifyDesktopOpenUrl('workbuddy://task?action=start&prompt=hello', {
     isTaskDeepLink: () => true,
   });

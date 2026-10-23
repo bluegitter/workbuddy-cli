@@ -28,6 +28,12 @@ import { n as init_ima_api_context, t as ImaApiContext } from "./ima-api-context
 import { a as getCurrentTheme, i as addThemeListener, n as useTheme, o as init_theme, t as init_useTheme } from "./useTheme-KZ-Qaric.js";
 import { c as init_auth_expired_detector, l as notifyIfAuthExpired } from "./chat-types-DIB8etkb.js";
 import { H as Modal, ct as Button, t as init_foundation } from "./foundation-C1UtLUuy.js";
+import {
+	checkShareTextsModeration as checkShareTextsModerationRuntime,
+	isInfraError as isInfraErrorRuntime,
+	normalizeModerationResult as normalizeModerationResultRuntime,
+	probeShareText as probeShareTextRuntime,
+} from "../runtime/share-moderation.js";
 import { n as init_ArtifactFileIconTypes, t as getArtifactFileIconKind } from "./ArtifactFileIconTypes-mWPconF_.js";
 import { n as useI18n, r as useTranslation$1, t as init_useI18n } from "./useI18n-DDytAo7_.js";
 import { A as init_route_matchers, S as useRouterContextSafe, _ as RouterProvider, b as resetRouterToHome, j as matchShellRoute, t as init_router } from "./router-DJX2y4GM.js";
@@ -3720,63 +3726,19 @@ var INFRA_ERROR_PATTERNS = [
 	"load failed"
 ];
 function isInfraError(error) {
-	if (typeof error !== "string") return false;
-	const normalized = error.toLowerCase();
-	return INFRA_ERROR_PATTERNS.some((pattern) => normalized.includes(pattern));
+	return isInfraErrorRuntime(error);
 }
 function normalizeModerationResult(result, text) {
-	if (result.pass) return { pass: true };
-	if (isInfraError(result.error)) return {
-		pass: false,
-		reason: "serviceUnavailable",
-		blockedText: text,
-		error: result.error
-	};
-	return {
-		pass: false,
-		reason: "blocked",
-		blockedText: text,
-		error: result.error
-	};
+	return normalizeModerationResultRuntime(result, text);
 }
 async function probeShareText(adapter, text) {
-	const trimmed = text.trim();
-	if (!trimmed) return { pass: true };
-	if (!adapter?.checkModeration) return { pass: true };
-	try {
-		return normalizeModerationResult(await adapter.checkModeration({
-			text: trimmed,
-			scene: SHARE_MODERATION_SCENE
-		}), trimmed);
-	} catch (error) {
-		return {
-			pass: false,
-			reason: "serviceUnavailable",
-			blockedText: trimmed,
-			error: String(error)
-		};
-	}
+	return probeShareTextRuntime(adapter, text);
 }
 /**
 * 分享前内容审核：明确违规时展示内容违规；审核链路网络异常时展示服务不可用，避免误报为敏感内容。
 */
 async function checkShareTextsModeration(adapter, texts) {
-	const normalizedTexts = texts.map((text) => text.trim()).filter(Boolean);
-	if (normalizedTexts.length === 0 || !adapter?.checkModeration) return { pass: true };
-	const combinedText = normalizedTexts.join("\n");
-	const combinedResult = await probeShareText(adapter, combinedText);
-	if (combinedResult.pass) return { pass: true };
-	if (combinedResult.reason === "serviceUnavailable") return combinedResult;
-	for (const text of normalizedTexts) {
-		const singleResult = await probeShareText(adapter, text);
-		if (!singleResult.pass) return singleResult;
-	}
-	return {
-		pass: false,
-		reason: "blocked",
-		blockedText: combinedText,
-		error: combinedResult.error
-	};
+	return checkShareTextsModerationRuntime(adapter, texts);
 }
 //#endregion
 //#region ../../packages/agent-ui/src/hooks/use-share-file.ts
