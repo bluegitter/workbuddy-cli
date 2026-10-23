@@ -11,6 +11,7 @@ const edgeSyncTracingRuntime = require("../runtime/edge-sync-tracing.js");
 const edgeSyncJsonlRuntime = require("../runtime/edge-sync-jsonl.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
+const connectorMappingRuntime = require("../runtime/connector-mapping.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -10389,125 +10390,50 @@ function registerServiceHandlers(server, serviceName, service, options) {
 //#region ../../packages/workbuddy-server/src/connector/cloud-service.ts
 var CONNECTOR_ROUTE_PREFIX = "/console/as/connector";
 function createApiError(envelope, operation) {
-	const error = new Error(envelope.message || envelope.msg || `${operation} failed`);
-	error.name = "ConnectorApiError";
-	error.code = envelope.code;
-	return error;
+	return connectorMappingRuntime.createApiError(envelope, operation);
 }
 function hasApiCode(value) {
-	return typeof value === "number" || typeof value === "string";
+	return connectorMappingRuntime.hasApiCode(value);
 }
 function unwrapData(response, operation) {
-	const nestedEnvelope = response?.data;
-	const envelope = hasApiCode(response?.code) ? response : hasApiCode(nestedEnvelope?.code) ? nestedEnvelope : response;
-	if (hasApiCode(envelope?.code) && String(envelope.code) !== "0") throw createApiError(envelope, operation);
-	return envelope?.data;
+	return connectorMappingRuntime.unwrapData(response, operation);
 }
 function mapRegistryItem(raw) {
-	const data = raw?.data ?? {};
-	return {
-		id: raw?.id,
-		name: raw?.name ?? "",
-		scope: raw?.scope,
-		authType: raw?.auth_type,
-		status: raw?.status,
-		capabilities: Array.isArray(raw?.capabilities) ? raw.capabilities : void 0,
-		displayName: data?.display_name ?? raw?.display_name ?? raw?.name ?? "",
-		description: data?.description ?? raw?.description ?? "",
-		iconUrl: data?.icon_url ?? raw?.icon_url ?? null,
-		isConnected: Boolean(raw?.is_connected ?? raw?.isConnected),
-		data,
-		mcp: raw?.mcp
-	};
+	return connectorMappingRuntime.mapRegistryItem(raw);
 }
 function mapUserConnector(raw) {
-	const repos = Array.isArray(raw?.repos) ? raw.repos : typeof raw?.repos === "string" ? raw.repos.split(",").filter(Boolean) : void 0;
-	return {
-		...raw,
-		name: raw?.name ?? "",
-		displayName: raw?.display_name ?? raw?.displayName ?? raw?.name ?? "",
-		description: raw?.description ?? "",
-		connectStatus: Number(raw?.connect_status ?? raw?.connectStatus ?? 0) === 1,
-		activeStatus: Number(raw?.active_status ?? raw?.activeStatus ?? 0) === 1,
-		repos,
-		url: raw?.url,
-		oauthClientId: raw?.oauth_client_id ?? raw?.oauthClientId,
-		oauthRedirectUrl: raw?.oauth_redirect_url ?? raw?.oauthRedirectUrl,
-		oauthAppName: raw?.oauth_app_name ?? raw?.oauthAppName,
-		prompt: raw?.prompt
-	};
+	return connectorMappingRuntime.mapUserConnector(raw);
 }
 function mapProjectConnector(raw) {
-	return {
-		connectorName: raw?.connector_name ?? raw?.connectorName ?? raw?.name ?? "",
-		displayName: raw?.display_name ?? raw?.displayName ?? raw?.connector_name ?? raw?.name ?? "",
-		description: raw?.description ?? "",
-		iconUrl: raw?.icon_url ?? raw?.iconUrl ?? null,
-		authMode: raw?.auth_mode ?? raw?.authMode ?? "personal",
-		configuredBy: raw?.configured_by ?? raw?.configuredBy ?? raw?.created_by ?? raw?.createdBy ?? null,
-		configuredByName: raw?.configured_by_name ?? raw?.configuredByName ?? raw?.created_by_name ?? raw?.createdByName ?? null,
-		connectedAccount: raw?.connected_account ?? raw?.connectedAccount ?? null,
-		isConnected: Boolean(raw?.is_connected ?? raw?.isConnected ?? raw?.connect_status ?? raw?.connectStatus)
-	};
+	return connectorMappingRuntime.mapProjectConnector(raw);
 }
 function mapProjectUserConnectorPreference(raw) {
-	return {
-		name: raw?.name ?? raw?.connector_name ?? raw?.connectorName ?? "",
-		authMode: raw?.auth_mode ?? raw?.authMode ?? "personal",
-		activeStatus: Number(raw?.active_status ?? raw?.activeStatus ?? 1) === 1
-	};
+	return connectorMappingRuntime.mapProjectUserConnectorPreference(raw);
 }
 /** 解析后端 ConversationConnector → 前端 TaskConnectorItem。
 *  字段命名遵循 services/pkg/store/interface/agentserver/def/connector.go::ConversationConnector。
 *  后端用 active_status / connect_status 表示开关与连接状态（int 0/1），前端统一为 boolean。
 */
 function mapTaskConnector(raw) {
-	const rawAuthMode = raw?.auth_mode ?? raw?.authMode;
-	const authMode = typeof rawAuthMode === "string" && rawAuthMode !== "" ? rawAuthMode : "personal";
-	return {
-		taskId: raw?.task_id ?? raw?.taskId ?? "",
-		name: raw?.name ?? "",
-		displayName: raw?.display_name ?? raw?.displayName ?? raw?.name ?? "",
-		authMode,
-		activeStatus: Number(raw?.active_status ?? raw?.activeStatus ?? 0) === 1,
-		isConnected: Number(raw?.connect_status ?? raw?.connectStatus ?? 0) === 1,
-		repos: typeof raw?.repos === "string" ? raw.repos : void 0
-	};
+	return connectorMappingRuntime.mapTaskConnector(raw);
 }
 function isConnectorAuthMode(value) {
-	return value === "personal" || value === "public";
+	return connectorMappingRuntime.isConnectorAuthMode(value);
 }
 function mapProjectConnectorChange(raw, field) {
-	if (!raw || typeof raw !== "object") throw new Error(`update project connectors returned invalid ${field} item`);
-	const item = raw;
-	const connectorName = item.connector_name ?? item.connectorName ?? item.name;
-	const authMode = item.auth_mode ?? item.authMode;
-	if (typeof connectorName !== "string" || !connectorName.trim()) throw new Error(`update project connectors returned ${field} item without connector_name`);
-	if (!isConnectorAuthMode(authMode)) throw new Error(`update project connectors returned ${field} item with invalid auth_mode`);
-	return {
-		connectorName,
-		authMode
-	};
+	return connectorMappingRuntime.mapProjectConnectorChange(raw, field);
 }
 function mapProjectConnectorChanges(raw, field) {
-	if (raw == null) return [];
-	if (!Array.isArray(raw)) throw new Error(`update project connectors returned invalid ${field} list`);
-	return raw.map((item) => mapProjectConnectorChange(item, field));
+	return connectorMappingRuntime.mapProjectConnectorChanges(raw, field);
 }
 function buildRegistryQuery(params) {
-	const search = new URLSearchParams();
-	if (params?.scope) search.set("scope", params.scope);
-	if (params?.status) search.set("status", params.status);
-	if (params?.mcpOnly) search.set("mcp_only", "true");
-	if (params?.capability) search.set("capability", params.capability);
-	if (params?.projectId) search.set("project_id", params.projectId);
-	return search.toString();
+	return connectorMappingRuntime.buildRegistryQuery(params);
 }
 function buildProjectQuery(projectId) {
-	return projectId ? `?project_id=${encodeURIComponent(projectId)}` : "";
+	return connectorMappingRuntime.buildProjectQuery(projectId);
 }
 function normalizeAuthConnectParams(params) {
-	return typeof params === "string" ? { authorizationCode: params } : params ?? {};
+	return connectorMappingRuntime.normalizeAuthConnectParams(params);
 }
 var ConnectorCloudService = class {
 	http;
