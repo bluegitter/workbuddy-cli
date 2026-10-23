@@ -16,6 +16,7 @@ const edgeSyncBasicHandlersRuntime = require("../runtime/edge-sync-basic-handler
 const edgeSyncArtifactsRuntime = require("../runtime/edge-sync-artifacts.js");
 const { EdgeSyncMappingStore: EdgeSyncMappingStoreRuntime } = require("../runtime/edge-sync-mapping-store.js");
 const { EdgeSyncNetworkRecovery: EdgeSyncNetworkRecoveryRuntime } = require("../runtime/edge-sync-recovery.js");
+const { EdgeSyncTurnTraceStore: EdgeSyncTurnTraceStoreRuntime } = require("../runtime/edge-sync-trace.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
@@ -222550,7 +222551,7 @@ function normalizeEdgeSyncTraceId(traceId) {
 * Executor handler 内用 AsyncLocalStorage 承载当前请求；handler 返回后，以 sessionId
 * 显式保存该 turn 上下文，供脱离原 Promise 链的 SessionManager sink 继续发布 convmsg。
 */
-var EdgeSyncTurnTraceStore = class {
+var LegacyEdgeSyncTurnTraceStore = class {
 	active = new node_async_hooks.AsyncLocalStorage();
 	byTurn = /* @__PURE__ */ new Map();
 	activeTurnTokensBySession = /* @__PURE__ */ new Map();
@@ -222660,6 +222661,7 @@ function fnv1a32(value, seed) {
 	}
 	return hash >>> 0;
 }
+var EdgeSyncTurnTraceStore = EdgeSyncTurnTraceStoreRuntime;
 //#endregion
 //#region ../../packages/workbuddy-server/src/edge-sync/edge-sync-service.ts
 /**
