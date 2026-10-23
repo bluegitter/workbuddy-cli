@@ -18,6 +18,50 @@ function isWithinHome(candidate, homeDir) {
   return candidate === homeDir || candidate.startsWith(homeWithSep);
 }
 function isSensitivePath(relativePath) { return SENSITIVE_PATHS.some((root) => relativePath === root || relativePath.startsWith(`${root}${path.sep}`)); }
+function isRemoteUrl(uri) { return typeof uri === 'string' && (uri.startsWith('http://') || uri.startsWith('https://')); }
+
+async function localizeRemoteImages(contentBlocks, sessionId, ctx, options = {}) {
+  const edgeLog = options.edgeLog || (() => {});
+  for (let index = 0; index < contentBlocks.length; index += 1) {
+    const block = contentBlocks[index];
+    if (!block || block.type !== 'image' || !isRemoteUrl(block.uri) || block.data) continue;
+    try {
+      const response = await fetch(block.uri);
+      if (!response.ok) continue;
+      const buffer = Buffer.from(await response.arrayBuffer());
+      if (buffer.length > 10 * 1024 * 1024) continue;
+      const blobId = crypto.createHash('sha256').update(buffer).digest('hex');
+      const mimeType = block.mimeType || response.headers.get('content-type')?.split(';')[0]?.trim() || 'image/png';
+      ctx.saveImageMapping(blobId, block.uri, sessionId);
+      contentBlocks[index] = { type: 'image', data: buffer.toString('base64'), mimeType, uri: block.uri };
+      edgeLog('IMAGE_DOWNLOAD_OK', `uri=${block.uri.slice(0, 80)} blobId=${blobId.slice(0, 12)} size=${buffer.length} sid=${sessionId}`);
+    } catch (error) { edgeLog('IMAGE_DOWNLOAD_ERROR', `uri=${block.uri?.slice(0, 120)} err=${error?.message || String(error)}`); }
+  }
+}
+
+function rebindBlockArray(blocks, ctx) {
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index];
+    if (!block || block.type !== 'image_blob_ref' || !block.blob_id) continue;
+    const uri = ctx.getImageUri(block.blob_id);
+    if (uri) blocks[index] = { type: 'image', uri, mimeType: block.mime || 'image/png' };
+  }
+}
+function rebindImageBlobRefs(notifications, ctx) {
+  for (const notification of notifications) {
+    const params = notification.params;
+    const update = params?.update;
+    if (update && (update.sessionUpdate === 'user_message_chunk' || update.sessionUpdate === 'user_message')) {
+      if (Array.isArray(update.content)) rebindBlockArray(update.content, ctx);
+      else if (update.content?.type === 'image_blob_ref') {
+        const uri = ctx.getImageUri(update.content.blob_id);
+        if (uri) update.content = { type: 'image', uri, mimeType: update.content.mime || 'image/png' };
+      }
+    }
+    const sourceBlocks = params?._meta?.['codebuddy.ai']?.extra?.sourceContentBlocks;
+    if (Array.isArray(sourceBlocks)) rebindBlockArray(sourceBlocks, ctx);
+  }
+}
 
 async function handleGetArtifact(ctx, cmd) {
   const filePath = cmd.filePath;
@@ -65,4 +109,4 @@ async function handleGetArtifact(ctx, cmd) {
   } catch (error) { log.warn(`[EdgeSync] ARTIFACT upload failed: ${error?.message || String(error)}`); return failed(requestId, error?.message || String(error)); }
 }
 
-module.exports = Object.freeze({ SMH_URL_TTL_MS, CACHE_EXPIRE_BUFFER_MS, MAX_ARTIFACT_BYTES, guessContentType, handleGetArtifact });
+module.exports = Object.freeze({ SMH_URL_TTL_MS, CACHE_EXPIRE_BUFFER_MS, MAX_ARTIFACT_BYTES, guessContentType, localizeRemoteImages, rebindImageBlobRefs, handleGetArtifact });

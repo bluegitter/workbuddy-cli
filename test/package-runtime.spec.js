@@ -252,6 +252,7 @@ const {
   handlePermissionResolve,
   handleGetArtifact,
   guessContentType,
+  rebindImageBlobRefs,
   handleGetAutomations,
   handleGetTaskArtifacts,
   handleGetModels,
@@ -2539,6 +2540,9 @@ async function main() {
   assert.strictEqual(guessContentType('report.pdf'), 'application/pdf');
   const artifactDenied = await handleGetArtifact({ logger: { warn() {} }, deps: {}, getArtifactCache() {} }, { commandId: 'artifact-1', filePath: '../secret.txt' });
   assert.deepStrictEqual(artifactDenied, { requestId: 'artifact-1', status: 'failed' });
+  const imageNotification = [{ params: { update: { sessionUpdate: 'user_message_chunk', content: { type: 'image_blob_ref', blob_id: 'blob-1' } } } }];
+  rebindImageBlobRefs(imageNotification, { getImageUri: () => 'https://cdn.test/image.png' });
+  assert.strictEqual(imageNotification[0].params.update.content.type, 'image');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });

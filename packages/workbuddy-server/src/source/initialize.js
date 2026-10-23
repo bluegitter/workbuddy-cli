@@ -222100,6 +222100,7 @@ function guessContentType(fileName) {
 * 下载失败的图片保留原样（降级：前端拿到 uri 自己兜底渲染）。
 */
 async function localizeRemoteImages(contentBlocks, sessionId, ctx) {
+	return edgeSyncArtifactsRuntime.localizeRemoteImages(contentBlocks, sessionId, ctx, { edgeLog });
 	for (let i = 0; i < contentBlocks.length; i++) {
 		const block = contentBlocks[i];
 		if (block.type !== "image") continue;
@@ -222148,6 +222149,7 @@ function isRemoteUrl(uri) {
 * 其余（agent_message_chunk / tool_use 等）不含用户图片，跳过。
 */
 function rebindImageBlobRefs(notifications, ctx) {
+	return edgeSyncArtifactsRuntime.rebindImageBlobRefs(notifications, ctx);
 	for (const notif of notifications) {
 		const params = notif.params;
 		if (!params) continue;
