@@ -15,6 +15,8 @@ const require_auth = require("./auth.js");
 const require_module_base = require("./module-base.js");
 const connectorMcpMetricRuntime = require("../runtime/connector-mcp-metric.js");
 const connectorMcpErrorRuntime = require("../runtime/connector-mcp-error-utils.js");
+const connectorStateRuntime = require("../runtime/connector-state-utils.js");
+const connectorLocaleRuntime = require("../runtime/connector-locale.js");
 let fs = require("fs");
 fs = require_chunk.__toESM(fs);
 let os = require("os");
@@ -356,31 +358,19 @@ function defaultGetSystemLocale() {
 	return require_runtime_context.getWorkbuddyRuntimeLocale();
 }
 function readPersistedLocale(configDir) {
-	try {
-		const configPath = (0, node_path.join)(configDir, "app", "app-config.json");
-		if (!(0, node_fs.existsSync)(configPath)) return;
-		const raw = JSON.parse((0, node_fs.readFileSync)(configPath, "utf-8"));
-		return typeof raw?.locale === "string" ? raw.locale : void 0;
-	} catch {
-		return;
-	}
+	return connectorLocaleRuntime.readPersistedLocale(configDir);
 }
 /**
 * 判断当前是否应使用英文显示连接器 name / description。
 * 详细优先级见文件头注释。
 */
 function isEnglishConnectorLocale(deps) {
-	const getProductIsOversea = deps.getProductIsOversea ?? defaultGetProductIsOversea;
-	const getProductLocale = deps.getProductLocale ?? defaultGetProductLocale;
-	const getSystemLocale = deps.getSystemLocale ?? defaultGetSystemLocale;
-	const persistedLocale = readPersistedLocale(deps.configDir);
-	if (persistedLocale) return !persistedLocale.toLowerCase().startsWith("zh");
-	const productLocale = getProductLocale();
-	if (productLocale) return !productLocale.toLowerCase().startsWith("zh");
-	const productIsOversea = getProductIsOversea();
-	if (productIsOversea === true) return true;
-	if (productIsOversea === false) return false;
-	return !getSystemLocale().toLowerCase().startsWith("zh");
+	return connectorLocaleRuntime.isEnglishConnectorLocale({
+		...deps,
+		getProductIsOversea: deps.getProductIsOversea ?? defaultGetProductIsOversea,
+		getProductLocale: deps.getProductLocale ?? defaultGetProductLocale,
+		getSystemLocale: deps.getSystemLocale ?? defaultGetSystemLocale
+	});
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/connector/connector-server-side-oauth-refresher.ts
@@ -642,15 +632,10 @@ var AAD_SCOPE_HEADER = "connector-states:headerOverrides";
 var AAD_SCOPE_ENV = "connector-states:envOverrides";
 /** 由 storageDir 推导出标准三件套路径 */
 function resolveStatesFilePaths(storageDir, masterKeyBackupBaseDir) {
-	return {
-		storageDir,
-		v3Path: (0, path.join)(storageDir, STATES_V3_FILE_NAME),
-		legacyPath: (0, path.join)(storageDir, STATES_LEGACY_FILE_NAME),
-		masterKeyBackupBaseDir
-	};
+	return connectorStateRuntime.resolveStatesFilePaths(storageDir, masterKeyBackupBaseDir);
 }
 function isAnonymousUser(userId) {
-	return !userId || userId === "default";
+	return connectorStateRuntime.isAnonymousUser(userId);
 }
 /**
 * 读 connector-states 状态。
@@ -814,55 +799,23 @@ function decryptValue(value, serverKey, fieldName, cipher) {
 }
 /** 从持久化数据 / 业务状态中抽出非敏感字段（不含 header/env/version/encryption） */
 function extractNonSensitiveFields(src) {
-	return {
-		enabled: coerceStringArray(src.enabled),
-		headerOverridesBearerStripped: src.headerOverridesBearerStripped,
-		staleManagedAuthHeadersPurged: src.staleManagedAuthHeadersPurged,
-		accountIdentityKey: src.accountIdentityKey,
-		everConnected: coerceOptionalStringArray(src.everConnected),
-		userDisabled: coerceConnectorUserDisabledState(src.userDisabled),
-		disabledToolsOverrides: coerceStringArrayMap(src.disabledToolsOverrides),
-		mcpSecurityMigrated: src.mcpSecurityMigrated,
-		cSideAutoBoundDefaultDisabledMigrated: src.cSideAutoBoundDefaultDisabledMigrated
-	};
+	return connectorStateRuntime.extractNonSensitiveFields(src);
 }
 function coerceStringArray(value) {
-	if (!Array.isArray(value)) return [];
-	return value.filter((item) => typeof item === "string");
+	return connectorStateRuntime.coerceStringArray(value);
 }
 function coerceOptionalStringArray(value) {
-	if (!Array.isArray(value)) return;
-	return coerceStringArray(value);
+	return connectorStateRuntime.coerceOptionalStringArray(value);
 }
 function coerceConnectorUserDisabledState(value) {
-	if (Array.isArray(value)) return value.reduce((result, item) => {
-		if (typeof item === "string") result[item] = true;
-		return result;
-	}, {});
-	if (!value || typeof value !== "object") return {};
-	const result = {};
-	for (const [key, item] of Object.entries(value)) if (typeof item === "boolean") result[key] = item;
-	return result;
+	return connectorStateRuntime.coerceConnectorUserDisabledState(value);
 }
 function coerceStringArrayMap(value) {
-	if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-	const result = {};
-	for (const [key, item] of Object.entries(value)) {
-		const items = coerceStringArray(item);
-		if (items.length > 0) result[key] = items;
-	}
-	return result;
+	return connectorStateRuntime.coerceStringArrayMap(value);
 }
 /** 把磁盘上的 sensitive map 强制视为明文（旧文件迁移源）；非 string 的 value 丢弃 */
 function coercePlainMap(map) {
-	const out = {};
-	if (!map) return out;
-	for (const [configId, fields] of Object.entries(map)) {
-		const plainFields = {};
-		for (const [key, value] of Object.entries(fields)) if (typeof value === "string") plainFields[key] = value;
-		out[configId] = plainFields;
-	}
-	return out;
+	return connectorStateRuntime.coercePlainMap(map);
 }
 function ensureStorageDir(storageDir) {
 	if (!(0, fs.existsSync)(storageDir)) (0, fs.mkdirSync)(storageDir, {
