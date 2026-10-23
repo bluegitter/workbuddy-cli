@@ -14,6 +14,7 @@ const require_module_app_server = require("./module.app-server.js");
 const { FileBackedLegacyLocalStorageMigrationService } = require("../runtime/legacy-localstorage-migration.js");
 const { createAppServerDesktopHostBridge: createDesktopHostBridge } = require("../runtime/desktop-host-bridge.js");
 const { markDaemon: markDaemonRuntime, resolveProductName, resolveStoredSessionTitle } = require("../runtime/daemon-utils.js");
+const { configureDaemonNetworkProxy: configureDaemonNetworkProxyRuntime } = require("../runtime/daemon-network-proxy.js");
 let node_fs = require("node:fs");
 node_fs = require_chunk.__toESM(node_fs);
 let _tencent_tencent_docs_ai_engine = require("@tencent/tencent-docs-ai-engine");
@@ -475,46 +476,16 @@ async function runDaemonAppServerEntry() {
 	process.on("SIGINT", shutdown);
 }
 async function configureDaemonNetworkProxy(resolveDaemonProxyEnv, pacResolver) {
-	let pacRpcHandle;
-	if (pacResolver) {
-		try {
-			require_net_log.setPacResolver(pacResolver);
-			daemonAppServerLogger.info("PAC resolver installed (per-request resolveProxy via host bridge)");
-		} catch (error) {
-			daemonAppServerLogger.warn("install PAC resolver failed (non-fatal, falling back to env)", error);
-		}
-		try {
-			pacRpcHandle = await require_initialize.startPacRpcService(pacResolver, { logger: {
-				info: (msg) => daemonAppServerLogger.info(msg),
-				warn: (msg) => daemonAppServerLogger.warn(msg)
-			} });
-			if (pacRpcHandle) {
-				process.env[require_initialize.PAC_RPC_SOCKET_ENV] = pacRpcHandle.socketPath;
-				process.env[require_initialize.PAC_RPC_TOKEN_ENV] = pacRpcHandle.token;
-				daemonAppServerLogger.info(`PAC RPC service started: socket=${pacRpcHandle.socketPath} (token written to env)`);
-			}
-		} catch (error) {
-			daemonAppServerLogger.warn("start PAC RPC service failed (non-fatal, CLI will skip L0)", error);
-		}
-	}
-	try {
-		const proxyEnv = await resolveDaemonProxyEnv();
-		for (const [key, value] of Object.entries(proxyEnv)) {
-			if (key === "NODE_OPTIONS") continue;
-			if (typeof value === "string" && value.length > 0) process.env[key] = value;
-		}
-	} catch (error) {
-		daemonAppServerLogger.warn("resolve daemon proxy env failed (non-fatal)", error);
-	}
-	require_net_log.installUndiciProxyDispatcher();
-	require_net_log.installAxiosGlobalProxy();
-	require_workbuddy_auth_product_coordinator.suppressTlsRejectWarning();
-	try {
-		if (require_workbuddy_product_config.tryGetWorkbuddyBaseProductConfiguration()?.productFeatures?.[require_common.ProductFeature.DisableTlsVerification]) require_workbuddy_auth_product_coordinator.disableTlsVerificationForProcess("bootstrap:daemon:product.json");
-	} catch (error) {
-		daemonAppServerLogger.warn("[TlsVerification] early bootstrap injection skipped (non-fatal)", error);
-	}
-	return pacRpcHandle;
+	return configureDaemonNetworkProxyRuntime({
+		resolveDaemonProxyEnv,
+		pacResolver,
+		netLog: require_net_log,
+		initialize: require_initialize,
+		authCoordinator: require_workbuddy_auth_product_coordinator,
+		productConfig: () => require_workbuddy_product_config.tryGetWorkbuddyBaseProductConfiguration(),
+		disableTlsVerification: (config) => Boolean(config?.productFeatures?.[require_common.ProductFeature.DisableTlsVerification]),
+		logger: daemonAppServerLogger
+	});
 }
 //#endregion
 exports.runDaemonAppServerEntry = runDaemonAppServerEntry;

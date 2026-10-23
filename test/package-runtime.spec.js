@@ -60,6 +60,7 @@ const { EMPTY_COMPLETION_RESULT, createCompletionResult, getZodSchemaObject, isZ
 const { startDaemonAppServerEntry } = require('../packages/workbuddy-server/src');
 const { FileBackedLegacyLocalStorageMigrationService, createAppServerDesktopHostBridge, partitionToScope, readOpenDialogResult, readSaveDialogResult } = require('../packages/workbuddy-server/src');
 const { markDaemon, resolveProductName, resolveStoredSessionTitle } = require('../packages/workbuddy-server/src');
+const { configureDaemonNetworkProxy } = require('../packages/workbuddy-server/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
@@ -1043,6 +1044,20 @@ async function main() {
   const marked = [];
   assert.strictEqual(markDaemon('F1', { marks: { F1: { id: 'F1', key: 'boot', phase: 'startup' } }, getPerfLogger: () => ({ mark: (...args) => marked.push(args) }), flow: 'startup' }), true);
   assert.deepStrictEqual(marked, [['boot', { id: 'F1', phase: 'startup' }]]);
+  const proxyEnv = {};
+  const proxyCalls = [];
+  const pacRpc = await configureDaemonNetworkProxy({
+    pacResolver: async () => 'DIRECT',
+    resolveDaemonProxyEnv: async () => ({ HTTP_PROXY: 'http://proxy.test', NODE_OPTIONS: '--ignored' }),
+    env: proxyEnv,
+    netLog: { setPacResolver: () => proxyCalls.push('pac'), installUndiciProxyDispatcher: () => proxyCalls.push('undici'), installAxiosGlobalProxy: () => proxyCalls.push('axios') },
+    initialize: { PAC_RPC_SOCKET_ENV: 'SOCKET', PAC_RPC_TOKEN_ENV: 'TOKEN', startPacRpcService: async () => ({ socketPath: '/tmp/pac.sock', token: 'token-1' }) },
+    authCoordinator: { suppressTlsRejectWarning: () => proxyCalls.push('tls') },
+    logger: { info: () => {}, warn: () => {} },
+  });
+  assert.deepStrictEqual(pacRpc, { socketPath: '/tmp/pac.sock', token: 'token-1' });
+  assert.deepStrictEqual(proxyEnv, { SOCKET: '/tmp/pac.sock', TOKEN: 'token-1', HTTP_PROXY: 'http://proxy.test' });
+  assert.deepStrictEqual(proxyCalls, ['pac', 'undici', 'axios', 'tls']);
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });

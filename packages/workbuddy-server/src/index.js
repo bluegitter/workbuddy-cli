@@ -27,6 +27,7 @@ module.exports = Object.freeze({
   ...require("./runtime/legacy-localstorage-migration"),
   ...require("./runtime/desktop-host-bridge"),
   ...require("./runtime/daemon-utils"),
+  ...require("./runtime/daemon-network-proxy"),
   ...require("./runtime/client-info-provider"),
   ...require("./runtime/channel-branding"),
   ...require("./runtime/proxy-env"),
