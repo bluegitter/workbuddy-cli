@@ -25,6 +25,8 @@ const {
   isSubagent,
   SubagentRunner,
   ToolRegistry,
+  executeToolCall,
+  prepareToolInput,
   mapWithConcurrency,
   partitionToolCalls,
   runAgentLoop,
@@ -162,6 +164,27 @@ async function main() {
     { id: 'unsafe', name: 'unsafe-read', input: {} },
     { id: 'read-2', name: 'read', input: {} },
   ], conservative).map((batch) => batch.concurrent), [false, true]);
+  const originalToolInput = { legacyValue: 'kept' };
+  const preparedToolInput = await prepareToolInput({
+    backfillObservableInput: (input) => { input.value = input.legacyValue; },
+    parseInput: (input) => ({ value: String(input.value) }),
+    validateInput: async (input) => ({ result: input.value === 'kept', message: 'invalid', errorCode: 17 }),
+  }, originalToolInput, {});
+  assert.deepStrictEqual(preparedToolInput, { ok: true, input: { value: 'kept' } });
+  assert.deepStrictEqual(originalToolInput, { legacyValue: 'kept' });
+  let invalidToolSideEffects = 0;
+  const invalidToolResult = await executeToolCall({ id: 'invalid-1', name: 'validated', input: {} }, {
+    tools: new ToolRegistry([{
+      name: 'validated',
+      validateInput: async () => ({ result: false, message: 'missing path', errorCode: 42 }),
+      execute: async () => { invalidToolSideEffects += 1; },
+    }]),
+    hooks: { run: async () => { invalidToolSideEffects += 1; } },
+    permissions: { canUse: async () => { invalidToolSideEffects += 1; return { behavior: 'allow' }; } },
+  });
+  assert.strictEqual(invalidToolResult.content, 'missing path');
+  assert.deepStrictEqual(invalidToolResult.metadata, { validation: true, errorCode: 42 });
+  assert.strictEqual(invalidToolSideEffects, 0);
 
   const session = new AgentSession({ messages: [{ role: 'user', content: 'read' }] });
   const lineageManager = new SessionManager();
@@ -382,7 +405,7 @@ async function main() {
   assert.strictEqual((await pending).behavior, 'allow');
   const abortController = new AbortController();
   abortController.abort();
-  const cancelled = await require('../src/runtime/tool-execution').executeToolCall(
+  const cancelled = await executeToolCall(
     { id: 'cancelled', name: 'read', input: {} },
     { tools, signal: abortController.signal },
   );
@@ -395,7 +418,7 @@ async function main() {
   approvalInterruptions = new InterruptionController({ onRequest: (request) => {
     setImmediate(() => request.id && approvalInterruptions.resolve(request.id, { behavior: 'allow', updatedInput: { value: 'edited' }, source: 'user' }));
   } });
-  const approvalResult = await require('../src/runtime/tool-execution').executeToolCall(
+  const approvalResult = await executeToolCall(
     { id: 'approval-input', name: 'approval', input: { value: 'original' } },
     {
       tools: approvalTools,

@@ -2,18 +2,21 @@
 
 const { HookEvent } = require('./hook-registry');
 const { getPermissionInput, normalizePermissionDecision } = require('./permission-result');
+const { parseToolInput, prepareToolInput } = require('./tool-input-pipeline');
 
 async function executeToolCall(call, context) {
   if (context.signal?.aborted) return toolResult(call, true, 'Tool use cancelled', { cancelled: true });
   const tool = context.tools.get(call.name);
   if (!tool) return toolResult(call, true, `Unknown tool: ${call.name}`);
 
-  let parsed;
-  try {
-    parsed = tool.parseInput ? tool.parseInput(call.input) : call.input;
-  } catch (error) {
-    return toolResult(call, true, error instanceof Error ? error.message : String(error));
+  const prepared = await prepareToolInput(tool, call.input, context);
+  if (!prepared.ok) {
+    return toolResult(call, true, prepared.message, {
+      validation: true,
+      ...(prepared.errorCode === undefined ? {} : { errorCode: prepared.errorCode }),
+    });
   }
+  let parsed = prepared.input;
   const preHook = await context.hooks?.run(HookEvent.PRE_TOOL_USE, { call, tool, input: parsed }, context);
   if (preHook?.stopped) return toolResult(call, true, preHook.reason, { hook: HookEvent.PRE_TOOL_USE });
   if (preHook?.payload?.input !== undefined) parsed = preHook.payload.input;
@@ -45,7 +48,7 @@ async function executeToolCall(call, context) {
 
   try {
     const finalInput = getPermissionInput(decision, parsed);
-    if (finalInput !== parsed) parsed = tool.parseInput ? tool.parseInput(finalInput) : finalInput;
+    if (finalInput !== parsed) parsed = parseToolInput(tool, finalInput);
     let output = await tool.execute(parsed, context);
     const postHook = await context.hooks?.run(HookEvent.POST_TOOL_USE, { call, tool, input: parsed, output }, context);
     if (postHook?.payload?.output !== undefined) output = postHook.payload.output;
