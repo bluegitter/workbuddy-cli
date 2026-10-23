@@ -14,6 +14,7 @@ const require_types = require("./types.js");
 const require_auth = require("./auth.js");
 const require_module_base = require("./module-base.js");
 const connectorMcpMetricRuntime = require("../runtime/connector-mcp-metric.js");
+const connectorMcpErrorRuntime = require("../runtime/connector-mcp-error-utils.js");
 let fs = require("fs");
 fs = require_chunk.__toESM(fs);
 let os = require("os");
@@ -14303,26 +14304,7 @@ function formatConnectorProxyLog(message, meta) {
 * 字符串后会丢失 `cause` 信息；我们必须在 fetch / body 层就地捕获才能拿到 code。
 */
 function formatUndiciFetchErrorForLog(error) {
-	if (!(error instanceof Error)) return `error=${JSON.stringify(error)}`;
-	const parts = [];
-	parts.push(`name=${error.name}`);
-	const code = error.code;
-	if (code !== void 0) parts.push(`code=${String(code)}`);
-	let cursor = error.cause;
-	let depth = 0;
-	while (cursor && depth < 4) {
-		if (cursor instanceof Error) {
-			const causeCode = cursor.code;
-			parts.push(`cause[${depth}]=${cursor.name}${causeCode !== void 0 ? `(${String(causeCode)})` : ""}: ${cursor.message}`);
-			cursor = cursor.cause;
-		} else {
-			parts.push(`cause[${depth}]=${String(cursor)}`);
-			cursor = void 0;
-		}
-		depth++;
-	}
-	parts.push(`message=${error.message}`);
-	return parts.join("; ");
+	return connectorMcpErrorRuntime.formatUndiciFetchErrorForLog(error);
 }
 /**
 * 判定错误是否为「HTTP 业务错误」——server 用 HTTP 4xx（除 401/403）明确拒绝这次请求。
@@ -14344,11 +14326,7 @@ function formatUndiciFetchErrorForLog(error) {
 * 的 `class StreamableHTTPError`）。这里走 duck typing，不硬依赖 SDK 内部类型。
 */
 function isHttpBusinessError(error) {
-	if (!(error instanceof Error)) return false;
-	const code = error.code;
-	if (typeof code !== "number") return false;
-	if (code === 401 || code === 403) return false;
-	return code >= 400 && code < 500;
+	return connectorMcpErrorRuntime.isHttpBusinessError(error);
 }
 /**
 * 把 SDK 抛出的 StreamableHTTPError(4xx, "Error POSTing to endpoint: <body>") 还原成
@@ -14362,14 +14340,7 @@ function isHttpBusinessError(error) {
 * 无法解析出 body 时降级为原文，保证上层永远拿到可用的 tool result。
 */
 function buildBusinessErrorResult(error) {
-	const raw = error instanceof Error ? error.message : String(error);
-	return {
-		content: [{
-			type: "text",
-			text: raw.match(/Error POSTing to endpoint:\s*(.+)$/s)?.[1]?.trim() || raw
-		}],
-		isError: true
-	};
+	return connectorMcpErrorRuntime.buildBusinessErrorResult(error);
 }
 /**
 * Node.js / undici 层的**标准网络错误码**枚举，用于结构化识别 transport 错误。
@@ -14386,21 +14357,7 @@ function buildBusinessErrorResult(error) {
 * 不包括 MCP protocol code（-32000 等 JSON-RPC 保留码）——这类错误由 `isReconnectRipple`
 * 单独识别，且业务/协议错误不应被误判为 transport。
 */
-var TRANSPORT_ERROR_CODES = new Set([
-	"ECONNRESET",
-	"ECONNREFUSED",
-	"ECONNABORTED",
-	"ETIMEDOUT",
-	"ENETUNREACH",
-	"ENOTCONN",
-	"ENOTFOUND",
-	"EAI_AGAIN",
-	"UND_ERR_SOCKET",
-	"UND_ERR_CONNECT_TIMEOUT",
-	"UND_ERR_HEADERS_TIMEOUT",
-	"UND_ERR_BODY_TIMEOUT",
-	"UND_ERR_ABORTED"
-]);
+var TRANSPORT_ERROR_CODES = connectorMcpErrorRuntime.TRANSPORT_ERROR_CODES;
 /**
 * 检查错误链上的任一层是否为 Node.js / undici 标准网络错误码。
 *
@@ -14415,17 +14372,7 @@ var TRANSPORT_ERROR_CODES = new Set([
 *   本身出问题，根本没走到 HTTP 响应
 */
 function isTransportErrorByCode(error) {
-	let cursor = error;
-	let depth = 0;
-	while (cursor && depth < 5) {
-		if (cursor instanceof Error) {
-			const code = cursor.code;
-			if (typeof code === "string" && TRANSPORT_ERROR_CODES.has(code)) return true;
-			cursor = cursor.cause;
-		} else break;
-		depth++;
-	}
-	return false;
+	return connectorMcpErrorRuntime.isTransportErrorByCode(error);
 }
 /**
 * Transport 错误的**兜底 message 判据**（当结构化 code 都不命中时使用）。
@@ -14438,11 +14385,7 @@ function isTransportErrorByCode(error) {
 * 相比历史上的 `['closed','connection','network','timeout','socket','fetch failed']`
 * 字符串 `includes`，这里几乎不可能误命中业务错误的 text。
 */
-var FALLBACK_TRANSPORT_MESSAGE_PATTERNS = [
-	/\bsocket hang up\b/i,
-	/\bpremature close\b/i,
-	/^aborted$/i
-];
+var FALLBACK_TRANSPORT_MESSAGE_PATTERNS = connectorMcpErrorRuntime.FALLBACK_TRANSPORT_MESSAGE_PATTERNS;
 /**
 * 判定错误是否为「reconnect 副作用」——SDK Protocol._onclose() 在 disconnect 时把
 * 所有 pending 请求 reject 成的 `McpError(code=-32000, "Connection closed")`。
@@ -14457,8 +14400,7 @@ var FALLBACK_TRANSPORT_MESSAGE_PATTERNS = [
 * 自动重试是幂等安全的。
 */
 function isReconnectRipple(error) {
-	if (!(error instanceof Error)) return false;
-	return error.code === -32e3;
+	return connectorMcpErrorRuntime.isReconnectRipple(error);
 }
 /**
 * 判定错误是否为「MCP 会话丢失」——即 MCP spec 2025-11-25 §Session 4 定义的场景：
@@ -14488,9 +14430,7 @@ function isReconnectRipple(error) {
 * 不知道 session）。因此 reconnect + 重试是幂等安全的。
 */
 function isMcpSessionLost(error, sessionId) {
-	if (!(error instanceof Error)) return false;
-	if (error.code !== 404) return false;
-	return typeof sessionId === "string" && sessionId.length > 0;
+	return connectorMcpErrorRuntime.isMcpSessionLost(error, sessionId);
 }
 /**
 * 根据 `waitForReconnect` 的失败原因生成精准的错误消息（issue #60615 review followup）。
@@ -14500,12 +14440,7 @@ function isMcpSessionLost(error, sessionId) {
 * 排查——尤其"手动 disconnect"完全没有 reconnect 在跑，用"未超时内恢复"是纯粹的假信号。
 */
 function buildRippleFailureMessage(configId, result) {
-	switch (result.reason) {
-		case "no-inflight": return `Connector "${configId}" was disconnected during call (no in-flight reconnect).`;
-		case "entry-lost": return `Connector "${configId}" was removed during call.`;
-		case "timeout": return `Connector "${configId}" call failed due to reconnect ripple and reconnect did not recover in time.`;
-		case "reconnect-failed": return `Connector "${configId}" reconnected but was disconnected again before retry could proceed.`;
-	}
+	return connectorMcpErrorRuntime.buildRippleFailureMessage(configId, result);
 }
 /**
 * 基于错误对象 / 错误链的字符串特征，对 transport 错误做启发式归类。
@@ -14519,99 +14454,34 @@ function buildRippleFailureMessage(configId, result) {
 * - `unknown`：未匹配到已知模式
 */
 function inferTransportCloseKind(error) {
-	const messages = [];
-	let cursor = error;
-	let depth = 0;
-	while (cursor && depth < 5) {
-		if (cursor instanceof Error) {
-			messages.push(`${cursor.name}: ${cursor.message}`);
-			const code = cursor.code;
-			if (typeof code === "string") messages.push(code);
-			cursor = cursor.cause;
-		} else if (typeof cursor === "string") {
-			messages.push(cursor);
-			cursor = void 0;
-		} else cursor = void 0;
-		depth++;
-	}
-	const haystack = messages.join(" | ").toLowerCase();
-	if (!haystack) return "unknown";
-	if (haystack.includes("sse stream disconnected") && haystack.includes("terminated")) return "sse-body-terminated";
-	if (haystack.includes("und_err_aborted") || haystack.includes("aborterror") || haystack.includes("the operation was aborted")) return "aborted";
-	if (haystack.includes("econnreset") || haystack.includes("und_err_socket")) return "econnreset";
-	if (haystack.includes("econnrefused")) return "econnrefused";
-	if (haystack.includes("und_err_headers_timeout")) return "headers-timeout";
-	if (haystack.includes("und_err_body_timeout")) return "body-timeout";
-	if (haystack.includes("terminated")) return "undici-terminated";
-	if (haystack.includes("mcp transport closed")) return "transport-closed";
-	return "unknown";
+	return connectorMcpErrorRuntime.inferTransportCloseKind(error);
 }
 function serializeConnectorProxyErrorForLog(error) {
-	if (error instanceof Error) {
-		const errorWithExtras = error;
-		return {
-			name: error.name,
-			message: error.message,
-			stack: error.stack,
-			code: errorWithExtras.code,
-			data: sanitizeConnectorProxyLogValue(errorWithExtras.data),
-			cause: errorWithExtras.cause ? serializeConnectorProxyErrorCauseForLog(errorWithExtras.cause) : void 0
-		};
-	}
-	return { message: String(error) };
+	return connectorMcpErrorRuntime.serializeConnectorProxyErrorForLog(error);
 }
 function serializeConnectorProxyErrorCauseForLog(error) {
-	if (error instanceof Error) return serializeConnectorProxyErrorForLog(error);
-	return String(error);
+	return connectorMcpErrorRuntime.serializeConnectorProxyErrorCauseForLog(error);
 }
 function sanitizeConnectorProxyLogValue(value, depth = 0) {
-	if (depth >= 3) return "[truncated]";
-	if (value == null || typeof value === "number" || typeof value === "boolean" || typeof value === "string") return value;
-	if (Array.isArray(value)) return value.slice(0, 10).map((item) => sanitizeConnectorProxyLogValue(item, depth + 1));
-	if (value instanceof Error) return serializeConnectorProxyErrorForLog(value);
-	if (typeof value === "object") {
-		const entries = Object.entries(value).slice(0, 20);
-		return Object.fromEntries(entries.map(([key, nested]) => [key, sanitizeConnectorProxyLogValue(nested, depth + 1)]));
-	}
-	return String(value);
+	return connectorMcpErrorRuntime.sanitizeConnectorProxyLogValue(value, depth);
 }
 function shouldDedupeArdotCreateDesignCall(configId, toolName, originalToolName) {
-	return configId === ARDOT_MCP_CONFIG_ID && toolName === ARDOT_CREATE_DESIGN_TOOL_NAME && originalToolName === ARDOT_CREATE_DESIGN_ORIGINAL_TOOL_NAME;
+	return connectorMcpErrorRuntime.shouldDedupeArdotCreateDesignCall(configId, toolName, originalToolName);
 }
 function buildConnectorCallToolRequest(configId, originalToolName, args, context) {
-	const request = {
-		name: originalToolName,
-		arguments: args
-	};
-	if (shouldInjectArdotSessionMeta(configId, context)) request._meta = { "workbuddy.ai/sessionId": context.workbuddySessionId };
-	return request;
+	return connectorMcpErrorRuntime.buildConnectorCallToolRequest(configId, originalToolName, args, context);
 }
 function shouldInjectArdotSessionMeta(configId, context) {
-	return configId === ARDOT_MCP_CONFIG_ID && typeof context?.workbuddySessionId === "string" && context.workbuddySessionId.length > 0;
+	return connectorMcpErrorRuntime.shouldInjectArdotSessionMeta(configId, context);
 }
 function buildArdotCreateDesignDedupeKey(configId, originalToolName, args) {
-	return `${configId}:${originalToolName}:${stableStringifyConnectorToolArgs(args)}`;
+	return connectorMcpErrorRuntime.buildArdotCreateDesignDedupeKey(configId, originalToolName, args);
 }
 function stableStringifyConnectorToolArgs(value) {
-	try {
-		return JSON.stringify(stableConnectorToolArgValue(value));
-	} catch {
-		try {
-			return JSON.stringify(value);
-		} catch {
-			return String(value);
-		}
-	}
+	return connectorMcpErrorRuntime.stableStringifyConnectorToolArgs(value);
 }
 function stableConnectorToolArgValue(value) {
-	if (value == null || typeof value === "number" || typeof value === "boolean" || typeof value === "string") return value;
-	if (Array.isArray(value)) return value.map((item) => stableConnectorToolArgValue(item));
-	if (typeof value === "object") {
-		const out = {};
-		for (const key of Object.keys(value).sort()) out[key] = stableConnectorToolArgValue(value[key]);
-		return out;
-	}
-	return String(value);
+	return connectorMcpErrorRuntime.stableConnectorToolArgValue(value);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/connector/connector-proxy-server.ts
