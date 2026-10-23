@@ -1,5 +1,7 @@
 'use strict';
 
+const { normalizeHookResult } = require('./hook-result');
+
 const HookEvent = Object.freeze({
   SESSION_START: 'SessionStart',
   SESSION_END: 'SessionEnd',
@@ -32,12 +34,10 @@ class HookRegistry {
     let current = payload;
     for (const { handler } of this.handlers.get(event) || []) {
       if (context.signal?.aborted) return { stopped: true, reason: 'cancelled', payload: current };
-      const result = await handler(current, context);
+      const result = normalizeHookResult(await handler(current, context), current);
       if (!result) continue;
-      if (result.payload !== undefined) current = result.payload;
-      if (result.block || result.stop) {
-        return { stopped: true, reason: result.reason || 'blocked by hook', payload: current };
-      }
+      current = result.payload;
+      if (result.stopped) return { stopped: true, reason: result.reason, payload: current };
     }
     return { stopped: false, payload: current };
   }

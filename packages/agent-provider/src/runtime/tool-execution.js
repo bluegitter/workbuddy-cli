@@ -18,6 +18,9 @@ async function executeToolCall(call, context) {
   if (preHook?.payload?.input !== undefined) parsed = preHook.payload.input;
 
   let decision = await context.permissions.canUse(tool, parsed, context);
+  if (preHook?.payload?.permissionDecision) {
+    decision = { ...decision, behavior: preHook.payload.permissionDecision, source: 'hook', message: preHook.payload.additionalContext };
+  }
   if (context.signal?.aborted) return toolResult(call, true, 'Tool use cancelled', { cancelled: true });
   if (decision.behavior === 'ask' && context.interruptions) {
     decision = await context.interruptions.request({

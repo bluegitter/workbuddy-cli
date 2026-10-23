@@ -14,6 +14,7 @@ const {
   LocalAgentProvider,
   HookEvent,
   HookRegistry,
+  normalizeHookResult,
   InterruptionController,
   PermissionController,
   PermissionMode,
@@ -79,6 +80,11 @@ async function main() {
     error: 'Forbidden', statusCode: 403, errorCode: '17234',
   });
   const events = [];
+  assert.deepStrictEqual(normalizeHookResult({ hookSpecificOutput: { permissionDecision: 'deny', updatedInput: { safe: true } } }, {}), {
+    payload: { permissionDecision: 'deny', input: { safe: true } },
+    stopped: false,
+    reason: 'blocked by hook',
+  });
   const tools = new ToolRegistry([
     { name: 'read', isConcurrencySafe: () => true, execute: async ({ value }) => value },
     { name: 'write', mutatesState: true, execute: async () => events.push('write') },

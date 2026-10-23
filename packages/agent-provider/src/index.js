@@ -14,6 +14,7 @@ module.exports = Object.freeze({
   ...require("./runtime/agent-session"),
   ...require("./runtime/context-builder"),
   ...require("./runtime/hook-registry"),
+  ...require("./runtime/hook-result"),
   ...require("./runtime/interruption-controller"),
   ...require("./runtime/messages"),
   ...require("./runtime/model-messages"),
