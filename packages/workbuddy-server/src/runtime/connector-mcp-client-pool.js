@@ -2,6 +2,7 @@
 
 const { planConnectorSync } = require('./connector-sync');
 const { createConnectingEntry, snapshotClientEntry, createToolEntry } = require('./connector-client-state');
+const { ToolRoutingTable } = require('./tool-routing');
 
 /**
  * Injectable MCP client pool extracted from ConnectorMcpProxy.
@@ -16,6 +17,8 @@ class ConnectorMcpClientPool {
     this.closeClient = options.closeClient || (async (client) => client.close?.());
     this.logger = options.logger || { info() {}, warn() {} };
     this.onToolsChanged = options.onToolsChanged || (() => {});
+    this.builtinTools = options.builtinTools || new Map();
+    this.getDisabledTools = options.getDisabledTools || (() => []);
     this.clients = new Map();
     this.activeConfigs = new Map();
     this.inFlightConnects = new Map();
@@ -90,7 +93,18 @@ class ConnectorMcpClientPool {
 
   getClientEntry(configId) { return snapshotClientEntry(this.clients.get(configId)); }
   getAllClientEntries() { return new Map([...this.clients].map(([id, entry]) => [id, snapshotClientEntry(entry)])); }
-  listAllTools() { return [...this.clients.values()].filter((entry) => entry.status === 'connected').flatMap((entry) => entry.tools); }
+  listAllTools(options = {}) {
+    const disabledTools = new Map([...this.clients.keys()].map((id) => [id, this.getDisabledTools(id)]));
+    return new ToolRoutingTable({ clients: this.clients, builtinTools: this.builtinTools, disabledTools }).listTools(options);
+  }
+
+  getToolServerMap(options) {
+    const disabledTools = new Map([...this.clients.keys()].map((id) => [id, this.getDisabledTools(id)]));
+    return new ToolRoutingTable({ clients: this.clients, builtinTools: this.builtinTools, disabledTools }).toolServerMap(options);
+  }
+
+  registerBuiltinTool(tool) { this.builtinTools.set(tool.name, tool); this.onToolsChanged(); }
+  unregisterBuiltinTool(name) { const removed = this.builtinTools.delete(name); if (removed) this.onToolsChanged(); return removed; }
 }
 
 function sameConfig(left, right) { return JSON.stringify(left) === JSON.stringify(right); }

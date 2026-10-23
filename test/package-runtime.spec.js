@@ -1921,6 +1921,9 @@ async function main() {
   assert.strictEqual((await mcpPool.connect('docs', { url: 'https://docs' })).success, true);
   assert.strictEqual((await mcpPool.connect('docs', { url: 'https://docs' })).cached, true);
   assert.strictEqual(mcpPool.listAllTools()[0].name, 'docs_docs-tool');
+  mcpPool.registerBuiltinTool({ name: 'builtin', description: 'built-in', inputSchema: { type: 'object' } });
+  assert.strictEqual(mcpPool.listAllTools().some(({ name }) => name === 'builtin'), true);
+  assert.strictEqual(mcpPool.getToolServerMap()['docs_docs-tool'], 'docs');
   const poolSync = await mcpPool.sync({ mail: { url: 'https://mail' }, docs: { url: 'https://docs-2' } });
   assert.deepStrictEqual(poolSync.added, ['mail']);
   assert.deepStrictEqual(poolSync.reconnected, ['docs']);
