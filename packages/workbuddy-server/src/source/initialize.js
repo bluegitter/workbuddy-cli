@@ -6,6 +6,7 @@ const { createSystemOpenLocalFileHandler: createSystemOpenLocalFileHandlerRuntim
 const localDocsHelpersRuntime = require("../runtime/local-docs-helpers.js");
 const { createLocalDocsHostFacade: createLocalDocsHostFacadeRuntime } = require("../runtime/local-docs-facade.js");
 const codebuddyBackendUtilsRuntime = require("../runtime/codebuddy-backend-utils.js");
+const codebuddyBackendEnvRuntime = require("../runtime/codebuddy-backend-env.js");
 const edgeSyncTranslateRuntime = require("../runtime/edge-sync-translate.js");
 const edgeSyncTracingRuntime = require("../runtime/edge-sync-tracing.js");
 const edgeSyncJsonlRuntime = require("../runtime/edge-sync-jsonl.js");
@@ -219568,35 +219569,15 @@ function buildArgs(options, cwd, mcpConfig, systemPromptFile, languageDeps = {},
 }
 function normalizeRuntimeConfig(config) {
 	return codebuddyBackendUtilsRuntime.normalizeRuntimeConfig(config);
-	const normalized = {
-		model: config?.model,
-		systemPrompt: config?.systemPrompt,
-		restartFingerprint: config?.restartFingerprint,
-		tools: config?.tools,
-		permissionMode: config?.permissionMode,
-		permissionModeBeforePlan: config?.permissionModeBeforePlan,
-		sessionSettings: config?.sessionSettings
-	};
-	if (config?.runtimeIdentity) normalized.runtimeIdentity = config.runtimeIdentity;
-	if (config?.welcomeMode) normalized.welcomeMode = config.welcomeMode;
-	return normalized;
 }
 function getRestartIdentity(config) {
 	return codebuddyBackendUtilsRuntime.getRestartIdentity(config);
-	return config.restartFingerprint ?? config.systemPrompt;
-}
-function isPlainObject(value) {
-	return !!value && typeof value === "object" && !Array.isArray(value);
 }
 function stableJsonStringify(value) {
 	return codebuddyBackendUtilsRuntime.stableJsonStringify(value);
-	if (Array.isArray(value)) return `[${value.map((item) => stableJsonStringify(item)).join(",")}]`;
-	if (isPlainObject(value)) return `{${Object.keys(value).sort().filter((key) => value[key] !== void 0).map((key) => `${JSON.stringify(key)}:${stableJsonStringify(value[key])}`).join(",")}}`;
-	return JSON.stringify(value);
 }
 function isSameRuntimeConfig(left, right) {
 	return codebuddyBackendUtilsRuntime.isSameRuntimeConfig(left, right);
-	return left.model === right.model && getRestartIdentity(left) === getRestartIdentity(right) && left.tools === right.tools && left.permissionMode === right.permissionMode && left.permissionModeBeforePlan === right.permissionModeBeforePlan && stableJsonStringify(left.sessionSettings) === stableJsonStringify(right.sessionSettings) && left.runtimeIdentity === right.runtimeIdentity && left.welcomeMode === right.welcomeMode;
 }
 async function waitForEndpoint(acpEndpoint) {
 	return waitForAgentCliLocalAcpEndpoint(acpEndpoint, {
@@ -219622,87 +219603,35 @@ var CLINotFoundError = class extends Error {
 	}
 };
 function resolveCLIPath(dependencies = {}) {
-	const resolveAsset = dependencies.resolveBundledAsset ?? defaultResolveBundledAsset;
-	const bundled = resolveAsset("cli", "bin", "codebuddy") ?? resolveAsset("cli", "dist", "codebuddy.js");
-	const envPath = process.env.CODEBUDDY_CODE_PATH;
-	const resolution = resolveAgentCliExecutablePath({
-		bundledCliPaths: [bundled],
-		envCliPath: envPath
+	const resolution = agentCliRuntime.resolveAgentCliServerExecutablePath({
+		resolveBundledAsset: dependencies.resolveBundledAsset ?? defaultResolveBundledAsset,
+		getRuntimeAppPath: dependencies.getRuntimeAppPath ?? require_runtime_context.getWorkbuddyRuntimeAppPath
 	});
+	const envPath = process.env.CODEBUDDY_CODE_PATH;
 	if (resolution?.source === "env") sidecarLog.warn(`[CodeBuddyCodeBackend] resolveCLIPath: bundled CLI not found, falling back to CODEBUDDY_CODE_PATH=${envPath}`);
 	if (resolution) return resolution.path;
 	throw new CLINotFoundError("CLI not found.\n\nSearched:\n  - cli/bin/codebuddy\n  - cli/dist/codebuddy.js\n" + (envPath ? `  - CODEBUDDY_CODE_PATH: ${envPath}\n` : "") + "\nRun: node scripts/copy-cli.js");
 }
 function buildEnv(extra, options = {}) {
-	const { configDir, userDataDir } = resolveAgentCliRuntimeDirs({
-		getConfigDir: options.getConfigDir,
-		getUserDataDir: options.getUserDataDir,
-		homeDir: node_os.homedir(),
+	return codebuddyBackendEnvRuntime.buildCodeBuddyBackendEnv(extra, {
+		...options,
 		processEnv: process.env,
-		defaultConfigDirname: (options.resolveDefaultConfigDirname ?? resolveDefaultConfigDirname)()
-	});
-	const productEnv = require_workbuddy_product_config.resolveAgentCliProductEnv({
-		processEnv: process.env,
-		fallbackProductConfigEnv: process.env.ACC_PRODUCT_CONFIG_V3 ? void 0 : (options.getBootstrapProductConfigEnv ?? defaultGetBootstrapProductConfigEnv)()
-	});
-	const localRuntimePathOptions = {
-		homeDir: node_os.homedir(),
-		platform: process.platform
-	};
-	const sandboxNativeEnv = resolveSandboxNativeEnv({
-		processEnv: process.env,
-		platform: process.platform,
 		processExecPath: process.execPath,
-		resolveCliPath: () => resolveCLIPath(options)
-	});
-	return buildAgentCliRuntimeEnv({
-		configDir,
-		userDataDir,
-		builtinSkillsDir: resolveBuiltinSkillsDir(options.requireBundledAsset),
-		productConfigEnv: productEnv.productConfigEnv,
-		productConfigPathEnv: productEnv.productConfigPathEnv,
-		hostedCliInternetEnv: productEnv.hostedCliInternetEnv,
-		clientInfoEnv: require_log_acl_guard.buildWorkbuddyClientInfoEnv({
-			getAppVersion: options.getAppVersion,
-			resolveBundledAsset: options.resolveBundledAsset ?? defaultResolveBundledAsset
-		}),
-		pluginDirs: listAgentCliEnabledPluginDirs(configDir).join(path.delimiter),
-		proxyEnv: (options.getProcessProxyEnv ?? getProxyEnvFromProcess$1)(),
-		cliConnectorBin: resolveAgentCliConnectorBin(localRuntimePathOptions),
-		managedNodeBinDirs: listAgentCliManagedBinDirs({
-			...localRuntimePathOptions,
-			binaryType: "node"
-		}),
-		managedPythonBinDirs: listAgentCliManagedBinDirs({
-			...localRuntimePathOptions,
-			binaryType: "python"
-		}),
-		bundledRuntimeConfig: readAgentCliBundledRuntimeConfig(userDataDir),
-		registeredBinaryTypes: require_log_acl_guard.getRegisteredBinaryTypes(),
-		processEnv: process.env,
-		pathDelimiter: path.delimiter,
-		extra: {
-			...sandboxNativeEnv,
-			...extra
-		}
+		resolveDefaultConfigDirname: options.resolveDefaultConfigDirname ?? resolveDefaultConfigDirname,
+		resolveProductEnv: (input) => require_workbuddy_product_config.resolveAgentCliProductEnv(input),
+		getBootstrapProductConfigEnv: options.getBootstrapProductConfigEnv ?? defaultGetBootstrapProductConfigEnv,
+		getProcessProxyEnv: options.getProcessProxyEnv ?? getProxyEnvFromProcess$1,
+		resolveCliPath: options.resolveCliPath ?? (() => resolveCLIPath(options)),
+		resolveBundledAsset: options.resolveBundledAsset ?? defaultResolveBundledAsset,
+		buildClientInfoEnv: (input) => require_log_acl_guard.buildWorkbuddyClientInfoEnv(input),
+		getRegisteredBinaryTypes: () => require_log_acl_guard.getRegisteredBinaryTypes()
 	});
 }
 function resolveSandboxNativeEnv(options) {
-	if (options.platform !== "darwin" || options.processEnv.SANDBOX_FILE_VERSION_MANAGEMENT_ENABLED !== "true") return {};
-	const env = {};
-	if (options.processEnv.SANDBOX_APP_GROUP_ID) env.SANDBOX_APP_GROUP_ID = options.processEnv.SANDBOX_APP_GROUP_ID;
-	else try {
-		const cliDir = node_path.resolve(node_path.dirname(options.resolveCliPath()), "..");
-		const sandboxConfigPath = node_path.join(cliDir, "sandbox-config.json");
-		const sandboxConfig = JSON.parse(node_fs.readFileSync(sandboxConfigPath, "utf8"));
-		if (typeof sandboxConfig.appGroupId === "string" && sandboxConfig.appGroupId) env.SANDBOX_APP_GROUP_ID = sandboxConfig.appGroupId;
-	} catch {}
-	if (options.processExecPath && options.processExecPath.includes(".app/Contents/MacOS/")) env.SANDBOX_ELECTRON_APP_PATH = node_path.resolve(options.processExecPath, "..", "..", "..");
-	if (options.processEnv.SANDBOX_HELPER_HEALTHCHECK_ENABLED) env.SANDBOX_HELPER_HEALTHCHECK_ENABLED = options.processEnv.SANDBOX_HELPER_HEALTHCHECK_ENABLED;
-	return env;
+	return codebuddyBackendEnvRuntime.resolveSandboxNativeEnv(options);
 }
 function resolveBuiltinSkillsDir(requireAsset = defaultRequireBundledAsset) {
-	return normalizeAgentCliBuiltinSkillsDir(requireAsset("builtin-skills"));
+	return codebuddyBackendEnvRuntime.resolveBuiltinSkillsDir(requireAsset);
 }
 function materializeWorkbuddyRuntimePromptRequest(request) {
 	const prompt = materializeWorkbuddyRuntimePrompt(request.prompt);

@@ -529,6 +529,8 @@ const {
   isTencentDocsClipboardOrigin,
   isTencentDocsUrl,
   buildAgentCliRuntimeEnv,
+  buildCodeBuddyBackendEnv,
+  resolveSandboxNativeEnv,
   readAgentCliBundledRuntimeConfigAsync,
   readAgentCliAppConfigValue,
   compareVersionsDesc,
@@ -1250,6 +1252,30 @@ async function main() {
   assert.strictEqual(cliEnv.PATH, '/tmp/node:/usr/bin');
   assert.strictEqual(resolveDisabledManagedRuntimeTypes({ enabled: true, tools: { node: false } }, ['node', 'python']).join(','), 'node');
   assert.strictEqual(compareVersionsDesc('2.10.0', '2.9.0') < 0, true);
+  const backendEnv = buildCodeBuddyBackendEnv({ SESSION_EXTRA: 'yes' }, {
+    homeDir: '/tmp/workbuddy-home',
+    platform: 'linux',
+    processEnv: { PATH: '/usr/bin', NODE_ENV: 'test' },
+    resolveProductEnv: () => ({ productConfigEnv: '{"edition":"test"}', hostedCliInternetEnv: 'cloud' }),
+    getProcessProxyEnv: () => ({ HTTPS_PROXY: 'http://proxy.test:8080' }),
+    buildClientInfoEnv: () => ({ CODEBUDDY_CLIENT: 'test' }),
+    getRegisteredBinaryTypes: () => ['node', 'python'],
+    requireBundledAsset: () => '/tmp/builtin-skills',
+  });
+  assert.strictEqual(backendEnv.ACC_PRODUCT_CONFIG_V3, '{"edition":"test"}');
+  assert.strictEqual(backendEnv.CODEBUDDY_CLIENT, 'test');
+  assert.strictEqual(backendEnv.SESSION_EXTRA, 'yes');
+  assert.strictEqual(backendEnv.HTTPS_PROXY, 'http://proxy.test:8080');
+  assert.deepStrictEqual(resolveSandboxNativeEnv({
+    platform: 'darwin',
+    processEnv: { SANDBOX_FILE_VERSION_MANAGEMENT_ENABLED: 'true' },
+    processExecPath: '/Applications/WorkBuddy.app/Contents/MacOS/WorkBuddy',
+    resolveCliPath: () => '/Applications/WorkBuddy.app/Contents/Resources/cli/bin/codebuddy',
+    readFileSync: () => JSON.stringify({ appGroupId: 'group.test' }),
+  }), {
+    SANDBOX_APP_GROUP_ID: 'group.test',
+    SANDBOX_ELECTRON_APP_PATH: '/Applications/WorkBuddy.app',
+  });
   assert.deepStrictEqual(resolveAgentCliExecutablePath({ bundledCliPaths: [], monorepoCliPath: '/missing', envCliPath: '/ok', exists: (file) => file === '/ok' }), { path: '/ok', source: 'env' });
   assert.deepStrictEqual(resolveAgentCliRuntimeDirs({ homeDir: '/home/test', processEnv: {} }), { configDir: '/home/test/.workbuddy', userDataDir: '/home/test/.workbuddy/app' });
   const cliConfigDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wb-cli-config-'));

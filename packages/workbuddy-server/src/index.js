@@ -78,6 +78,7 @@ module.exports = Object.freeze({
   ...require("./runtime/automation-delivery-worker"),
   ...require("./runtime/embedding-client"),
   ...require("./runtime/codebuddy-backend-utils"),
+  ...require("./runtime/codebuddy-backend-env"),
   ...require("./runtime/traceparent"),
   ...require("./runtime/service-handlers"),
   ...require("./runtime/hosted-cli-auth-lifecycle"),
