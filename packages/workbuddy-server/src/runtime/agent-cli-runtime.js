@@ -83,6 +83,13 @@ function resolveAgentCliExecutablePath({ bundledCliPaths = [], monorepoCliPath, 
   return undefined;
 }
 
+function resolveAgentCliServerExecutablePath({ resolveBundledAsset, getRuntimeAppPath, envPath = process.env.CODEBUDDY_CODE_PATH, exists = fs.existsSync } = {}) {
+  const bundled = resolveBundledAsset?.('cli', 'bin', 'codebuddy') || resolveBundledAsset?.('cli', 'dist', 'codebuddy.js');
+  const appPath = getRuntimeAppPath?.();
+  const monorepoCliPath = appPath ? path.join(path.resolve(appPath, '..', '..'), 'packages', 'agent-cli', 'bin', 'codebuddy') : undefined;
+  return resolveAgentCliExecutablePath({ bundledCliPaths: [bundled], monorepoCliPath, envCliPath: envPath, exists });
+}
+
 function compareVersionsDesc(a, b) {
   const left = String(a).split('.').map(Number), right = String(b).split('.').map(Number);
   for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
@@ -182,6 +189,6 @@ module.exports = {
   buildAgentCliRuntimeEnv, compareVersionsDesc, copyProcessEnv, listAgentCliEnabledPluginDirs, listAgentCliEnabledPluginDirsAsync,
   listAgentCliManagedBinDirs, listAgentCliManagedBinDirsAsync, normalizeAgentCliBuiltinSkillsDir,
   prependDirsToEnvPath, readAgentCliBundledRuntimeConfig, readAgentCliBundledRuntimeConfigAsync, readAgentCliAppConfigValue, readAgentCliAppConfigValueAsync, resolveAgentCliConfigDir,
-  resolveAgentCliConnectorBin, resolveAgentCliExecutablePath, resolveAgentCliRuntimeDirs,
+  resolveAgentCliConnectorBin, resolveAgentCliExecutablePath, resolveAgentCliServerExecutablePath, resolveAgentCliRuntimeDirs,
   resolveAgentCliUserDataDir, resolveDisabledManagedRuntimeTypes, stringValues,
 };

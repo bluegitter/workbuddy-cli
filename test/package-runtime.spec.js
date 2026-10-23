@@ -532,6 +532,7 @@ const {
   readAgentCliAppConfigValue,
   compareVersionsDesc,
   resolveAgentCliExecutablePath,
+  resolveAgentCliServerExecutablePath,
   resolveAgentCliRuntimeDirs,
   resolveDisabledManagedRuntimeTypes,
   buildProjectQuery,
@@ -582,6 +583,7 @@ const {
 
 async function main() {
   assert.strictEqual(runtimeCliProcessEnv.isNamedPipe('win32'), true);
+  assert.deepStrictEqual(resolveAgentCliServerExecutablePath({ resolveBundledAsset: () => '/tmp/bundled-codebuddy', getRuntimeAppPath: () => '/tmp/app', exists: () => true }), { path: '/tmp/bundled-codebuddy', source: 'bundled' });
   assert.strictEqual(runtimeCliProcessEnv.isNamedPipe('darwin'), false);
   assert.match(runtimeCliProcessEnv.dataSocketPath('session-1', { WORKBUDDY_CONFIG_DIR: '/tmp/workbuddy-test' }, 'darwin'), /s-[a-f0-9]{16}\.sock$/);
   assert.strictEqual(runtimeCliProcessEnv.buildCliProcessEnv({ SERVER__PORT: '1234' }, { CODEBUDDY_SECRET: 'drop', PATH: '/bin' }).SERVER__PORT, '1234');

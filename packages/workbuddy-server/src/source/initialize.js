@@ -9579,16 +9579,11 @@ async function isEndpointReachable(endpoint) {
 	}
 }
 function resolveCLIPath$1(options = {}) {
-	const resolveAsset = options.resolveBundledAsset ?? defaultResolveBundledAsset$1;
-	const bundled = resolveAsset("cli", "bin", "codebuddy") ?? resolveAsset("cli", "dist", "codebuddy.js");
-	const appPath = (options.getRuntimeAppPath ?? require_runtime_context.getWorkbuddyRuntimeAppPath)();
-	const monorepoBin = path.join(path.resolve(appPath, "..", ".."), "packages", "agent-cli", "bin", "codebuddy");
-	const envPath = process.env.CODEBUDDY_CODE_PATH;
-	const resolution = resolveAgentCliExecutablePath({
-		bundledCliPaths: [bundled],
-		monorepoCliPath: monorepoBin,
-		envCliPath: envPath
+	const resolution = agentCliRuntime.resolveAgentCliServerExecutablePath({
+		resolveBundledAsset: options.resolveBundledAsset ?? defaultResolveBundledAsset$1,
+		getRuntimeAppPath: options.getRuntimeAppPath ?? require_runtime_context.getWorkbuddyRuntimeAppPath
 	});
+	const envPath = process.env.CODEBUDDY_CODE_PATH;
 	if (resolution?.source === "env") sidecarLog$1.warn(`${TAG$25} resolveCLIPath: bundled CLI not found, falling back to CODEBUDDY_CODE_PATH=${envPath}`);
 	if (resolution) return resolution.path;
 	throw new Error(`${TAG$25} CLI not found.\n  - cli/bin/codebuddy
