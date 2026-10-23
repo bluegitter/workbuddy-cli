@@ -15,6 +15,7 @@ const edgeSyncChannelRuntime = require("../runtime/edge-sync-channel.js");
 const edgeSyncBasicHandlersRuntime = require("../runtime/edge-sync-basic-handlers.js");
 const edgeSyncArtifactsRuntime = require("../runtime/edge-sync-artifacts.js");
 const { EdgeSyncMappingStore: EdgeSyncMappingStoreRuntime } = require("../runtime/edge-sync-mapping-store.js");
+const { EdgeSyncNetworkRecovery: EdgeSyncNetworkRecoveryRuntime } = require("../runtime/edge-sync-recovery.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
@@ -222462,7 +222463,7 @@ var RETRY_DELAYS_MS = [
 * close → handshake。失败按有界退避重试，避免 Wi-Fi 刚恢复但 DNS/路由尚未
 * ready 时一次 handshake 失败后永久离线。
 */
-var EdgeSyncNetworkRecovery = class {
+var LegacyEdgeSyncNetworkRecovery = class {
 	active;
 	generation = 0;
 	disposed = false;
@@ -222516,6 +222517,7 @@ function sleep(ms) {
 		setTimeout(resolve, ms).unref?.();
 	});
 }
+var EdgeSyncNetworkRecovery = EdgeSyncNetworkRecoveryRuntime;
 //#endregion
 //#region ../../packages/workbuddy-server/src/edge-sync/edge-sync-turn-trace.ts
 function createEdgeSyncTurnTraceContext(meta, sessionId) {
