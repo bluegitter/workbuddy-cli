@@ -11,6 +11,7 @@ const edgeSyncTranslateRuntime = require("../runtime/edge-sync-translate.js");
 const edgeSyncTracingRuntime = require("../runtime/edge-sync-tracing.js");
 const edgeSyncJsonlRuntime = require("../runtime/edge-sync-jsonl.js");
 const edgeSyncApiRuntime = require("../runtime/edge-sync-api.js");
+const edgeSyncChannelRuntime = require("../runtime/edge-sync-channel.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
@@ -220267,6 +220268,7 @@ function spanKind(operation) {
 * @param extraScopes 额外的 scope（如 convmsg:{cid}），追加到用户级 scope 后面
 */
 async function fetchChannelCredentials(ctx, unwrapResponse, extraScopes, traceContext) {
+	return edgeSyncChannelRuntime.fetchChannelCredentials(ctx, unwrapResponse, extraScopes, traceContext);
 	const deviceId = ctx.deps.getDeviceId();
 	const userId = ctx.deps.getAccount()?.uid || "";
 	const scopes = [...extraScopes || []];
@@ -220368,6 +220370,7 @@ async function connectChannelSdk(ctx, fetchCreds) {
 * 从而拿到新 channel 的 subscriptionTokens / encryptionKeys。
 */
 async function refreshChannelKeys(ctx) {
+	return edgeSyncChannelRuntime.refreshChannelKeys(ctx);
 	const sdkRef = ctx.rawSdkRef;
 	if (!sdkRef) return;
 	const credManager = sdkRef.credManager;
@@ -220383,6 +220386,9 @@ async function refreshChannelKeys(ctx) {
 }
 /** handshake 完成后上报设备上线，发到 user:{userId}:devices channel */
 function reportDeviceOnline(ctx) {
+	const result = edgeSyncChannelRuntime.reportDeviceOnline(ctx);
+	if (result && typeof result.then === "function") result.catch(() => {});
+	return result;
 	const sdk = ctx.channelSdk || ctx.deps.getSdk();
 	const account = ctx.deps.getAccount();
 	if (!sdk || !account?.uid) return;
@@ -222935,6 +222941,7 @@ var EdgeSyncService = class {
 		const ctx = {
 			deps: this.deps,
 			logger: this.logger,
+			edgeLog,
 			channelSdk: this.channelSdk,
 			rawSdkRef: this.rawSdkRef,
 			channelConnecting: this.channelConnecting,
