@@ -53,6 +53,8 @@ const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValu
 const startupPerfSource = require('../packages/telemetry/src/source/startup-perf-exporters.js');
 const { buildStartupSpans: buildStartupSpansFromPackage } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
+const projectHttpSource = require('../packages/workbuddy-server/src/source/http.js');
+const { HANDOFF_CANARY_HEADERS, ROUTE_PREFIX, withAcceptLanguageHeader } = require('../packages/workbuddy-server/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
@@ -905,6 +907,19 @@ async function main() {
   assert.strictEqual(deriveAccountContext({ enterpriseId: 'e1' }).kind, 'enterprise');
   assert.strictEqual(gatewaySecretEnv().CODEBUDDY_GATEWAY_PASSWORD, getGatewaySecret());
   assert.strictEqual(gatewaySecretHeaders().Authorization, `Bearer ${getGatewaySecret()}`);
+  assert.strictEqual(projectHttpSource.buildQuery, buildQuery);
+  assert.strictEqual(buildQuery({ q: 'hello world', empty: null }), '?q=hello%20world');
+  assert.strictEqual(ROUTE_PREFIX, '/console/as/projects');
+  assert.strictEqual(HANDOFF_CANARY_HEADERS['x-teams-collab-handoff-canary'], 'true');
+  assert.strictEqual(unwrap({ code: 0, data: { ok: true } }, 'demo').ok, true);
+  assert.throws(() => unwrap({ code: 7, msg: 'bad', requestId: 'r1' }, 'demo'), (error) => error.code === 7 && error.requestId === 'r1');
+  assert.strictEqual(resolveTeamsAcceptLanguage({ resolveIsOverseas: () => true }), 'en-US');
+  const projectHttpCalls = [];
+  const httpStub = { get: (...args) => projectHttpCalls.push(args), post: (...args) => projectHttpCalls.push(args), put: (...args) => projectHttpCalls.push(args), patch: (...args) => projectHttpCalls.push(args), delete: (...args) => projectHttpCalls.push(args) };
+  withHandoffCanaryHeaders(httpStub).get('/handoff', { headers: { 'x-extra': '1' } });
+  withAcceptLanguageHeader(httpStub, () => 'zh-CN').get('/projects', { headers: { 'Accept-Language': 'en-US' } });
+  assert.strictEqual(projectHttpCalls[0][1].headers['x-teams-collab-handoff-canary'], 'true');
+  assert.strictEqual(projectHttpCalls[1][1].headers['Accept-Language'], 'en-US');
   const telemetryMessages = [];
   configureWorkbuddyLogger({ info: (message, ...args) => telemetryMessages.push([message, ...args]) });
   const scopedTelemetryLogger = createWorkbuddyScopedLogger('test');
