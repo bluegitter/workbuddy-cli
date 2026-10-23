@@ -15,28 +15,14 @@ const { FileBackedLegacyLocalStorageMigrationService } = require("../runtime/leg
 const { createAppServerDesktopHostBridge: createDesktopHostBridge } = require("../runtime/desktop-host-bridge.js");
 const { markDaemon: markDaemonRuntime, resolveProductName, resolveStoredSessionTitle } = require("../runtime/daemon-utils.js");
 const { configureDaemonNetworkProxy: configureDaemonNetworkProxyRuntime } = require("../runtime/daemon-network-proxy.js");
+const { createTencentDocsEngineProvider: createTencentDocsEngineProviderRuntime } = require("../runtime/tencent-docs-engine-provider.js");
 let node_fs = require("node:fs");
 node_fs = require_chunk.__toESM(node_fs);
 let _tencent_tencent_docs_ai_engine = require("@tencent/tencent-docs-ai-engine");
 //#region ../../packages/workbuddy-server/src/docs/mcp/tencent-docs-engine-provider.ts
 require_common.init_common$3();
 function createTencentDocsEngineProvider(options) {
-	const { documentService, logger } = options;
-	return { async resolveAgentEnv() {
-		if (await documentService.canEnsureEngineStart().catch(() => false) && !documentService.isEngineStarted()) documentService.ensureEngineStarted("agent-spawn").catch((error) => {
-			logger?.warn?.("[TencentDocsEngine] background engine warmup failed during session init", { error: error instanceof Error ? error.message : String(error) });
-		});
-		const engineStarted = documentService.isEngineStarted();
-		const enginePort = documentService.getEnginePort();
-		const env = engineStarted ? { ...(0, _tencent_tencent_docs_ai_engine.buildTencentDocsLocalMcpEnv)(enginePort) } : {};
-		if (engineStarted && enginePort) env.editor_sdk_port = String(enginePort);
-		logger?.info?.("[TencentDocsEngine] resolveAgentEnv result", {
-			engineStarted,
-			enginePort,
-			envKeys: Object.keys(env)
-		});
-		return env;
-	} };
+	return createTencentDocsEngineProviderRuntime({ ...options, buildLocalMcpEnv: _tencent_tencent_docs_ai_engine.buildTencentDocsLocalMcpEnv });
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/session/tencent-docs-document-lifecycle-port.ts

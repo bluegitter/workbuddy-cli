@@ -61,6 +61,7 @@ const { startDaemonAppServerEntry } = require('../packages/workbuddy-server/src'
 const { FileBackedLegacyLocalStorageMigrationService, createAppServerDesktopHostBridge, partitionToScope, readOpenDialogResult, readSaveDialogResult } = require('../packages/workbuddy-server/src');
 const { markDaemon, resolveProductName, resolveStoredSessionTitle } = require('../packages/workbuddy-server/src');
 const { configureDaemonNetworkProxy } = require('../packages/workbuddy-server/src');
+const { createTencentDocsEngineProvider } = require('../packages/workbuddy-server/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
@@ -1058,6 +1059,11 @@ async function main() {
   assert.deepStrictEqual(pacRpc, { socketPath: '/tmp/pac.sock', token: 'token-1' });
   assert.deepStrictEqual(proxyEnv, { SOCKET: '/tmp/pac.sock', TOKEN: 'token-1', HTTP_PROXY: 'http://proxy.test' });
   assert.deepStrictEqual(proxyCalls, ['pac', 'undici', 'axios', 'tls']);
+  let engineStarted = false;
+  const engineLogs = [];
+  const engineProvider = createTencentDocsEngineProvider({ documentService: { canEnsureEngineStart: async () => true, isEngineStarted: () => engineStarted, ensureEngineStarted: async () => { engineStarted = true; }, getEnginePort: () => 4321 }, buildLocalMcpEnv: (port) => ({ MCP_PORT: String(port) }), logger: { info: (_message, details) => engineLogs.push(details) } });
+  assert.deepStrictEqual(await engineProvider.resolveAgentEnv(), { MCP_PORT: '4321', editor_sdk_port: '4321' });
+  assert.strictEqual(engineLogs[0].engineStarted, true);
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });
