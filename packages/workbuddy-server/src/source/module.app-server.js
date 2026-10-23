@@ -13,6 +13,7 @@ const require_helpers = require("./helpers.js");
 const require_types = require("./types.js");
 const require_auth = require("./auth.js");
 const require_module_base = require("./module-base.js");
+const connectorMcpMetricRuntime = require("../runtime/connector-mcp-metric.js");
 let fs = require("fs");
 fs = require_chunk.__toESM(fs);
 let os = require("os");
@@ -60,23 +61,11 @@ var import_adm_zip = /* @__PURE__ */ require_chunk.__toESM(require_adm_zip$1.req
 var import_dist = /* @__PURE__ */ require_chunk.__toESM(require_workbuddy_auth_product_coordinator.require_dist());
 var import_semver = /* @__PURE__ */ require_chunk.__toESM(require_workbuddy_auth_product_coordinator.require_semver());
 function classifyMcpInvokeErrorKind(error) {
-	const msg = error instanceof Error ? error.message : String(error);
-	if (/disabled by user/i.test(msg)) return "disabled";
-	if (/requires re-authorization/i.test(msg)) return "auth";
-	if (/is unavailable/i.test(msg)) return "unavailable";
-	if (/is not connected/i.test(msg)) return "not_connected";
-	if (/is reconnecting/i.test(msg)) return "reconnecting";
-	if (/not found in any connected connector/i.test(msg)) return "not_found";
-	if (/timeout|timed out/i.test(msg)) return "timeout";
-	return "unknown";
+	return connectorMcpMetricRuntime.classifyMcpInvokeErrorKind(error);
 }
 /** SDK 在 server 不支持 method 时抛 -32601 / "Method not found"。 */
 function classifyMcpListErrorKind(error) {
-	const msg = error instanceof Error ? error.message : String(error);
-	if (/method not found|-32601/i.test(msg)) return "method_not_found";
-	if (/timeout|timed out/i.test(msg)) return "timeout";
-	if (/unauthor|401|403/i.test(msg)) return "auth";
-	return "unknown";
+	return connectorMcpMetricRuntime.classifyMcpListErrorKind(error);
 }
 /**
 * 连接器业务监控上报通道。daemon-server 层不依赖 desktop 的 DesktopMonitorService，
@@ -90,8 +79,9 @@ function classifyMcpListErrorKind(error) {
 var metricReporter;
 function setConnectorMetricReporter(reporter) {
 	metricReporter = reporter;
+	connectorMcpMetricRuntime.setConnectorMetricReporter(reporter);
 }
-var ConnectorMetricReporter = class {
+var LegacyConnectorMetricReporter = class {
 	/** 耗时事件（invoke / list / oauth）。 */
 	duration(metric, durationMs, dims) {
 		metricReporter?.recordDuration(metric, durationMs, dims);
@@ -10725,7 +10715,7 @@ var ConnectorMcpProxy = class ConnectorMcpProxy {
 	* `setConnectorMetricReporter` 注入，详见 connector-mcp-proxy-metric.ts）；
 	* 未注入时所有上报安全降级为 noop。
 	*/
-	metric = new ConnectorMetricReporter();
+	metric = new connectorMcpMetricRuntime.ConnectorMetricReporter();
 	hostCapabilities = DEFAULT_CONNECTOR_MCP_PROXY_HOST_CAPABILITIES;
 	setHostCapabilities(capabilities) {
 		this.hostCapabilities = {
@@ -14708,7 +14698,7 @@ var ConnectorProxyServer = class ConnectorProxyServer {
 	* `setConnectorMetricReporter` 注入，详见 connector-mcp-proxy-metric.ts）；
 	* 未注入时所有上报安全降级为 noop。
 	*/
-	metric = new ConnectorMetricReporter();
+	metric = new connectorMcpMetricRuntime.ConnectorMetricReporter();
 	async start() {
 		this.proxySecret = (0, node_crypto.randomBytes)(32).toString("base64url");
 		this.logger.info(`[ConnectorProxyServer] Generated proxy secret (length=${this.proxySecret.length})`);
