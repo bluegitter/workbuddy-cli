@@ -53,12 +53,26 @@ const {
   normalizeProjectInvitationRole,
   normalizeProjectInvitationStatus,
   normalizeOptionalProjectInvitationStatus,
+  ProviderRegistry,
+  initAppProviders,
+  getFacades,
+  getConnectorManager,
   getBackendErrorPayload,
   normalizeProjectInvitationDetail,
   normalizeAcceptProjectInvitationResult,
 } = require('../src');
 
 async function main() {
+  const providerRegistry = new ProviderRegistry();
+  const manager = { name: 'connector-manager' };
+  providerRegistry.initialize({ facades: { chat: { complete: true } }, connectorManager: manager });
+  assert.strictEqual(providerRegistry.getFacades().chat.complete, true);
+  assert.strictEqual(providerRegistry.getConnectorManager(), manager);
+  providerRegistry.reset();
+  assert.deepStrictEqual(providerRegistry.getFacades(), {});
+  initAppProviders({ facades: { default: true }, connectorManager: manager });
+  assert.deepStrictEqual(getFacades(), { default: true });
+  assert.strictEqual(getConnectorManager(), manager);
   const loopSession = new AgentSession();
   const loopState = createAgentLoopState(loopSession, { maxTurns: 2 });
   assert.strictEqual(normalizeMaxTurns('2'), 2);

@@ -9,6 +9,7 @@ module.exports = Object.freeze({
   runtimeRoot: __dirname + "/runtime",
   cliBundle: require.resolve("./source/cli-bundle.js"),
   providerRegistry: require.resolve("./source/provider-registry.js"),
+  ...require("./source/provider-registry.js"),
   ...require("./runtime/agent-loop"),
   ...require("./runtime/agent-loop-state"),
   ...require("./runtime/agent-turn"),
