@@ -2,6 +2,7 @@ const require_chunk = require("./chunk.js");
 const { getOnlineDocPreviewRegistry: getOnlineDocPreviewRegistryRuntime } = require("../runtime/online-doc-preview-registry.js");
 const { getOnlineDocumentSelectionStore: getOnlineDocumentSelectionStoreRuntime } = require("../runtime/online-document-selection-store.js");
 const { createMqqSelectionReporter: createMqqSelectionReporterRuntime } = require("../runtime/mqq-selection-router.js");
+const { createSystemOpenLocalFileHandler: createSystemOpenLocalFileHandlerRuntime, TENCENT_DOCS_RENDERER_PUSH_CHANNELS: TENCENT_DOCS_RENDERER_PUSH_CHANNELS_RUNTIME } = require("../runtime/system-open-local-file.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -387,13 +388,7 @@ function readPayloadFileId(selection) {
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/docs/tencent-docs-renderer-push.ts
-var TENCENT_DOCS_RENDERER_PUSH_CHANNELS = {
-	OPEN_LOCAL_FILE_IN_MAIN_WINDOW: "tencent-docs:openLocalFileInMainWindow",
-	LOCAL_FILE_ALREADY_ACTIVE: "tencent-docs:localFileAlreadyActive",
-	PREVIEW_POOL_FULL: "tencent-docs:previewPoolFull",
-	ENGINE_READY: "tencent-docs:engineReady",
-	RELOAD_EMBEDDED_PREVIEW: "tencent-docs:reloadEmbeddedPreview"
-};
+var TENCENT_DOCS_RENDERER_PUSH_CHANNELS = TENCENT_DOCS_RENDERER_PUSH_CHANNELS_RUNTIME;
 //#endregion
 //#region ../../packages/workbuddy-server/src/docs/system-open-local-file.ts
 /**
@@ -429,6 +424,11 @@ var TENCENT_DOCS_RENDERER_PUSH_CHANNELS = {
 * ```
 */
 function createSystemOpenLocalFileHandler(deps) {
+	return createSystemOpenLocalFileHandlerRuntime({
+		...deps,
+		channels: TENCENT_DOCS_RENDERER_PUSH_CHANNELS,
+		logger: require_workbuddy_auth_product_coordinator.mainLog
+	});
 	const { windowManager, push, documentService, documentPreviewPoolCapacity } = deps;
 	return function systemOpenLocalFile(filePath) {
 		const title = filePath.replace(/\\/g, "/").split("/").pop() || filePath;

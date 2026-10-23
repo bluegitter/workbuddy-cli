@@ -64,6 +64,7 @@ const { configureDaemonNetworkProxy } = require('../packages/workbuddy-server/sr
 const { createTencentDocsEngineProvider } = require('../packages/workbuddy-server/src');
 const { OnlineDocPreviewRegistry, OnlineDocumentSelectionStore, truncateForBroadcast } = require('../packages/workbuddy-server/src');
 const { createMqqSelectionReporter, stripPadIdPrefix, resolveOnlineFileIdWithoutResourceUri } = require('../packages/workbuddy-server/src');
+const { createSystemOpenLocalFileHandler, TENCENT_DOCS_RENDERER_PUSH_CHANNELS } = require('../packages/workbuddy-server/src');
 const { DocumentEditContext, resolveToolUsableFileIdFromSelection, toActiveFileContextInfo, toActiveFilePreviewContextInfo, TencentDocsContextManager } = require('../packages/authentication/src');
 const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
 const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
@@ -1137,6 +1138,17 @@ async function main() {
   mqqReporter({ documentResourceUri: 'tdoc://online-file', fileType: 'doc', selection: { text: 'x' } });
   assert.strictEqual(routedOnline[0].sessionId, 's1');
   assert.strictEqual(resolveOnlineFileIdWithoutResourceUri({ selection: { fileId: 'pad$online-file' } }, { isTencentOnlineFilePath: () => false, extractTencentOnlineFileId: () => undefined, onlineDocPreviewRegistry: { getRecordByFileId: (value) => value === 'online-file' ? {} : undefined } }), 'online-file');
+  const openEvents = [];
+  const openHandler = createSystemOpenLocalFileHandler({
+    windowManager: { showOrCreate: () => openEvents.push('show') },
+    push: (channel, payload) => openEvents.push([channel, payload]),
+    documentService: { checkLocalFileOpenConflict: () => ({ kind: 'none' }), getOpenLeaseCount: () => 0 },
+    documentPreviewPoolCapacity: 2,
+    logger: { warn: () => {} },
+  });
+  assert.deepStrictEqual(await openHandler('/tmp/demo.docx'), { success: true, status: 'broadcasted' });
+  assert.strictEqual(openEvents[0], 'show');
+  assert.strictEqual(openEvents[1][0], TENCENT_DOCS_RENDERER_PUSH_CHANNELS.OPEN_LOCAL_FILE_IN_MAIN_WINDOW);
   assert.deepStrictEqual(clampBoundsToWorkArea({ x: -10, y: 700, width: 1600, height: 900 }, { x: 0, y: 0, width: 1200, height: 800 }), { x: 0, y: 0, width: 1200, height: 800 });
   assert.strictEqual(isVisibleOnAnyDisplay({ x: 100, y: 100, width: 20, height: 20 }, [{ workArea: { x: 0, y: 0, width: 200, height: 200 } }]), true);
   assert.deepStrictEqual(stripFrameEmbeddingHeaders({ 'X-Frame-Options': ['DENY'], 'Content-Security-Policy': ['default-src \'self\'; frame-ancestors \'none\''], 'X-Test': ['ok'] }), { 'Content-Security-Policy': ["default-src 'self'"], 'X-Test': ['ok'] });
