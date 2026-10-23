@@ -12,6 +12,7 @@ const edgeSyncJsonlRuntime = require("../runtime/edge-sync-jsonl.js");
 const agentCliRuntime = require("../runtime/agent-cli-runtime.js");
 const appServerRuntime = require("../runtime/app-server-runtime.js");
 const connectorMappingRuntime = require("../runtime/connector-mapping.js");
+const storageUtilsRuntime = require("../runtime/storage-utils.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -6029,8 +6030,7 @@ function excludedColumn(columnName) {
 * UI 也要按用户原始大小写展示。大小写差异交给比较层处理。
 */
 function canonicalizeStoredPath(p) {
-	if (!p) return p;
-	return path.normalize(p);
+	return storageUtilsRuntime.canonicalizeStoredPath(p);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/storage/repositories/automation-repository.ts
@@ -6300,16 +6300,10 @@ var AutomationRepository = class {
 	}
 };
 function parseJsonArray(value) {
-	if (typeof value !== "string" || !value) return [];
-	try {
-		const parsed = JSON.parse(value);
-		return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : [];
-	} catch {
-		return [];
-	}
+	return storageUtilsRuntime.parseJsonArray(value);
 }
 function parsePermissionMode(value) {
-	if (value === "fullAccess" || value === "default") return value;
+	return storageUtilsRuntime.parsePermissionMode(value);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/storage/repositories/delivery-outbox-repository.ts
@@ -6525,7 +6519,7 @@ var MigrationMetaRepository = class {
 //#endregion
 //#region ../../packages/workbuddy-server/src/storage/repositories/session-repository.ts
 function escapeSqliteLikePattern(value) {
-	return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+	return storageUtilsRuntime.escapeSqliteLikePattern(value);
 }
 var SessionRepository = class {
 	constructor(getDb) {
@@ -6755,9 +6749,7 @@ var SessionUsageRepository = class {
 var WORKBUDDY_SQLITE_BUSY_TIMEOUT_MS = 1e4;
 var WORKBUDDY_SQLITE_AUTO_CHECKPOINT_PAGES = 1e3;
 function configureWorkbuddySqliteConnection(db) {
-	db.pragma("journal_mode = WAL");
-	db.pragma(`busy_timeout = ${WORKBUDDY_SQLITE_BUSY_TIMEOUT_MS}`);
-	db.pragma(`wal_autocheckpoint = ${WORKBUDDY_SQLITE_AUTO_CHECKPOINT_PAGES}`);
+	return storageUtilsRuntime.configureWorkbuddySqliteConnection(db);
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/storage/sqlite/ghost-cleanup.ts
