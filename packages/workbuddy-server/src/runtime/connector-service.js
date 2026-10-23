@@ -21,10 +21,11 @@ class ConnectorService {
     this.connectorMcpConfigPath = options.connectorMcpConfigPath;
     this.readConnectorMcpConfig = options.readConnectorMcpConfig || (() => undefined);
     this.toProxyConfigId = options.toProxyConfigId || ((id) => id);
+    this.clientPool = options.clientPool;
     this.state = options.state || new ConnectorServiceState({
       persistentState: options.persistentState,
-      connect: options.connect,
-      disconnect: options.disconnect,
+      connect: options.connect || ((id, config, connectOptions) => this.clientPool?.connect(id, config, connectOptions)),
+      disconnect: options.disconnect || ((id, disconnectOptions) => this.clientPool?.disconnect(id, disconnectOptions?.reason)),
       onStateChanged: options.onStateChanged,
       logger: this.logger,
     });

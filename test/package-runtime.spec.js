@@ -392,6 +392,7 @@ const {
   listMcpServers,
   buildDesiredConnectorConfigs,
   planConnectorSync,
+  ConnectorMcpClientPool,
   normalizePersistentState,
   buildEnabledPluginIndex,
   discoverPluginMcpConfigs,
@@ -1910,6 +1911,21 @@ async function main() {
   assert.deepStrictEqual(syncPlan.added.map(({ id }) => id), ['add']);
   assert.deepStrictEqual(syncPlan.reconnect.map(({ id }) => id), ['change']);
   assert.deepStrictEqual(syncPlan.unchanged.map(({ id }) => id), ['keep']);
+  const poolEvents = [];
+  const mcpPool = new ConnectorMcpClientPool({
+    createClient: (id) => ({ id }),
+    connectClient: async (client) => { poolEvents.push(`connect:${client.id}`); },
+    listClientTools: async (client) => ({ tools: [{ name: `${client.id}-tool` }] }),
+    closeClient: async (client) => { poolEvents.push(`close:${client.id}`); },
+  });
+  assert.strictEqual((await mcpPool.connect('docs', { url: 'https://docs' })).success, true);
+  assert.strictEqual((await mcpPool.connect('docs', { url: 'https://docs' })).cached, true);
+  assert.strictEqual(mcpPool.listAllTools()[0].name, 'docs_docs-tool');
+  const poolSync = await mcpPool.sync({ mail: { url: 'https://mail' }, docs: { url: 'https://docs-2' } });
+  assert.deepStrictEqual(poolSync.added, ['mail']);
+  assert.deepStrictEqual(poolSync.reconnected, ['docs']);
+  await mcpPool.disconnect('mail');
+  assert(poolEvents.includes('close:mail'));
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(facadeRoot, 'connectors', 'mcp.json'), 'utf8')).mcpServers['connector:docs'].disabled, true);
   fs.rmSync(facadeRoot, { recursive: true, force: true });
   proxyServer.stop();
