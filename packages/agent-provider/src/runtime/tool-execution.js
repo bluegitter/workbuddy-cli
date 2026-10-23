@@ -1,6 +1,7 @@
 'use strict';
 
 const { HookEvent } = require('./hook-registry');
+const { getPermissionInput, normalizePermissionDecision } = require('./permission-result');
 
 async function executeToolCall(call, context) {
   if (context.signal?.aborted) return toolResult(call, true, 'Tool use cancelled', { cancelled: true });
@@ -17,28 +18,38 @@ async function executeToolCall(call, context) {
   if (preHook?.stopped) return toolResult(call, true, preHook.reason, { hook: HookEvent.PRE_TOOL_USE });
   if (preHook?.payload?.input !== undefined) parsed = preHook.payload.input;
 
-  let decision = await context.permissions.canUse(tool, parsed, context);
+  let decision = normalizePermissionDecision(
+    await context.permissions.canUse(tool, parsed, context),
+    parsed,
+  );
   if (preHook?.payload?.permissionDecision) {
-    decision = { ...decision, behavior: preHook.payload.permissionDecision, source: 'hook', message: preHook.payload.additionalContext };
+    decision = normalizePermissionDecision({
+      ...decision,
+      behavior: preHook.payload.permissionDecision,
+      source: 'hook',
+      message: preHook.payload.additionalContext,
+    }, parsed);
   }
   if (context.signal?.aborted) return toolResult(call, true, 'Tool use cancelled', { cancelled: true });
   if (decision.behavior === 'ask' && context.interruptions) {
-    decision = await context.interruptions.request({
+    decision = normalizePermissionDecision(await context.interruptions.request({
       id: call.id,
       type: 'tool_permission',
       toolName: call.name,
       input: parsed,
-    });
+    }), parsed);
   }
   if (decision.behavior !== 'allow') {
     return toolResult(call, true, decision.message || 'Tool use denied', { decision });
   }
 
   try {
+    const finalInput = getPermissionInput(decision, parsed);
+    if (finalInput !== parsed) parsed = tool.parseInput ? tool.parseInput(finalInput) : finalInput;
     let output = await tool.execute(parsed, context);
     const postHook = await context.hooks?.run(HookEvent.POST_TOOL_USE, { call, tool, input: parsed, output }, context);
     if (postHook?.payload?.output !== undefined) output = postHook.payload.output;
-    return toolResult(call, false, output, { decision, stopped: postHook?.stopped || false });
+    return toolResult(call, false, output, { decision, input: parsed, stopped: postHook?.stopped || false });
   } catch (error) {
     const message = context.signal?.aborted ? 'Tool use cancelled' : error instanceof Error ? error.message : String(error);
     await context.hooks?.run(HookEvent.POST_TOOL_USE_FAILURE, { call, tool, input: parsed, error: message }, context);

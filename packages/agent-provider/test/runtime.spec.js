@@ -378,6 +378,25 @@ async function main() {
   );
   assert.strictEqual(cancelled.metadata.cancelled, true);
 
+  const approvalInputs = [];
+  const approvalTool = { name: 'approval', execute: async (input) => { approvalInputs.push(input); return input.value; } };
+  const approvalTools = new ToolRegistry([approvalTool]);
+  let approvalInterruptions;
+  approvalInterruptions = new InterruptionController({ onRequest: (request) => {
+    setImmediate(() => request.id && approvalInterruptions.resolve(request.id, { behavior: 'allow', updatedInput: { value: 'edited' }, source: 'user' }));
+  } });
+  const approvalResult = await require('../src/runtime/tool-execution').executeToolCall(
+    { id: 'approval-input', name: 'approval', input: { value: 'original' } },
+    {
+      tools: approvalTools,
+      permissions: new PermissionController({ decide: async () => ({ behavior: 'ask' }) }),
+      interruptions: approvalInterruptions,
+    },
+  );
+  assert.strictEqual(approvalResult.content, 'edited');
+  assert.deepStrictEqual(approvalInputs, [{ value: 'edited' }]);
+  assert.deepStrictEqual(approvalResult.metadata.input, { value: 'edited' });
+
   const sessions = new SessionManager();
   const parent = sessions.create({ project: { id: 'project' } });
   const subagents = new SubagentRunner({
