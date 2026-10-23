@@ -5,6 +5,7 @@ const crypto = require('node:crypto');
 const { ConnectorProxySessionRegistry } = require('./connector-proxy-sessions');
 const { extractHostname, isAllowedLoopbackHost, isValidProxyBearer, validateOrigin } = require('./connector-proxy-security');
 const { matchesUriTemplate, readHeader } = require('./connector-proxy-utils');
+const { parseOAuthCallbackUrl } = require('./connector-oauth-callback');
 
 /**
  * Readable MCP proxy server boundary. The MCP SDK constructors and request
@@ -131,6 +132,7 @@ class ConnectorProxyServer {
     if (url.pathname === '/health' && req.method === 'GET') {
       return this.sendJson(res, 200, { status: 'ok', tools: this.proxy.listAllTools?.().length || 0 });
     }
+    if (url.pathname === '/oauth/callback') return this.handleOAuthCallback(url, res);
     if (url.pathname === '/mcp') {
       if (!this.verifyAuth(req, res)) return;
       return this.handleMcpRequest(req, res);
@@ -148,6 +150,29 @@ class ConnectorProxyServer {
       projectId: readHeader(req, 'x-workbuddy-project-id'),
     });
     return pair.transport.handleRequest(req, res);
+  }
+
+  async handleOAuthCallback(url, res) {
+    let callback;
+    try { callback = parseOAuthCallbackUrl(url.toString(), this.proxy.stateToConfigId || new Map()); }
+    catch { return this.sendOAuthPage(res, 400, '授权失败', 'OAuth 回调地址无效。'); }
+    if (!callback.success) {
+      await this.proxy.handleOAuthCallbackFromUrl?.(url.toString());
+      return this.sendOAuthPage(res, 400, '授权失败', callback.error || '缺少必要的 OAuth 参数，请返回 WorkBuddy 重试。');
+    }
+    try {
+      const result = await this.proxy.handleOAuthCallback?.(callback.state, callback.code, callback.configId);
+      if (!result?.success) return this.sendOAuthPage(res, 400, '授权失败', result?.error || 'OAuth 处理失败，请返回 WorkBuddy 重试。');
+      return this.sendOAuthPage(res, 200, '授权成功', '您可以关闭此页面，返回 WorkBuddy。');
+    } catch (error) {
+      this.logger.error?.('[ConnectorProxyServer] OAuth callback failed', error);
+      return this.sendOAuthPage(res, 500, '授权失败', 'OAuth 回调处理异常，请返回 WorkBuddy 重试。');
+    }
+  }
+
+  sendOAuthPage(res, status, title, message) {
+    res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(`<!doctype html><html><head><title>${escapeHtml(title)}</title></head><body><main><h2>${escapeHtml(title)}</h2><p>${escapeHtml(message)}</p></main></body></html>`);
   }
 
   notifyToolsChanged() { return this.sessions.broadcast({ jsonrpc: '2.0', method: 'notifications/tools/list_changed' }); }
@@ -183,4 +208,6 @@ function normalizeToolResult(result, dims = {}) {
   return { content: [{ type: 'text', text: typeof result === 'string' ? result : JSON.stringify(result) }], _meta: attribution };
 }
 
-module.exports = { ConnectorProxyServer, normalizeToolResult };
+function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
+
+module.exports = { ConnectorProxyServer, escapeHtml, normalizeToolResult };

@@ -385,6 +385,7 @@ const {
   ConnectorProxySessionRegistry,
   ConnectorProxyServer,
   normalizeToolResult,
+  escapeHtml,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1717,6 +1718,16 @@ async function main() {
   assert.deepStrictEqual(await handlerMap.get('resources/list')(), { resources: [{ uri: 'docs://a', name: 'A', description: undefined, mimeType: undefined }] });
   assert.deepStrictEqual(await handlerMap.get('resources/templates/list')(), { resourceTemplates: [{ uriTemplate: 'docs://items/{id}', name: 'Item', description: undefined, mimeType: undefined }] });
   assert.deepStrictEqual(await handlerMap.get('resources/read')({ params: { uri: 'docs://items/42' } }), { contents: [{ uri: 'docs://items/42', text: 'connector:docs' }] });
+  assert.strictEqual(escapeHtml('<script>'), '&lt;script&gt;');
+  const callbackResponses = [];
+  const callbackProxyServer = new ConnectorProxyServer({
+    proxy: { stateToConfigId: new Map([['state-1', 'connector:docs']]), handleOAuthCallback: async (state, code, configId) => { callbackResponses.push([state, code, configId]); return { success: true }; } },
+    logger: { info() {}, warn() {}, error() {} },
+  });
+  const callbackResponse = { headersSent: false, writeHead(status, headers) { this.status = status; this.headers = headers; }, end(body) { this.body = body; } };
+  await callbackProxyServer.handleOAuthCallback(new URL('http://127.0.0.1/oauth/callback?state=state-1&code=code-1'), callbackResponse);
+  assert.strictEqual(callbackResponse.status, 200);
+  assert.deepStrictEqual(callbackResponses, [['state-1', 'code-1', 'connector:docs']]);
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
