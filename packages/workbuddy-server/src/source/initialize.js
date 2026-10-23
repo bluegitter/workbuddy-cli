@@ -221166,6 +221166,7 @@ async function handleSessionStop(ctx, cmd) {
 * 出参：{ success, sessionId }
 */
 async function handleSessionCreate(ctx, cmd) {
+	return edgeSyncBasicHandlersRuntime.handleSessionCreate(ctx, cmd);
 	const cwd = cmd.cwd || cmd.workDir;
 	ctx.logger.info(`[EdgeSync] §SESSION.CREATE: mode=${cmd.mode || "default"} model=${cmd.model || "(default)"} cwd=${cwd || "(default)"} expertId=${cmd.expertId || "(none)"} isPlayground=${cmd.isPlayground ?? "undefined"}`);
 	try {

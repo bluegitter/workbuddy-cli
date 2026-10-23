@@ -1,7 +1,36 @@
 'use strict';
 
+const crypto = require('crypto');
+
 function logger(ctx) { return ctx.logger || { info() {}, warn() {} }; }
 function errorText(error) { return error?.message || String(error); }
+
+async function handleSessionCreate(ctx, cmd) {
+  const log = logger(ctx);
+  const cwd = cmd.cwd || cmd.workDir;
+  log.info(`[EdgeSync] SESSION.CREATE: mode=${cmd.mode || 'default'} model=${cmd.model || '(default)'} cwd=${cwd || '(default)'}`);
+  try {
+    if (!ctx.deps.createSession) return { success: false, error: 'createSession not available' };
+    const opts = {};
+    for (const key of ['mode', 'model', 'expertId', 'expertMarketplace', 'locale', 'systemPrompt', 'tools', 'permissionMode', 'disabledTools', 'env', 'backendId', 'projectId']) if (cmd[key]) opts[key] = cmd[key];
+    if (cwd) opts.cwd = cwd;
+    if (!cwd) opts.isPlayground = true;
+    else if (cmd.isPlayground !== undefined) opts.isPlayground = cmd.isPlayground;
+    if (cmd.sessionOptions && typeof cmd.sessionOptions === 'object') {
+      const { sessionId: _sessionId, preGeneratedSessionId: _preGeneratedSessionId, ...safeOptions } = cmd.sessionOptions;
+      Object.assign(opts, safeOptions);
+    }
+    const preGeneratedSessionId = crypto.randomUUID();
+    opts.sessionId = preGeneratedSessionId;
+    ctx.edgeLog?.('SESSION_CREATE', `cwd=${cwd || '(empty)'} isPlayground=${opts.isPlayground}`);
+    ctx.markRemoteCreatedSession?.(preGeneratedSessionId);
+    const sessionId = (await ctx.deps.createSession(opts))?.sessionId ?? preGeneratedSessionId;
+    return { success: true, sessionId };
+  } catch (error) {
+    log.warn(`[EdgeSync] SESSION.CREATE failed: ${errorText(error)}`);
+    return { success: false, error: errorText(error) };
+  }
+}
 
 async function handleSessionStop(ctx, cmd) {
   const log = logger(ctx);
@@ -46,4 +75,4 @@ async function handleGetSkills(ctx, cmd) {
   catch (error) { log.warn(`[EdgeSync] GET_SKILLS failed: ${errorText(error)}`); return { success: false }; }
 }
 
-module.exports = Object.freeze({ handleSessionStop, handleGetAutomations, handleGetTaskArtifacts, handleGetModels, handleGetSessionConfig, handleGetSkills });
+module.exports = Object.freeze({ handleSessionCreate, handleSessionStop, handleGetAutomations, handleGetTaskArtifacts, handleGetModels, handleGetSessionConfig, handleGetSkills });

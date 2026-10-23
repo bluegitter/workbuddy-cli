@@ -239,6 +239,7 @@ const {
   readActiveChainPage,
   handleGetPage,
   handleSessionStop,
+  handleSessionCreate,
   handleGetAutomations,
   handleGetTaskArtifacts,
   handleGetModels,
@@ -2481,6 +2482,14 @@ async function main() {
   assert.deepStrictEqual((await handleGetModels(handlerCtx, {})).data.models, ['sonnet']);
   assert.strictEqual((await handleGetSessionConfig(handlerCtx, { sessionId: 's1' })).data.permissionMode, 'default');
   assert.strictEqual((await handleGetSkills(handlerCtx, {})).data[0].name, 'skill-a');
+  let createdOptions;
+  const createResponse = await handleSessionCreate({
+    deps: { createSession: async (options) => { createdOptions = options; return { sessionId: 'created-1' }; } },
+    markRemoteCreatedSession: () => {},
+    logger: { info() {}, warn() {} },
+  }, { cwd: '/tmp/project', model: 'sonnet', sessionOptions: { sessionId: 'reserved' } });
+  assert.deepStrictEqual(createResponse, { success: true, sessionId: 'created-1' });
+  assert.strictEqual(createdOptions.sessionId !== 'reserved', true);
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });
