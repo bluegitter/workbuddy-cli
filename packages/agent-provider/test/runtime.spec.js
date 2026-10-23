@@ -28,6 +28,10 @@ const {
   mapWithConcurrency,
   partitionToolCalls,
   runAgentLoop,
+  createAgentLoopState,
+  beginAgentTurn,
+  finishAgentLoop,
+  normalizeMaxTurns,
   runAgentTurn,
   isTerminalStopReason,
   AssistantMessage,
@@ -55,6 +59,18 @@ const {
 } = require('../src');
 
 async function main() {
+  const loopSession = new AgentSession();
+  const loopState = createAgentLoopState(loopSession, { maxTurns: 2 });
+  assert.strictEqual(normalizeMaxTurns('2'), 2);
+  assert.strictEqual(beginAgentTurn(loopState), true);
+  assert.strictEqual(loopSession.turn, 1);
+  assert.strictEqual(beginAgentTurn(loopState), true);
+  assert.strictEqual(beginAgentTurn(loopState), false);
+  assert.strictEqual(loopSession.status, 'running');
+  assert.throws(() => normalizeMaxTurns(0), /positive integer/);
+  loopSession.status = 'running';
+  assert.strictEqual(finishAgentLoop(loopState), undefined);
+  assert.strictEqual(loopSession.status, 'max_turns');
   assert.strictEqual(normalizeProjectInvitationRole('admin'), 'admin');
   assert.strictEqual(normalizeProjectInvitationRole('unknown'), 'viewer');
   assert.strictEqual(normalizeProjectInvitationStatus('approved'), 'approved');

@@ -10,6 +10,7 @@ module.exports = Object.freeze({
   cliBundle: require.resolve("./source/cli-bundle.js"),
   providerRegistry: require.resolve("./source/provider-registry.js"),
   ...require("./runtime/agent-loop"),
+  ...require("./runtime/agent-loop-state"),
   ...require("./runtime/agent-turn"),
   ...require("./runtime/agent-session"),
   ...require("./runtime/context-builder"),
