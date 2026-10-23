@@ -231,6 +231,9 @@ const {
   assertWorkbuddyAppServerStdioMode,
   createWorkbuddyAppServerPlatformFromEnv,
   fetchChannelCredentials,
+  findBytePosByMessageId,
+  peekIdAtBytePos,
+  extendToLineEnd,
   buildDeviceOnlinePayload,
   createInitialTaskState,
   reduceTaskStatus,
@@ -2427,6 +2430,12 @@ async function main() {
   const lazyItem = parseLineWithLazyLoad(lazyLine);
   assert.strictEqual(lazyItem._lazyLoad, true);
   assert.strictEqual(estimateItemPayloadBytes(lazyItem, lazyLine), 512);
+  const jsonlPath = path.join(root, 'edge-sync.jsonl');
+  fs.writeFileSync(jsonlPath, `${JSON.stringify({ id: 'm1', type: 'message', role: 'user' })}\n${JSON.stringify({ id: 'm2', type: 'message', role: 'assistant', parentId: 'm1' })}\n`);
+  const m1Position = await findBytePosByMessageId(jsonlPath, 'm1');
+  assert.strictEqual(m1Position.bytePos, 0);
+  assert.strictEqual(await peekIdAtBytePos(jsonlPath, m1Position.bytePos), 'm1');
+  assert.strictEqual(await extendToLineEnd(jsonlPath, m1Position.bytePos), Buffer.byteLength(JSON.stringify({ id: 'm1', type: 'message', role: 'user' })) + 1);
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true }), '0');
   assert.strictEqual(resolveAgentTeamsEnv({ disableAgentTeams: true, expertType: 'team' }), '1');
   const teams = createAgentTeamsEnvResolver({ getDisableAgentTeams: () => true });

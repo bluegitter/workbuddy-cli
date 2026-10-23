@@ -220528,6 +220528,7 @@ function parseLineWithLazyLoad(line) {
 * @param onFragment 迭代结束时调用，参数是文件首行的完整内容（可能为空字符串）
 */
 async function iterateChunksBackward(fd, startBytePos, onLine, onFragment) {
+	return edgeSyncJsonlRuntime.iterateChunksBackward(fd, startBytePos, onLine, onFragment);
 	let tailFragment = "";
 	let tailFragmentByteOffset = startBytePos;
 	let readPos = startBytePos;
@@ -220639,6 +220640,7 @@ async function readActiveChainPage(jsonlPath, limitTurns, startBytePos) {
 * @returns { bytePos, linesScanned }
 */
 async function findBytePosByMessageId(jsonlPath, targetMessageId) {
+	return edgeSyncJsonlRuntime.findBytePosByMessageId(jsonlPath, targetMessageId);
 	if (!targetMessageId) return {
 		bytePos: -1,
 		linesScanned: 0
@@ -220682,6 +220684,7 @@ async function findBytePosByMessageId(jsonlPath, targetMessageId) {
 * 只读 4KB（cover 绝大多数正常行的开头 + id 字段），不做全行 parse。
 */
 async function peekIdAtBytePos(jsonlPath, bytePos) {
+	return edgeSyncJsonlRuntime.peekIdAtBytePos(jsonlPath, bytePos);
 	if (bytePos < 0) return;
 	const fsPromises = await import("node:fs/promises");
 	const stat = await fsPromises.stat(jsonlPath);
@@ -220706,6 +220709,7 @@ async function peekIdAtBytePos(jsonlPath, bytePos) {
 * 找不到 \n 说明起点行超过 SCAN_LIMIT 或延伸到文件末尾，返回 fileSize。
 */
 async function extendToLineEnd(jsonlPath, startBytePos) {
+	return edgeSyncJsonlRuntime.extendToLineEnd(jsonlPath, startBytePos);
 	const fsPromises = await import("node:fs/promises");
 	const fileSize = (await fsPromises.stat(jsonlPath)).size;
 	const scanLen = Math.min(512 * 1024, fileSize - startBytePos);

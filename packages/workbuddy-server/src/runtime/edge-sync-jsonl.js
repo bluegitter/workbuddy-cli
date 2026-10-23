@@ -10,6 +10,87 @@ const ID_REGEX = /"id"\s*:\s*"([^"]+)"/;
 const RE_TOMBSTONE_PARENT = /"parentId"\s*:\s*"([^"]+)"/;
 const TOMBSTONE_MARK = '"type":"resend-fork-notice"';
 
+async function iterateChunksBackward(fd, startBytePos, onLine, onFragment) {
+  let tailFragment = '';
+  let tailFragmentByteOffset = startBytePos;
+  let readPos = startBytePos;
+  while (readPos > 0) {
+    const chunkStart = Math.max(0, readPos - CHUNK_SIZE);
+    const chunkLen = readPos - chunkStart;
+    const buf = Buffer.alloc(chunkLen);
+    await fd.read(buf, 0, chunkLen, chunkStart);
+    readPos = chunkStart;
+    const lines = (buf.toString('utf-8') + tailFragment).split('\n');
+    const lineByteStarts = computeLineByteStarts(lines, chunkStart);
+    tailFragment = lines[0];
+    tailFragmentByteOffset = lineByteStarts[0];
+    for (let i = lines.length - 1; i >= 1; i -= 1) {
+      const trimmed = lines[i].trim();
+      if (!trimmed) continue;
+      if (onLine({ line: trimmed, byteOffset: lineByteStarts[i], prevLine: lines[i - 1] })?.stop) return;
+    }
+  }
+  if (onFragment && tailFragment.trim()) onFragment({ line: tailFragment.trim(), byteOffset: tailFragmentByteOffset });
+}
+
+async function findBytePosByMessageId(jsonlPath, targetMessageId) {
+  if (!targetMessageId) return { bytePos: -1, linesScanned: 0 };
+  const fsPromises = require('fs').promises;
+  const fileSize = (await fsPromises.stat(jsonlPath)).size;
+  if (fileSize === 0) return { bytePos: -1, linesScanned: 0 };
+  const fd = await fsPromises.open(jsonlPath, 'r');
+  let hitBytePos = -1;
+  let linesScanned = 0;
+  try {
+    await iterateChunksBackward(fd, fileSize, ({ line, byteOffset }) => {
+      linesScanned += 1;
+      const match = (line.length > 500 ? line.slice(0, 500) : line).match(/"id":"([^"]+)"/);
+      if (match?.[1] === targetMessageId) {
+        hitBytePos = byteOffset;
+        return { stop: true };
+      }
+      return undefined;
+    });
+  } finally {
+    await fd.close();
+  }
+  return { bytePos: hitBytePos, linesScanned };
+}
+
+async function peekIdAtBytePos(jsonlPath, bytePos) {
+  if (bytePos < 0) return undefined;
+  const fsPromises = require('fs').promises;
+  const stat = await fsPromises.stat(jsonlPath);
+  if (bytePos >= stat.size) return undefined;
+  const readSize = Math.min(4096, stat.size - bytePos);
+  const fd = await fsPromises.open(jsonlPath, 'r');
+  try {
+    const buf = Buffer.alloc(readSize);
+    await fd.read(buf, 0, readSize, bytePos);
+    const chunk = buf.toString('utf-8');
+    const newlineIndex = chunk.indexOf('\n');
+    return (newlineIndex >= 0 ? chunk.slice(0, newlineIndex) : chunk).match(/"id":"([^"]+)"/)?.[1];
+  } finally {
+    await fd.close();
+  }
+}
+
+async function extendToLineEnd(jsonlPath, startBytePos) {
+  const fsPromises = require('fs').promises;
+  const fileSize = (await fsPromises.stat(jsonlPath)).size;
+  const scanLen = Math.min(CHUNK_SIZE, fileSize - startBytePos);
+  if (scanLen <= 0) return startBytePos;
+  const fd = await fsPromises.open(jsonlPath, 'r');
+  try {
+    const buf = Buffer.alloc(scanLen);
+    await fd.read(buf, 0, scanLen, startBytePos);
+    const newlineIndex = buf.indexOf(10);
+    return newlineIndex >= 0 ? startBytePos + newlineIndex + 1 : fileSize;
+  } finally {
+    await fd.close();
+  }
+}
+
 function estimateItemPayloadBytes(item, line) { return item && typeof item === 'object' && item._lazyLoad === true ? 512 : line.length; }
 function parseLineWithLazyLoad(line) {
   if (line.length <= LARGE_LINE_THRESHOLD) return JSON.parse(line);
@@ -23,4 +104,4 @@ function isLikelyUserMessageLine(line) { const head = line.length > 200 ? line.s
 function isLikelyCustomItemLine(line) { for (const type of CUSTOM_ITEM_TYPES) if (line.includes(`"type":"${type}"`)) return true; return false; }
 function checkPrevLineTombstone(prevLine) { if (!prevLine || !prevLine.includes(TOMBSTONE_MARK)) return { isTombstone: false }; return { isTombstone: true, forkPoint: prevLine.match(RE_TOMBSTONE_PARENT)?.[1] }; }
 
-module.exports = Object.freeze({ CHUNK_SIZE, MAX_ITEMS, MAX_BYTES, LARGE_LINE_THRESHOLD, LAZY_LOAD_TYPES, CUSTOM_ITEM_TYPES, ID_REGEX, estimateItemPayloadBytes, parseLineWithLazyLoad, computeLineByteStarts, isLikelyUserMessageLine, isLikelyCustomItemLine, checkPrevLineTombstone });
+module.exports = Object.freeze({ CHUNK_SIZE, MAX_ITEMS, MAX_BYTES, LARGE_LINE_THRESHOLD, LAZY_LOAD_TYPES, CUSTOM_ITEM_TYPES, ID_REGEX, estimateItemPayloadBytes, parseLineWithLazyLoad, computeLineByteStarts, isLikelyUserMessageLine, isLikelyCustomItemLine, checkPrevLineTombstone, iterateChunksBackward, findBytePosByMessageId, peekIdAtBytePos, extendToLineEnd });
