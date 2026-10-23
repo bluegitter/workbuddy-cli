@@ -394,6 +394,8 @@ const {
   mergeConnectorMcpServers,
   normalizeTimeout,
   writeConnectorMcpConfig,
+  disableConnectorSkills,
+  markSkillFileDisabled,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1780,6 +1782,17 @@ async function main() {
   writeConnectorMcpConfig(configFile, connectorConfig);
   assert.deepStrictEqual(JSON.parse(fs.readFileSync(configFile, 'utf8')), connectorConfig);
   fs.rmSync(path.dirname(configFile), { recursive: true, force: true });
+  const skillRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-skills-'));
+  fs.mkdirSync(path.join(skillRoot, 'nested', 'deep'), { recursive: true });
+  const skillA = path.join(skillRoot, 'SKILL.md');
+  const skillB = path.join(skillRoot, 'nested', 'deep', 'SKILL.md');
+  fs.writeFileSync(skillA, '---\nname: demo\n---\nBody\n');
+  fs.writeFileSync(skillB, '---\nname: nested\ndisable: false\n---\nBody\n');
+  assert.strictEqual(disableConnectorSkills(skillRoot), 2);
+  assert(fs.readFileSync(skillA, 'utf8').includes('disable: true'));
+  assert(fs.readFileSync(skillB, 'utf8').includes('disable: true'));
+  assert.strictEqual(markSkillFileDisabled(skillA), true);
+  fs.rmSync(skillRoot, { recursive: true, force: true });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };

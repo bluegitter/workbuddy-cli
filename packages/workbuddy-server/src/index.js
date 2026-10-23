@@ -140,4 +140,5 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-service-state"),
   ...require("./runtime/plugin-mcp-discovery"),
   ...require("./runtime/connector-mcp-config-writer"),
+  ...require("./runtime/connector-skill-state"),
 });
