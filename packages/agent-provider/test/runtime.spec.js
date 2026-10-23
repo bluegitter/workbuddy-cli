@@ -17,6 +17,8 @@ const {
   InterruptionController,
   PermissionController,
   PermissionMode,
+  parsePermissionRule,
+  evaluatePermissionRules,
   SessionManager,
   SubagentRunner,
   ToolRegistry,
@@ -81,6 +83,12 @@ async function main() {
     { name: 'read', isConcurrencySafe: () => true, execute: async ({ value }) => value },
     { name: 'write', mutatesState: true, execute: async () => events.push('write') },
   ]);
+  assert.deepStrictEqual(parsePermissionRule('Bash(npm install:*)'), { toolName: 'Bash', ruleContent: 'npm install:*' });
+  assert.deepStrictEqual(evaluatePermissionRules([
+    { ruleBehavior: 'deny', ruleValue: { toolName: 'write' } },
+  ], 'write', {}), { behavior: 'deny', source: 'rule', rule: { ruleBehavior: 'deny', ruleValue: { toolName: 'write' } } });
+  const ruleController = new PermissionController({ rules: ['read(path/*)'] });
+  assert.strictEqual((await ruleController.canUse(tools.get('read'), { value: 'path/file' }, {})).behavior, 'allow');
   assert.deepStrictEqual(partitionToolCalls([
     { id: '1', name: 'read', input: {} },
     { id: '2', name: 'read', input: {} },

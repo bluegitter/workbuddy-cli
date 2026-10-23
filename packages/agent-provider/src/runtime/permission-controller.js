@@ -1,5 +1,7 @@
 'use strict';
 
+const { evaluatePermissionRules } = require('./permission-rules');
+
 const PermissionMode = Object.freeze({
   DEFAULT: 'default',
   ACCEPT_EDITS: 'acceptEdits',
@@ -11,12 +13,15 @@ const PermissionMode = Object.freeze({
 });
 
 class PermissionController {
-  constructor({ mode = PermissionMode.DEFAULT, decide } = {}) {
+  constructor({ mode = PermissionMode.DEFAULT, decide, rules = [] } = {}) {
     this.mode = mode;
     this.decide = decide;
+    this.rules = rules;
   }
 
   async canUse(tool, input, context) {
+    const ruleDecision = evaluatePermissionRules(this.rules, tool.name, input);
+    if (ruleDecision) return ruleDecision;
     if (this.mode === PermissionMode.BYPASS) return { behavior: 'allow', source: 'mode' };
     if (this.mode === PermissionMode.PLAN && tool.mutatesState) {
       return { behavior: 'deny', source: 'plan', message: 'Plan mode blocks mutating tools' };
