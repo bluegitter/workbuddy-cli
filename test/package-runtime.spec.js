@@ -388,6 +388,9 @@ const {
   escapeHtml,
   ConnectorServiceState,
   normalizePersistentState,
+  buildEnabledPluginIndex,
+  discoverPluginMcpConfigs,
+  isInside,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1748,6 +1751,20 @@ async function main() {
   assert.strictEqual(connectorState.activeConfigs.has('mail'), true);
   assert.strictEqual(connectorState.activeConfigs.has('docs'), false);
   assert(stateEvents.some(([id, status]) => id === 'mail' && status === 'connected'));
+  assert.deepStrictEqual([...buildEnabledPluginIndex({ 'demo@market': true }).get('market')], ['demo']);
+  const pluginRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-plugin-mcp-'));
+  const pluginDir = path.join(pluginRoot, 'plugins', 'marketplaces', 'market', 'plugins', 'demo');
+  fs.mkdirSync(path.join(pluginDir, '.workbuddy-plugin'), { recursive: true });
+  fs.writeFileSync(path.join(pluginRoot, 'settings.json'), JSON.stringify({ enabledPlugins: { 'demo@market': true } }));
+  fs.writeFileSync(path.join(pluginRoot, 'plugins', 'marketplaces', 'market', 'marketplace.json'), JSON.stringify({ name: 'market', plugins: [{ name: 'demo', source: 'plugins/demo' }] }));
+  fs.writeFileSync(path.join(pluginDir, '.workbuddy-plugin', 'plugin.json'), JSON.stringify({ name: 'demo', version: '1.0.0' }));
+  fs.writeFileSync(path.join(pluginDir, '.mcp.json'), JSON.stringify({ mcpServers: { docs: { command: 'node', args: ['server.js'] } } }));
+  const discovered = discoverPluginMcpConfigs(pluginRoot, { enabledPlugins: { 'demo@market': true } });
+  assert.strictEqual(discovered.docs.sourcePluginId, 'demo@market');
+  assert.strictEqual(discovered.docs.config.type, 'stdio');
+  assert.strictEqual(isInside(pluginRoot, pluginDir), true);
+  assert.strictEqual(isInside(pluginRoot, path.join(pluginRoot, '..')), false);
+  fs.rmSync(pluginRoot, { recursive: true, force: true });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
