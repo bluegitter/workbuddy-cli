@@ -16,4 +16,5 @@ module.exports = Object.freeze({
   ...require("./runtime/promise-util"),
   ...require("./runtime/language-model"),
   ...require("./runtime/auth-contract"),
+  ...require("./runtime/model-catalog"),
 });

@@ -1,4 +1,5 @@
 const require_chunk = require("./chunk.js");
+const modelCatalogRuntime = require("../runtime/model-catalog.js");
 let path = require("path");
 let url = require("url");
 url = require_chunk.__toESM(url);
@@ -45986,6 +45987,11 @@ function resolveModelCapabilities(modelId, options) {
 *   thinkingLevelMap   → thinkingLevelMap (pass-through)
 */
 function enrichLanguageModelFromCatalog(model) {
+	return modelCatalogRuntime.enrichLanguageModelFromCatalog(model, getIndexes(), {
+		providerPriority: PROVIDER_PRIORITY,
+		supplements: REASONING_SUPPLEMENTS,
+		stripCustomLocalModelPrefix
+	});
 	const caps = resolveModelCapabilities(model.id);
 	if (!caps) return model;
 	const target = model;

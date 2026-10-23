@@ -158,6 +158,11 @@ const {
   CUSTOM_LOCAL_MODEL_PREFIX,
   isModelVariantType,
   stripCustomLocalModelPrefix,
+  deriveMaxTokensField,
+  deriveThinkingFormat,
+  deriveSupportsReasoningEffort,
+  resolveModelCapabilitiesFromCatalog,
+  enrichLanguageModelFromCatalog,
 } = require('../packages/workbuddy-core/src');
 const coreContractSource = require('../packages/workbuddy-core/src/source/contract.js');
 const { AUTH_RPC_CHANNELS } = require('../packages/workbuddy-core/src');
@@ -1504,6 +1509,14 @@ async function main() {
   assert.strictEqual(stripCustomLocalModelPrefix('custom-local:model-x'), 'model-x');
   assert.strictEqual(isModelVariantType('reasoning'), true);
   assert.strictEqual(isModelVariantType('unknown'), false);
+  const modelEntry = { id: 'demo', provider: 'deepseek', api: 'openai-completions', baseUrl: 'https://api.deepseek.com', contextWindow: 1000, maxTokens: 200, reasoning: true };
+  const modelCatalog = { byId: new Map([['demo', [modelEntry]]]) };
+  assert.strictEqual(deriveMaxTokensField(modelEntry), 'max_completion_tokens');
+  assert.strictEqual(deriveThinkingFormat(modelEntry), 'deepseek');
+  assert.strictEqual(deriveSupportsReasoningEffort(modelEntry), true);
+  assert.strictEqual(resolveModelCapabilitiesFromCatalog('org/demo', modelCatalog, { providerPriority: ['deepseek'], stripCustomLocalModelPrefix }).contextWindow, 1000);
+  const enrichedModel = enrichLanguageModelFromCatalog({ id: 'demo' }, modelCatalog, { providerPriority: ['deepseek'] });
+  assert.deepStrictEqual({ input: enrichedModel.maxInputTokens, output: enrichedModel.maxOutputTokens, reasoning: enrichedModel.supportsReasoning }, { input: 1000, output: 200, reasoning: true });
 
   const serverEvents = [];
   const sessions = new SessionStore({ clock: (() => { let now = 100; return () => ++now; })() });
