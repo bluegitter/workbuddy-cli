@@ -46,6 +46,8 @@ const {
 const { EventBuffer, LogSampler, StructuredLogger, buildStartupSpans, exportStartupMetric, PerfFlow, WorkbuddyPerfLogger, formatLocalIsoTimestamp, formatLine, buildLifecycleLine, buildStartupPerfFields } = require('../packages/telemetry/src');
 const { DateRangeUtils, DeterministicIdGenerator, readOtelTraceEnv, parseKeyValueList } = require('../packages/telemetry/src');
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
+const logAclSource = require('../packages/enterprise-policy/src/source/log-acl-guard.js');
+const { computeCutoff, DATE_DIR_PATTERN, DENY_MASK, releaseLogAclGuard, startLogAclGuardScheduler } = require('../packages/enterprise-policy/src');
 const {
   AgentViewModel,
   TodoProjection,
@@ -895,6 +897,13 @@ async function main() {
   assert.strictEqual(deriveAccountContext({ enterpriseId: 'e1' }).kind, 'enterprise');
   assert.strictEqual(gatewaySecretEnv().CODEBUDDY_GATEWAY_PASSWORD, getGatewaySecret());
   assert.strictEqual(gatewaySecretHeaders().Authorization, `Bearer ${getGatewaySecret()}`);
+  assert.strictEqual(logAclSource.computeCutoff, computeCutoff);
+  assert.strictEqual(computeCutoff('2026-01-07'), '2026-01-01');
+  assert.strictEqual(DATE_DIR_PATTERN.test('2026-01-02'), true);
+  assert.strictEqual(DATE_DIR_PATTERN.test('2026-1-2'), false);
+  assert.strictEqual(DENY_MASK, '(OI)(CI)(DE,DC)');
+  assert.strictEqual(await releaseLogAclGuard(path.join(root, 'logs', '2026-01-01'), 'user'), undefined);
+  assert.strictEqual(typeof startLogAclGuardScheduler(path.join(root, 'logs')), 'function');
   const connectorEntry = { auth_mode: 'oneid-token', enterprise_variants: { enterprise: { auth_mode: 'server-side', token_header: { name: 'X-Custom-Token' }, oneid_app_type: 'enterprise-doc' } } };
   assert.strictEqual(resolveActiveAuthMode(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'server-side');
   assert.strictEqual(resolveTokenHeaderName(connectorEntry, { kind: 'enterprise', variantKey: 'enterprise' }), 'X-Custom-Token');

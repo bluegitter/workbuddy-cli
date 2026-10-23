@@ -8,4 +8,5 @@ module.exports = Object.freeze({
   artifactRoot: __dirname + "/compiled",
   ...require("./runtime/path-policy"),
   ...require("./runtime/fs-protection"),
+  ...require("./runtime/log-acl-guard"),
 });
