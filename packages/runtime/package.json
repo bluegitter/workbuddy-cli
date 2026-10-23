@@ -1,1 +1,1 @@
-{"name":"@workbuddy/runtime","private":true,"version":"5.3.8","main":"src/index.js"}
+{"name":"@workbuddy/runtime","private":true,"version":"5.3.8","main":"src/index.js","dependencies":{"@lydell/node-pty":"^1.2.0-beta.14","better-sqlite3":"^12.8.0"}}
