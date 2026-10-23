@@ -220736,16 +220736,6 @@ function sanitizeBackendLogValue(value, depth = 0) {
 */
 function translateDesktopToCloudPayload(payload) {
 	return edgeSyncTranslateRuntime.translateDesktopToCloudPayload(payload);
-	const inner = payload.update || payload;
-	const sessionUpdate = inner.sessionUpdate || payload.sessionUpdate || void 0;
-	if (!sessionUpdate) return payload;
-	switch (sessionUpdate) {
-		case "state_update": return translateStateUpdate(payload, inner);
-		case "session_end_turn": return translateSessionEndTurn(payload, inner);
-		case "topic_update": return translateTopicUpdate(payload, inner);
-		case "assistant_message_chunk": return rewriteSessionUpdate(payload, inner, "agent_message_chunk");
-		default: return payload;
-	}
 }
 /**
 * Desktop `state_update` + currentState → Cloud `session_end_turn` + stopReason。
@@ -220761,39 +220751,6 @@ function translateDesktopToCloudPayload(payload) {
 */
 function translateStateUpdate(payload, inner) {
 	return edgeSyncTranslateRuntime.translateStateUpdate(payload, inner);
-	const meta = payload._meta || inner._meta || {};
-	const codebuddyMeta = meta["codebuddy.ai"] || {};
-	const currentState = inner.currentState || codebuddyMeta.currentState || codebuddyMeta.state || "completed";
-	let stopReason;
-	switch (currentState) {
-		case "completed":
-			stopReason = "end_turn";
-			break;
-		case "cancelled":
-			stopReason = "cancelled";
-			break;
-		case "terminated":
-			stopReason = "cancelled";
-			break;
-		case "error":
-			stopReason = "refusal";
-			break;
-		default:
-			stopReason = "end_turn";
-			break;
-	}
-	const cloudUpdate = {
-		sessionUpdate: "session_end_turn",
-		stopReason
-	};
-	const cloudMeta = { ...meta };
-	if (codebuddyMeta.error) cloudMeta["codebuddy.ai"] = { ...codebuddyMeta };
-	return {
-		...payload,
-		update: cloudUpdate,
-		_meta: Object.keys(cloudMeta).length > 0 ? cloudMeta : void 0,
-		sessionUpdate: void 0
-	};
 }
 /**
 * Desktop `session_end_turn` → Cloud `session_end_turn`（值保留不变）。
@@ -220801,17 +220758,6 @@ function translateStateUpdate(payload, inner) {
 */
 function translateSessionEndTurn(payload, inner) {
 	return edgeSyncTranslateRuntime.translateSessionEndTurn(payload, inner);
-	const meta = payload._meta || inner._meta || {};
-	const stopReason = (meta["codebuddy.ai"] || {}).stopReason || "end_turn";
-	return {
-		...payload,
-		update: {
-			sessionUpdate: "session_end_turn",
-			stopReason
-		},
-		_meta: meta,
-		sessionUpdate: void 0
-	};
 }
 /**
 * Desktop `topic_update` → Cloud `session_info_update` + title。
@@ -220819,33 +220765,12 @@ function translateSessionEndTurn(payload, inner) {
 */
 function translateTopicUpdate(payload, inner) {
 	return edgeSyncTranslateRuntime.translateTopicUpdate(payload, inner);
-	const title = inner.title || inner.topic || payload.title || payload.topic || "";
-	return {
-		...payload,
-		update: {
-			sessionUpdate: "session_info_update",
-			title
-		},
-		sessionUpdate: void 0
-	};
 }
 /**
 * 简单重写 sessionUpdate 值（如 assistant_message_chunk → agent_message_chunk）。
 */
 function rewriteSessionUpdate(payload, inner, newSessionUpdate) {
 	return edgeSyncTranslateRuntime.rewriteSessionUpdate(payload, inner, newSessionUpdate);
-	const newInner = {
-		...inner,
-		sessionUpdate: newSessionUpdate
-	};
-	if (payload.update) return {
-		...payload,
-		update: newInner
-	};
-	return {
-		...payload,
-		sessionUpdate: newSessionUpdate
-	};
 }
 //#endregion
 //#region ../../packages/workbuddy-server/src/edge-sync/edge-sync-api.ts
@@ -221284,17 +221209,9 @@ function reportDesktopChannelTrace(input) {
 }
 function resolveDesktopSpanPlan(input) {
 	return edgeSyncTracingRuntime.resolveDesktopSpanPlan(input);
-	if (!isTraceId$1(input.traceId) || !isSpanId$1(input.spanId)) return;
-	return {
-		traceId: input.traceId.toLowerCase(),
-		spanId: input.spanId.toLowerCase(),
-		...isSpanId$1(input.parentSpanId) ? { parentSpanId: input.parentSpanId.toLowerCase() } : {}
-	};
 }
-var HIGH_CARDINALITY_ID_KEY = /(^|[._])(message|request|session|conversation|device|user|trace|span)[._-]?id([._-]|$)/i;
 function sanitizeChannelTraceAttributes(attributes) {
 	return edgeSyncTracingRuntime.sanitizeChannelTraceAttributes(attributes);
-	return Object.fromEntries(Object.entries(attributes).filter(([key]) => !HIGH_CARDINALITY_ID_KEY.test(key)));
 }
 function isTraceId$1(value) {
 	return !!value && /^(?!0{32}$)[0-9a-f]{32}$/i.test(value);
@@ -221533,7 +221450,6 @@ var MAX_BYTES = 5 * 1024 * 1024;
 * 【前端如何拉真实内容】
 * 前端看到 `_lazyLoad: true` → 通过 `get_artifact` 类命令按 messageId 二次拉取真实 output。
 */
-var LARGE_LINE_THRESHOLD = 100 * 1024;
 /**
 * 估算一条 item 序列化到响应体后的**近似字节数**（用于 MAX_BYTES 预算记账）。
 *
@@ -221555,8 +221471,6 @@ var LARGE_LINE_THRESHOLD = 100 * 1024;
 */
 function estimateItemPayloadBytes(item, line) {
 	return edgeSyncJsonlRuntime.estimateItemPayloadBytes(item, line);
-	if (item && typeof item === "object" && item._lazyLoad === true) return 512;
-	return line.length;
 }
 /**
 * 走懒解析的顶层 type 白名单——只有工具相关的行才允许缺失详细内容：
@@ -221566,11 +221480,6 @@ function estimateItemPayloadBytes(item, line) {
 * 其他 type（message / reasoning / reasoning_text / code / diff / file-history-snapshot / ...）
 * 即便超阈值也走完整 parse，保证聊天流内容永远可见。
 */
-var LAZY_LOAD_TYPES = new Set([
-	"function_call",
-	"function_call_result",
-	"function_call_output"
-]);
 /**
 * 对单行 JSONL 做安全解析：
 * - 小行（≤100KB）→ 正常 JSON.parse
@@ -221583,25 +221492,6 @@ var LAZY_LOAD_TYPES = new Set([
 */
 function parseLineWithLazyLoad(line) {
 	return edgeSyncJsonlRuntime.parseLineWithLazyLoad(line);
-	if (line.length <= LARGE_LINE_THRESHOLD) return JSON.parse(line);
-	const head = line.slice(0, 500);
-	const type = head.match(/"type":"([^"]+)"/)?.[1] || "";
-	if (!LAZY_LOAD_TYPES.has(type)) return JSON.parse(line);
-	return {
-		id: head.match(/"id":"([^"]+)"/)?.[1] || "",
-		parentId: head.match(/"parentId":"([^"]+)"/)?.[1] || "",
-		type,
-		name: head.match(/"name":"([^"]+)"/)?.[1] || "",
-		callId: head.match(/"callId":"([^"]+)"/)?.[1] || "",
-		status: head.match(/"status":"([^"]+)"/)?.[1] || "",
-		_lazyLoad: true,
-		_originalSize: line.length,
-		output: {
-			type: "text",
-			text: `[内容过大 ${(line.length / 1024 / 1024).toFixed(1)}MB，点击加载]`
-		},
-		content: []
-	};
 }
 /**
 * 逆序读取 chunk：从 `startBytePos` 往前按 CHUNK_SIZE 块读，每块内按行**逆序**（i = len-1 → 1）
@@ -221648,13 +221538,6 @@ async function iterateChunksBackward(fd, startBytePos, onLine, onFragment) {
 */
 function computeLineByteStarts(lines, baseByteOffset) {
 	return edgeSyncJsonlRuntime.computeLineByteStarts(lines, baseByteOffset);
-	const starts = new Array(lines.length);
-	let cursor = baseByteOffset;
-	for (let k = 0; k < lines.length; k++) {
-		starts[k] = cursor;
-		cursor += Buffer.byteLength(lines[k], "utf-8") + 1;
-	}
-	return starts;
 }
 /**
 * 沿 parent-chain 逆序读一页活跃分支消息。首屏和翻页统一入口。
@@ -221825,32 +221708,16 @@ async function extendToLineEnd(jsonlPath, startBytePos) {
 */
 function isLikelyUserMessageLine(line) {
 	return edgeSyncJsonlRuntime.isLikelyUserMessageLine(line);
-	const head = line.length > 200 ? line.slice(0, 200) : line;
-	return head.includes("\"type\":\"message\"") && head.includes("\"role\":\"user\"");
 }
 /** 正则提取行中的 id 字段值（不做 full JSON.parse，性能优先） */
 var ID_REGEX = /"id"\s*:\s*"([^"]+)"/;
 /** 已知 custom item type，这些不参与 parentId 链 */
-var CUSTOM_ITEM_TYPES = new Set([
-	"resend-fork-notice",
-	"file-history-snapshot",
-	"ai-title",
-	"custom-title",
-	"summary",
-	"topic",
-	"goal-result",
-	"goal-progress"
-]);
 /** 快速判断是否为 custom item（不参与 parentId 链的辅助记录） */
 function isLikelyCustomItemLine(line) {
 	return edgeSyncJsonlRuntime.isLikelyCustomItemLine(line);
-	for (const t of CUSTOM_ITEM_TYPES) if (line.includes(`"type":"${t}"`)) return true;
-	return false;
 }
 /** 正则：从 `resend-fork-notice` 行中提取 fork 点 parentId */
-var RE_TOMBSTONE_PARENT = /"parentId"\s*:\s*"([^"]+)"/;
 /** `resend-fork-notice` 墓碑标记子串（子串匹配快过 JSON.parse 10x+） */
-var TOMBSTONE_MARK = "\"type\":\"resend-fork-notice\"";
 /**
 * 检查物理上一行是否为 resend-fork-notice 墓碑；是则返回其 parentId（fork 点，可能 undefined = root fork）。
 * 用于 parent-chain 判定：当前行若是新链起点（user message，其上一行是墓碑），
@@ -221859,12 +221726,6 @@ var TOMBSTONE_MARK = "\"type\":\"resend-fork-notice\"";
 */
 function checkPrevLineTombstone(prevLine) {
 	return edgeSyncJsonlRuntime.checkPrevLineTombstone(prevLine);
-	if (!prevLine) return { isTombstone: false };
-	if (!prevLine.includes(TOMBSTONE_MARK)) return { isTombstone: false };
-	return {
-		isTombstone: true,
-		forkPoint: prevLine.match(RE_TOMBSTONE_PARENT)?.[1]
-	};
 }
 /**
 * 沿 parentId 链逆序读取活跃分支的消息（带 fork 墓碑就地判定）。

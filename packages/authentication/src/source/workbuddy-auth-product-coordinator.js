@@ -766,29 +766,12 @@ function resolveToolUsableFileIdFromSelection(record, reportedFileId) {
 		isTencentOnlineFilePath,
 		isLocalPreviewGlobalPadId
 	});
-	if (!reportedFileId) return;
-	if (isTencentOnlineFilePath(record.documentResourceUri)) return reportedFileId;
-	if (isLocalPreviewGlobalPadId(record.filePath, reportedFileId)) return;
-	return reportedFileId;
 }
 function toActiveFileContextInfo(record) {
 	return documentContextUtils.toActiveFileContextInfo(record);
-	return {
-		documentResourceUri: record.documentResourceUri,
-		filePath: record.filePath,
-		fileType: record.fileType,
-		title: record.title,
-		fileId: record.fileId,
-		sessionId: record.sessionId
-	};
 }
 function toActiveFilePreviewContextInfo(record) {
 	return documentContextUtils.toActiveFilePreviewContextInfo(record);
-	return {
-		...toActiveFileContextInfo(record),
-		previewUrl: record.previewUrl,
-		createdAt: record.createdAt
-	};
 }
 var TENCENT_DOCS_AI_FILE_SUPPORT_WHITELIST = Object.freeze([
 	{
