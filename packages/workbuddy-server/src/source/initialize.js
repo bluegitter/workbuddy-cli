@@ -5,6 +5,7 @@ const { createMqqSelectionReporter: createMqqSelectionReporterRuntime } = requir
 const { createSystemOpenLocalFileHandler: createSystemOpenLocalFileHandlerRuntime, TENCENT_DOCS_RENDERER_PUSH_CHANNELS: TENCENT_DOCS_RENDERER_PUSH_CHANNELS_RUNTIME } = require("../runtime/system-open-local-file.js");
 const localDocsHelpersRuntime = require("../runtime/local-docs-helpers.js");
 const { createLocalDocsHostFacade: createLocalDocsHostFacadeRuntime } = require("../runtime/local-docs-facade.js");
+const codebuddyBackendUtilsRuntime = require("../runtime/codebuddy-backend-utils.js");
 const require_common$3 = require("./common.js");
 const require_workbuddy_auth_product_coordinator = require("./workbuddy-auth-product-coordinator.js");
 const require_logger$1 = require("./logger.js");
@@ -220534,6 +220535,7 @@ var CodeBuddyCodeSessionBackend = class {
 * 字符串拼接细节。
 */
 function buildPrewarmActivateArgs(coldStartArgs, port) {
+	return codebuddyBackendUtilsRuntime.buildPrewarmActivateArgs(coldStartArgs, port);
 	const out = [
 		...coldStartArgs.slice(1),
 		"--port",
@@ -220568,6 +220570,7 @@ function buildPrewarmActivateArgs(coldStartArgs, port) {
 * --settings=<len=132> --mcp-config=/tmp/...mcp.json --strict-mcp-config --port=12345`。
 */
 function summarizePrewarmArgs(args) {
+	return codebuddyBackendUtilsRuntime.summarizePrewarmArgs(args);
 	const sensitiveValueFlags = new Set([
 		"--system-prompt",
 		"--append-system-prompt",
@@ -220618,6 +220621,7 @@ function buildArgs(options, cwd, mcpConfig, systemPromptFile, languageDeps = {},
 	});
 }
 function normalizeRuntimeConfig(config) {
+	return codebuddyBackendUtilsRuntime.normalizeRuntimeConfig(config);
 	const normalized = {
 		model: config?.model,
 		systemPrompt: config?.systemPrompt,
@@ -220632,17 +220636,20 @@ function normalizeRuntimeConfig(config) {
 	return normalized;
 }
 function getRestartIdentity(config) {
+	return codebuddyBackendUtilsRuntime.getRestartIdentity(config);
 	return config.restartFingerprint ?? config.systemPrompt;
 }
 function isPlainObject(value) {
 	return !!value && typeof value === "object" && !Array.isArray(value);
 }
 function stableJsonStringify(value) {
+	return codebuddyBackendUtilsRuntime.stableJsonStringify(value);
 	if (Array.isArray(value)) return `[${value.map((item) => stableJsonStringify(item)).join(",")}]`;
 	if (isPlainObject(value)) return `{${Object.keys(value).sort().filter((key) => value[key] !== void 0).map((key) => `${JSON.stringify(key)}:${stableJsonStringify(value[key])}`).join(",")}}`;
 	return JSON.stringify(value);
 }
 function isSameRuntimeConfig(left, right) {
+	return codebuddyBackendUtilsRuntime.isSameRuntimeConfig(left, right);
 	return left.model === right.model && getRestartIdentity(left) === getRestartIdentity(right) && left.tools === right.tools && left.permissionMode === right.permissionMode && left.permissionModeBeforePlan === right.permissionModeBeforePlan && stableJsonStringify(left.sessionSettings) === stableJsonStringify(right.sessionSettings) && left.runtimeIdentity === right.runtimeIdentity && left.welcomeMode === right.welcomeMode;
 }
 async function waitForEndpoint(acpEndpoint) {
