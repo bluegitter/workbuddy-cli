@@ -146,6 +146,7 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-marketplace-service"),
   ...require("./runtime/connector-service"),
   ...require("./runtime/connector-service-facade"),
+  ...require("./runtime/connector-core-services"),
   ...require("./runtime/connector-auth-coordinator"),
   ...require("./runtime/mcp-server-listing"),
   ...require("./runtime/connector-desired-configs"),

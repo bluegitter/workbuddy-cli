@@ -410,6 +410,7 @@ const {
   ConnectorService,
   createConnectorServiceFacade,
   createConnectorOAuthCallbackFacade,
+  createConnectorCoreServices,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1957,6 +1958,13 @@ async function main() {
   } });
   assert.strictEqual(oauthFacade.isOAuthCallbackUrl('http://localhost/oauth/callback'), true);
   assert.deepStrictEqual(await oauthFacade.handleOAuthCallback('state', 'code'), { state: 'state', code: 'code' });
+  const coreServices = createConnectorCoreServices({
+    connectorService: { listMcpServers: () => ['docs'] },
+    connectorUiAdapter: { getStates: () => ({}) },
+    connectorMcpProxy: { isOAuthCallbackUrl: () => true },
+  });
+  assert.deepStrictEqual(coreServices.connectors.listMcpServers(), ['docs']);
+  assert.strictEqual(coreServices.connectorOAuthCallbacks.isOAuthCallbackUrl('callback'), true);
   fs.rmSync(facadeRoot, { recursive: true, force: true });
   proxyServer.stop();
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
