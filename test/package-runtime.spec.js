@@ -378,6 +378,7 @@ const {
   SessionStore,
   ToolRoutingTable,
   shouldHideToolsFromCli,
+  runConnectorReconnect,
   buildQuery,
   resolveTeamsAcceptLanguage,
   unwrap,
@@ -1643,6 +1644,25 @@ async function main() {
   ]) });
   hiddenRouting.upsert('tencent-docs_search', 'connector:tencent-docs');
   assert.deepStrictEqual(hiddenRouting.listTools(), []);
+  const reconnectEvents = [];
+  let connectAttempts = 0;
+  assert.strictEqual(await runConnectorReconnect('connector:docs', {
+    getConfig: () => ({ serverUrl: 'https://mcp.example' }),
+    retryDelays: [0, 0],
+    sleep: async () => {},
+    connect: async () => ({ success: ++connectAttempts === 2, error: 'ECONNRESET' }),
+    onStatus: (_id, status) => reconnectEvents.push(status),
+  }), true);
+  assert.deepStrictEqual(reconnectEvents, ['connected']);
+  const reconnectAuthEvents = [];
+  assert.strictEqual(await runConnectorReconnect('connector:auth', {
+    getConfig: () => ({ serverUrl: 'https://mcp.example' }),
+    retryDelays: [0],
+    refreshToken: async () => ({ ok: false, kind: 'auth', error: 'invalid_grant' }),
+    markUnauthorized: (_id, error) => reconnectAuthEvents.push(error),
+    onStatus: (_id, status) => reconnectAuthEvents.push(status),
+  }), false);
+  assert.deepStrictEqual(reconnectAuthEvents, ['invalid_grant', 'unauthorized']);
   const expertCache = new ExpertCacheManager(path.join(root, 'experts-cache'));
   const cachedManifest = { version: '2', experts: [{ id: 'editor' }] };
   await expertCache.saveManifest(cachedManifest, 'source-1');
