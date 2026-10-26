@@ -414,6 +414,8 @@ module.exports = Object.freeze({
   ...require("./mcp/tools/visualizer-read-me-tool"),
   ...require("./mcp/tools/preview-resolver"),
   ...require("./mcp/tools/agently-cli-utils"),
+  ...require("./mcp/tools/download-attachment-tool"),
+  ...require("./mcp/tools/conversation-search-tool"),
   ...require("./mcp/tools/index"),
   ...require("./mcp/contract"),
   ...require("./claw/claw-types"),
