@@ -36,4 +36,9 @@ module.exports = Object.freeze({
   ...require("./adapter/enhance-prompt-abort"),
   ...require("./adapter/progress-phase-formatter"),
   ...require("./adapter/session-runtime-types"),
+  ...require("./adapter/acp-session-info-boundary"),
+  ...require("./adapter/acp-session-info-router"),
+  ...require("./adapter/acp-tool-call-update-coordinator"),
+  ...require("./adapter/acp-transcript-event-classifier"),
+  ...require("./adapter/compact-message-handler"),
 });
