@@ -18,10 +18,13 @@ assert.strictEqual(manifest.dependencies['reflect-metadata'], '^0.1.13');
 assert.strictEqual(manifest.dependencies.semver, '^7.7.2');
 assert.strictEqual(manifest.dependencies.axios, '^1.13.6');
 assert.strictEqual(manifest.dependencies['vscode-uri'], '^3.0.7');
+assert.strictEqual(manifest.dependencies.rxjs, '^6.6.0');
 assert.match(commonSource, /require\("reflect-metadata"\)/);
 assert.match(commonSource, /module\.exports = require\("semver"\)/);
 assert.match(commonSource, /module\.exports = require\("axios"\)/);
 assert.match(commonSource, /LIB = require\("vscode-uri"\)/);
+assert.match(commonSource, /Observable \} = require\("rxjs"\)/);
+assert.match(commonSource, /distinctUntilChanged = require\("rxjs\/operators"\)/);
 assert.match(
   commonSource,
   /require\("reflect-metadata"\);[\s\S]*?Reflect\$1 = typeof globalThis/,
