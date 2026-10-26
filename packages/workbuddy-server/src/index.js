@@ -21,6 +21,8 @@ module.exports = Object.freeze({
   ...require("./runtime/session-notification-adapter"),
   ...require("./expert/manifest-provider"),
   ...require("./expert/import-share-metric"),
+  ...require("./my-files/task-artifacts"),
+  ...require("./my-files/service"),
   ...require("./runtime/connector-config"),
   ...require("./connector/version-compatibility"),
   ...require("./connector/poi-consent-registry"),
