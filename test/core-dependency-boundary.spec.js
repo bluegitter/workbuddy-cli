@@ -20,6 +20,7 @@ assert.strictEqual(manifest.dependencies.axios, '^1.13.6');
 assert.strictEqual(manifest.dependencies['vscode-uri'], '^3.0.7');
 assert.strictEqual(manifest.dependencies.rxjs, '^6.6.0');
 assert.strictEqual(manifest.dependencies['@opentelemetry/api'], '^1.8.0');
+assert.strictEqual(manifest.dependencies.jsonwebtoken, '^9.0.2');
 assert.match(commonSource, /require\("reflect-metadata"\)/);
 assert.match(commonSource, /module\.exports = require\("semver"\)/);
 assert.match(commonSource, /module\.exports = require\("axios"\)/);
@@ -27,6 +28,7 @@ assert.match(commonSource, /LIB = require\("vscode-uri"\)/);
 assert.match(commonSource, /Observable \} = require\("rxjs"\)/);
 assert.match(commonSource, /distinctUntilChanged = require\("rxjs\/operators"\)/);
 assert.match(commonSource, /const otelApi = require\("@opentelemetry\/api"\)/);
+assert.match(commonSource, /module\.exports = require\("jsonwebtoken"\)/);
 assert.match(
   commonSource,
   /require\("reflect-metadata"\);[\s\S]*?Reflect\$1 = typeof globalThis/,

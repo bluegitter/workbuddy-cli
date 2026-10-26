@@ -74842,6 +74842,10 @@ var require_sign = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, module
 //#endregion
 //#region ../../node_modules/jsonwebtoken/index.js
 var require_jsonwebtoken = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, module) => {
+	// JWT decoding is a public package boundary; keep token behavior aligned with
+	// the maintained jsonwebtoken implementation used by the CLI.
+	module.exports = require("jsonwebtoken");
+	return;
 	module.exports = {
 		decode: require_decode(),
 		verify: require_verify(),
