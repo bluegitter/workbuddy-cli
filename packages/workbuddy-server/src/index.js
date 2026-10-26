@@ -189,6 +189,8 @@ module.exports = Object.freeze({
   ...require("./network/wait-for-network-online"),
   ...require("./claw/ioa-im-override"),
   ...require("./project/_internal/quota-errors"),
+  ...require("./project/_internal/cloud-expert"),
+  ...require("./project/_internal/cloud-join-request"),
   ...require("./shared/file-lock"),
   ...require("./shared/settings-store"),
   ...require("./project/_internal/cloud-activity"),
