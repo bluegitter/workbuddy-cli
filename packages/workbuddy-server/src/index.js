@@ -188,6 +188,7 @@ module.exports = Object.freeze({
   ...require("./agent-im/wechatbot-api-client"),
   ...require("./network/handlers"),
   ...require("./core/handlers"),
+  ...require("./connector/service"),
   ...require("./growth/handlers"),
   ...require("./msg-center/handlers"),
   ...require("./personal-skills/handlers"),
