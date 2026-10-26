@@ -18,4 +18,7 @@ module.exports = Object.freeze({
   ...require("./file-tree/tree-utils"),
   ...require("./share/common/share-task-utils"),
   ...require("./share/artifact-filter"),
+  ...require("./hooks/ardot-instance-cache"),
+  ...require("./constants/artifact"),
+  ...require("./share/moderation"),
 });
