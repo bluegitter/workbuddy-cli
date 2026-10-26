@@ -96,6 +96,7 @@ module.exports = Object.freeze({
   ...require("./session/session-meta/session-meta-writer"),
   ...require("./session/runtime-config"),
   ...require("./session/session-runtime-config-resolver"),
+  ...require("./session/brain-artifact-service"),
   ...require("./session/session-manager-meta"),
   ...require("./session/session-runtime-identity"),
   ...require("./session/session-history-events"),
