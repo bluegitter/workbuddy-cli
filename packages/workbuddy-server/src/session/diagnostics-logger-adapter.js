@@ -1,0 +1,4 @@
+'use strict';
+function stringifyDetails(details) { if (details === undefined) return ''; if (typeof details === 'string') return ` ${details}`; if (details instanceof Error) return ` ${details.stack ?? `${details.name}: ${details.message}`}`; try { return ` ${JSON.stringify(details)}`; } catch { return ` ${String(details)}`; } }
+function adaptSessionDiagnosticsLogger(hostLogger) { if (!hostLogger) return undefined; const forward = (fn, message, details) => fn?.(`${message}${stringifyDetails(details)}`); return { info: (message, details) => forward(hostLogger.info?.bind(hostLogger), message, details), warn: (message, details) => forward(hostLogger.warn?.bind(hostLogger), message, details), error: (message, details) => forward(hostLogger.error?.bind(hostLogger), message, details), debug: (message, details) => forward(hostLogger.debug?.bind(hostLogger), message, details) }; }
+module.exports = Object.freeze({ adaptSessionDiagnosticsLogger, stringifyDetails });
