@@ -41,6 +41,8 @@ module.exports = Object.freeze({
   ...require("./edge-sync/edge-sync-translate"),
   ...require("./edge-sync/edge-sync-api"),
   ...require("./edge-sync/edge-sync-tracing"),
+  ...require("./edge-sync/edge-sync-handlers"),
+  ...require("./edge-sync/edge-sync-service"),
   ...require("./edge-sync/edge-sync-mapping-store"),
   ...require("./edge-sync/edge-sync-jsonl"),
   ...require("./runtime/edge-sync-basic-handlers"),
