@@ -127,6 +127,8 @@ module.exports = Object.freeze({
   ...require("./storage/repositories/migration-meta-repository"),
   ...require("./storage/repositories/session-usage-repository"),
   ...require("./storage/repositories/session-repository"),
+  ...require("./storage/repositories/automation-repository"),
+  ...require("./storage/repositories/delivery-outbox-repository"),
   ...require("./storage/database-file-logger"),
   ...require("./storage/sqlite/ghost-cleanup"),
   ...require("./storage/sqlite/legacy-vscdb-reader"),
