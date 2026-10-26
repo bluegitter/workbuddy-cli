@@ -57,6 +57,7 @@ const projectHttpSource = require('../packages/workbuddy-server/src/source/http.
 const { HANDOFF_CANARY_HEADERS, ROUTE_PREFIX, withAcceptLanguageHeader } = require('../packages/workbuddy-server/src');
 const { SHARE_CHANNEL_MAP, SHARE_RPC_CHANNELS, registerShareHandlers } = require('../packages/workbuddy-server/src');
 const { LEXIANG_COOKIE_DOMAINS, LexiangSpApiError, TENCENT_LEXIANG_CHANNEL_MAP, TENCENT_LEXIANG_RPC_CHANNELS, registerTencentLexiangHandlers } = require('../packages/workbuddy-server/src');
+const { TTS_CHANNEL_MAP, TTS_RPC_CHANNELS, registerTtsHandlers } = require('../packages/workbuddy-server/src');
 const { sessionRecordToTaskConversation } = require('../packages/workbuddy-server/src');
 const { createSessionRecordStore, SessionRuntimeEventService, DefaultUsageCacheService, createUsageCacheStore } = require('../packages/workbuddy-server/src');
 const mcpSchemaSource = require('../packages/workbuddy-server/src/runtime/mcp-schema.js');
@@ -2686,6 +2687,24 @@ async function main() {
   assert.strictEqual(lexiangHandlers.size, Object.keys(TENCENT_LEXIANG_RPC_CHANNELS).length);
   await lexiangHandlers.get(TENCENT_LEXIANG_RPC_CHANNELS.GATEWAY_POST)('/spapi/test', { value: 1 });
   assert.deepStrictEqual(lexiangCalls, [['gatewayPost', '/spapi/test', { value: 1 }]]);
+  assert.deepStrictEqual(TTS_CHANNEL_MAP.onTtsEvent, { type: 'listener', channel: TTS_RPC_CHANNELS.EVENT });
+  const ttsHandlers = new Map();
+  const ttsEvents = [];
+  const ttsErrors = [];
+  registerTtsHandlers({
+    handle: (channel, handler) => ttsHandlers.set(channel, handler),
+    push: (channel, payload) => ttsEvents.push([channel, payload]),
+  }, {
+    services: { tts: {
+      startTts: async (params, pushEvent) => { pushEvent({ id: params.id }); return { success: true }; },
+      stopTts: async () => { throw new Error('stop failed'); },
+    } },
+    logger: { error: (...args) => ttsErrors.push(args) },
+  });
+  assert.deepStrictEqual(await ttsHandlers.get(TTS_RPC_CHANNELS.START_TTS)({ id: 'speech-1' }), { success: true });
+  assert.deepStrictEqual(ttsEvents, [[TTS_RPC_CHANNELS.EVENT, { id: 'speech-1' }]]);
+  assert.strictEqual(await ttsHandlers.get(TTS_RPC_CHANNELS.STOP_TTS)({ id: 'speech-1' }), undefined);
+  assert.strictEqual(ttsErrors[0][1], 'stop failed');
   assert.strictEqual(getHostedCliSessionOwnerKey({ account: { uid: 'u1' }, auth: { domain: 'd' } }), 'u1|d|');
   class FakeAcpClient { constructor(options) { this.options = options; this.connection = { prompt: async (value) => value }; } connect() { return Promise.resolve(); } disconnect() {} debugState() { return 'ready'; } resolvePermission() {} rejectPermission() {} answerQuestion() {} cancelQuestion() {} respondElicitation() {} resolveInterruption() {} }
   const acpFacade = createWorkbuddyAgentAcpClient({ ClientClass: FakeAcpClient, endpoint: 'http://127.0.0.1:1' });
