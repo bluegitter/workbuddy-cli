@@ -143,6 +143,8 @@ module.exports = Object.freeze({
   ...require("./server/server-http-fetch"),
   ...require("./server/daemon-lifecycle-handlers"),
   ...require("./server/daemon-rpc-handlers"),
+  ...require("./server/bootstrap-server"),
+  ...require("./server/daemon-server"),
   ...require("./server/runtime-handlers"),
   ...require("./slot/handlers"),
   ...require("./runtime/stdio-rpc"),
