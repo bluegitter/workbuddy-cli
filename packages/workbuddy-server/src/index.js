@@ -163,6 +163,7 @@ module.exports = Object.freeze({
   ...require("./docs-shared/local-docs/wb-source"),
   ...require("./skill/common/skill-upload-slug"),
   ...require("./skill/common/skill-upload-form-fields"),
+  ...require("./skill/common/skill-upload-metadata"),
   ...require("./skill/security-app-key"),
   ...require("./claw/constants"),
   ...require("./claw/claw-content-utils"),
