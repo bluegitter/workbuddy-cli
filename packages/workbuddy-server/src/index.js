@@ -180,6 +180,7 @@ module.exports = Object.freeze({
   ...require("./skill/personal/handlers"),
   ...require("./skill/marketplace/local-marketplace"),
   ...require("./skill/marketplace/skillhub"),
+  ...require("./skill/marketplace/knot"),
   ...require("./skill/security/skill-scan-helpers"),
   ...require("./skill/security/skill-security-client"),
   ...require("./skill/security-app-key"),
