@@ -388,6 +388,7 @@ module.exports = Object.freeze({
   ...require("./backend/handlers"),
   ...require("./asr/facade"),
   ...require("./plugin/builtin-plugin-marketplace-updater"),
+  ...require("./skill/builtin-skill-marketplace-updater"),
   ...require("./workspace/default-workspace-root"),
   ...require("./claw/reply-error-classifier"),
   ...require("./inspiration/handlers"),
