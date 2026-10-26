@@ -53,4 +53,9 @@ module.exports = Object.freeze({
   ...require("./session-store/permissions"),
   ...require("./session-store/progress"),
   ...require("./session-store/context-usage"),
+  ...require("./desktop/host"),
+  ...require("./desktop/clipboard"),
+  ...require("./desktop/opener"),
+  ...require("./adapter/token-connector-bus"),
+  ...require("./adapter/mcp-token-config-bus"),
 });
