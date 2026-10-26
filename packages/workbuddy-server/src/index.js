@@ -159,6 +159,8 @@ module.exports = Object.freeze({
   ...require("./data-retention/types"),
   ...require("./data-retention/config-store"),
   ...require("./data-retention/file-utils"),
+  ...require("./data-retention/contract"),
+  ...require("./data-retention/handlers"),
   ...require("./config/contract"),
   ...require("./config/handlers"),
   ...require("./binary/facade"),
