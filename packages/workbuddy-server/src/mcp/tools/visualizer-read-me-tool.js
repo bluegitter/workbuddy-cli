@@ -1,0 +1,7 @@
+'use strict';
+
+const { VisualizerGuidelines } = require('./visualizer-guidelines');
+const VALID_MODULES = ['diagram', 'mockup', 'interactive', 'art', 'chart'];
+function parseModules(raw) { if (Array.isArray(raw)) return raw.map((item) => typeof item === 'string' ? item : String(item)).map((item) => item.trim()).filter(Boolean); if (typeof raw !== 'string') return []; const value = raw.trim(); if (!value) return []; if (value.startsWith('[')) try { const parsed = JSON.parse(value); if (Array.isArray(parsed)) return parsed.map(String).map((item) => item.trim()).filter(Boolean); } catch {} return value.split(/[\s,]+/).filter(Boolean); }
+function createVisualizerReadMeTool() { return { name: 'read_me', description: 'Returns required Visualizer design context before show_widget.', inputSchema: { type: 'object', properties: { modules: { anyOf: [{ type: 'array', items: { type: 'string' } }, { type: 'string' }], description: `Modules: ${VALID_MODULES.join(', ')}` } }, required: ['modules'] }, handler: async (args) => { try { return { content: [{ type: 'text', text: JSON.stringify({ type: 'visualizer_read_me_result', content: VisualizerGuidelines.build(parseModules(args?.modules)) }) }] }; } catch (error) { return { content: [{ type: 'text', text: JSON.stringify({ type: 'visualizer_read_me_result', content: '', success: false, message: `Failed to load visualizer guidance: ${String(error)}` }) }], isError: true }; } } }; }
+module.exports = Object.freeze({ VALID_MODULES, VisualizerGuidelines, createVisualizerReadMeTool, parseModules });
