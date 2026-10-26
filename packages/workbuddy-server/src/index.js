@@ -195,6 +195,8 @@ module.exports = Object.freeze({
   ...require("./project/_internal/cloud-task-queue"),
   ...require("./project/_internal/cloud-task"),
   ...require("./project/_internal/cloud-todo-sync-source"),
+  ...require("./project/_internal/cloud-todo-utils"),
+  ...require("./project/_internal/cloud-todo"),
   ...require("./sandbox/handlers"),
   ...require("./migration/archived-sync-service"),
   ...require("./migration/session-fragment-repair-service"),
