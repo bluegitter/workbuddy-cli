@@ -1,5 +1,8 @@
 'use strict';
 
+const { DefaultUsageCacheService } = require('./usage-cache-service');
+const { isMissingSessionUsageTableError, createUsageCacheStore } = require('./usage-cache-store');
+
 function isArchivedStatus(status) {
   return typeof status === 'string' && status.toLowerCase() === 'archived';
 }
@@ -129,50 +132,6 @@ class SessionRuntimeEventService {
     if (!rawEvent || typeof rawEvent !== 'object' || typeof rawEvent.sessionId !== 'string' || !rawEvent.sessionId) return undefined;
     return { sessionId: rawEvent.sessionId, timestamp: typeof rawEvent.timestamp === 'number' ? rawEvent.timestamp : undefined, source: typeof rawEvent.source === 'string' ? rawEvent.source : undefined, userId: typeof rawEvent.userId === 'string' ? rawEvent.userId : undefined, rawType: typeof rawEvent.rawType === 'string' ? rawEvent.rawType : undefined, rawState: typeof rawEvent.rawState === 'string' ? rawEvent.rawState : undefined, meta: rawEvent.meta && typeof rawEvent.meta === 'object' ? rawEvent.meta : undefined };
   }
-}
-
-class DefaultUsageCacheService {
-  constructor(deps) { this.memory = new Map(); this.store = deps?.store; this.logger = deps?.logger; }
-  recordUsage(sessionId, snapshot) {
-    if (!sessionId) return;
-    const existing = this.memory.get(sessionId);
-    if (existing && existing.updatedAt >= snapshot.updatedAt) return;
-    this.memory.set(sessionId, snapshot);
-    this.store?.upsertUsage(sessionId, snapshot).catch((error) => this.logger?.warn?.(`[UsageCacheService] upsertUsage failed for session ${sessionId}`, error));
-  }
-  getCached(sessionId) { return sessionId ? this.memory.get(sessionId) : undefined; }
-  async getPersisted(sessionId) {
-    if (!sessionId) return undefined;
-    const cached = this.memory.get(sessionId);
-    if (cached || !this.store) return cached;
-    try {
-      const persisted = await this.store.getUsage(sessionId);
-      if (persisted) { const current = this.memory.get(sessionId); if (!current || current.updatedAt < persisted.updatedAt) this.memory.set(sessionId, persisted); }
-      return persisted;
-    } catch (error) { this.logger?.warn?.(`[UsageCacheService] getUsage failed for session ${sessionId}`, error); return undefined; }
-  }
-  getLastEvent(sessionId) {
-    const snapshot = this.memory.get(sessionId);
-    return snapshot && { sessionId, used: snapshot.used, size: snapshot.size, updatedAt: snapshot.updatedAt, credit: snapshot.credit, usageByCategory: snapshot.usageByCategory };
-  }
-  async purge(sessionId) { if (!sessionId) return; this.memory.delete(sessionId); try { await this.store?.deleteUsage(sessionId); } catch (error) { this.logger?.warn?.(`[UsageCacheService] deleteUsage failed for session ${sessionId}`, error); } }
-}
-
-function isMissingSessionUsageTableError(error) { return error instanceof Error && typeof error.message === 'string' && error.message.length > 0 && error.message.includes('no such table'); }
-
-function createUsageCacheStore(celljs) {
-  const ensureDatabaseReady = (database) => database.initialize?.();
-  const tryRecreateTable = (database) => { if (typeof database.ensureSessionUsageTable !== 'function') return false; try { database.ensureSessionUsageTable(); return true; } catch { return false; } };
-  return {
-    async getUsage(sessionId) {
-      try { const deps = await celljs; ensureDatabaseReady(deps.database); try { const row = deps.database.getSessionUsage(sessionId); if (!row) return undefined; const snapshot = { used: row.used, size: row.size, updatedAt: row.updatedAt }; if (row.creditJson) try { snapshot.credit = JSON.parse(row.creditJson); } catch {} return snapshot; } catch (error) { if (isMissingSessionUsageTableError(error)) tryRecreateTable(deps.database); return undefined; } } catch { return undefined; }
-    },
-    async upsertUsage(sessionId, snapshot) {
-      try { const deps = await celljs; ensureDatabaseReady(deps.database); const entry = { sessionId, used: snapshot.used, size: snapshot.size, updatedAt: snapshot.updatedAt, creditJson: snapshot.credit ? JSON.stringify(snapshot.credit) : undefined }; try { deps.database.upsertSessionUsage(entry); } catch (error) { if (isMissingSessionUsageTableError(error) && tryRecreateTable(deps.database)) try { deps.database.upsertSessionUsage(entry); } catch {} } } catch {}
-    },
-    async deleteUsage(sessionId) { try { const deps = await celljs; ensureDatabaseReady(deps.database); deps.database.deleteSessionUsage(sessionId); } catch {} },
-    async listAllUsages() { try { const deps = await celljs; ensureDatabaseReady(deps.database); return deps.database.getAllSessionUsages().map((row) => { const snapshot = { sessionId: row.sessionId, used: row.used, size: row.size, updatedAt: row.updatedAt }; if (row.creditJson) try { snapshot.credit = JSON.parse(row.creditJson); } catch {} return snapshot; }); } catch { return []; } },
-  };
 }
 
 module.exports = Object.freeze({

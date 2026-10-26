@@ -64,6 +64,8 @@ module.exports = Object.freeze({
   ...require("./session/task-status"),
   ...require("./runtime/task-conversation"),
   ...require("./storage/session-record-store"),
+  ...require("./storage/usage-cache-service"),
+  ...require("./storage/usage-cache-store"),
   ...require("./storage/service"),
   ...require("./storage/handlers"),
   ...require("./storage/contract"),
