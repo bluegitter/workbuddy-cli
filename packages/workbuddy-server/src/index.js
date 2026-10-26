@@ -199,6 +199,7 @@ module.exports = Object.freeze({
   ...require("./project/_internal/cloud-todo-utils"),
   ...require("./project/_internal/cloud-todo"),
   ...require("./project/_internal/cloud-todo-comment"),
+  ...require("./project/service"),
   ...require("./project/_internal/smartsheet/smartsheet-http-adapter"),
   ...require("./sandbox/handlers"),
   ...require("./migration/archived-sync-service"),
