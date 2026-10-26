@@ -168,6 +168,7 @@ module.exports = Object.freeze({
   ...require("./backend/factory"),
   ...require("./backend/handlers"),
   ...require("./asr/facade"),
+  ...require("./plugin/builtin-plugin-marketplace-updater"),
   ...require("./asr/handlers"),
   ...require("./app/contract"),
   ...require("./auth/core-service"),
