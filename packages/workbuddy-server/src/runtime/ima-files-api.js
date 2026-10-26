@@ -1,21 +1,2 @@
 'use strict';
-
-const { buildFilters, mapRawKnowledgeItem, SORT_BY_TO_SORT_TYPE, transformKbItem, transformResults, transformSearchItem } = require('./ima-file-utils');
-
-class ImaFilesApi {
-  constructor(client, options = {}) { this.client = client; this.fetchFn = options.fetchFn || globalThis.fetch?.bind(globalThis); }
-  async list(params = {}) { const body = { knowledge_base_id: params.kbId, cursor: params.cursor || '', limit: Math.min(50, Math.max(1, params.limit ?? 20)) }; const filters = buildFilters(params); if (params.sortBy) body.sort_type = SORT_BY_TO_SORT_TYPE[params.sortBy] ?? 0; if (filters) body.filters = filters; if (params.folderId) body.folder_id = params.folderId; const raw = await this.client.post('/openapi/knowledge_base/v1/get_knowledge_list', body); return { knowledgeBaseInfo: { id: raw.knowledge_base_info?.id || '', name: raw.knowledge_base_info?.basic_info?.name || '', fileCount: Number(raw.knowledge_base_info?.basic_info?.knowledge_total_size) || 0 }, items: (raw.knowledge_list || []).map(mapRawKnowledgeItem), currentPath: (raw.current_path || []).map((item) => ({ folderId: item.folder_id || '', name: item.name || '' })), nextCursor: raw.next_cursor || null, isEnd: raw.is_end ?? true, totalSize: Number(raw.total_size) || 0, version: raw.version, isUpdate: raw.is_update }; }
-  async search(params = {}) { const body = { knowledge_base_id: params.kbId, cursor: params.cursor || '', ...(params.q ? { query: params.q } : {}), ...(params.folderId ? { folder_id: params.folderId } : {}) }; const filters = buildFilters(params); if (filters) body.filters = filters; const raw = await this.client.post('/openapi/knowledge_base/v1/search_knowledge', body); return { items: (raw.searched_knowledge_list || []).map((item) => ({ ...mapRawKnowledgeItem(item.knowledge || {}), parentFolderName: item.parent_folder_name, highlights: item.highlight_content || item.highlight_title || item.highlight_tags?.length || item.highlight_category ? { content: item.highlight_content, title: item.highlight_title, tags: item.highlight_tags, category: item.highlight_category } : undefined })), nextCursor: raw.next_cursor || null, isEnd: raw.is_end ?? true }; }
-  getViewUrl(fileId) { return this.fetchSingleMediaItem(fileId, '/openapi/media/v1/preview_medias'); }
-  getDownloadUrl(fileId) { return this.fetchSingleMediaItem(fileId, '/openapi/media/v1/download_medias'); }
-  async fetchSingleMediaItem(fileId, endpoint) { const raw = await this.client.post(endpoint, { media_ids: [fileId] }); const item = raw.results?.[fileId]; if (!item) throw new Error(`[ImaFilesApi] missing result for media_id=${fileId}`); if (item.ret_code !== 0) throw new Error(`[ImaFilesApi] media_id=${fileId} ret_code=${item.ret_code} msg=${item.wrong_msg || ''}`); return item; }
-  async getContent(url) { if (!url) throw new Error('[ImaFilesApi] getContent: url is empty'); const response = await this.fetchFn(url); if (!response.ok) throw new Error(`[ImaFilesApi] getContent: http ${response.status}`); return { content: await response.text() }; }
-  async getBlob(url) { if (!url) throw new Error('[ImaFilesApi] getBlob: url is empty'); const response = await this.fetchFn(url); if (!response.ok) throw new Error(`[ImaFilesApi] getBlob: http ${response.status}`); const buffer = await response.arrayBuffer(); return { base64: Buffer.from(buffer).toString('base64'), mimeType: response.headers.get('content-type')?.split(';')[0]?.trim() || 'application/octet-stream', size: buffer.byteLength }; }
-}
-
-class ImaKnowledgeBaseApi {
-  constructor(client) { this.client = client; }
-  async list(params = {}) { const types = params.types?.length ? params.types : [1001, 1002, 1004, 1005]; const limit = params.limit ?? 20; const raw = await this.client.post('/openapi/knowledge_base/v1/get_knowledge_base_list', { params: types.map((type) => ({ type, cursor: params.cursors?.[type] || '', limit })) }); return { groups: transformResults(raw.results) }; }
-  async search(params = {}) { const raw = await this.client.post('/openapi/knowledge_base/v1/search_knowledge_base', { query: params.query, cursor: params.cursor || '', limit: Math.max(1, Math.min(20, params.limit ?? 20)) }); return { items: (raw.info_list || []).map(transformSearchItem), nextCursor: raw.next_cursor || null, isEnd: raw.is_end ?? true }; }
-}
-module.exports = Object.freeze({ ImaFilesApi, ImaKnowledgeBaseApi });
+module.exports = require('../ima/api/files-api');

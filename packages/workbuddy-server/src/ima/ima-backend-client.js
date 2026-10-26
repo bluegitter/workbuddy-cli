@@ -1,8 +1,8 @@
 'use strict';
 
 const crypto = require('crypto');
-const { ImaApiError } = require('../runtime/ima-errors');
-const { ImaDataCipher, CryptoMode } = require('../runtime/ima-cipher');
+const { ImaApiError } = require('./errors');
+const { ImaDataCipher, CryptoMode } = require('./ima-data-cipher');
 
 const DEFAULT_PATH_PREFIX = '/console/agent-gateway/ima';
 const ENCRYPTED_PATHS = new Set(['/openapi/media/v1/download_medias', '/openapi/media/v1/preview_medias']);
