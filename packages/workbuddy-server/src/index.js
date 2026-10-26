@@ -194,6 +194,7 @@ module.exports = Object.freeze({
   ...require("./docs/system-open-local-file"),
   ...require("./docs/service"),
   ...require("./docs/handlers"),
+  ...require("./docs/route-mqq-selection"),
   ...require("./docs/contract"),
   ...require("./docs/runtime-paths"),
   ...require("./runtime/local-docs-helpers"),
