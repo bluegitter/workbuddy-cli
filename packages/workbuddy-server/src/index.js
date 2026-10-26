@@ -168,6 +168,7 @@ module.exports = Object.freeze({
   ...require("./claw/claw-settings-store"),
   ...require("./claw/claw-i18n"),
   ...require("./claw/bg-agent-api-client"),
+  ...require("./claw/claw-text-approval"),
   ...require("./growth/handlers"),
   ...require("./msg-center/handlers"),
   ...require("./personal-skills/handlers"),
