@@ -1,0 +1,5 @@
+'use strict';
+const GET_REMOTE_VIEW_FLAG_CHANNEL = 'edgeSync:getRemoteViewFlag';
+const SET_REMOTE_VIEW_FLAG_CHANNEL = 'edgeSync:setRemoteViewFlag';
+function registerEdgeSyncHandlers(registry, deps) { registry.handle(GET_REMOTE_VIEW_FLAG_CHANNEL, async () => { const service = deps.getEdgeSyncService(); if (!service) return { flag: 0 }; try { const { devices } = await service.getOnlineDevices(); const deviceId = service.getDeviceId(); return { flag: devices.find((device) => device.deviceId === deviceId)?.remoteViewFlag ?? 0 }; } catch { return { flag: 0 }; } }); registry.handle(SET_REMOTE_VIEW_FLAG_CHANNEL, async (flag = 2) => { const service = deps.getEdgeSyncService(); if (!service) return { success: false }; try { const value = typeof flag === 'number' ? flag : 2; const deviceId = service.getDeviceId(); await service.setRemoteViewFlag(deviceId, value); return { success: true, flag: value }; } catch { return { success: false }; } }); return registry; }
+module.exports = Object.freeze({ GET_REMOTE_VIEW_FLAG_CHANNEL, SET_REMOTE_VIEW_FLAG_CHANNEL, registerEdgeSyncHandlers });
