@@ -191,6 +191,8 @@ module.exports = Object.freeze({
   ...require("./project/_internal/quota-errors"),
   ...require("./project/_internal/cloud-expert"),
   ...require("./project/_internal/cloud-join-request"),
+  ...require("./project/_internal/cloud-invitation"),
+  ...require("./project/_internal/cloud-task-queue"),
   ...require("./shared/file-lock"),
   ...require("./shared/settings-store"),
   ...require("./project/_internal/cloud-activity"),
