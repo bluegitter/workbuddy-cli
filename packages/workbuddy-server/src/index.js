@@ -48,6 +48,8 @@ module.exports = Object.freeze({
   ...require("./agent/cli-runtime-args"),
   ...require("./agent/cli-runtime-process"),
   ...require("./agent/cli-settings-language"),
+  ...require("./agent/cli-runtime-env"),
+  ...require("./agent/cli-runtime-files"),
   ...require("./session/session-replay"),
   ...require("./runtime/media-types"),
   ...require("./session/terminal-proxy"),
