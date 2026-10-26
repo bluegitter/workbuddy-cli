@@ -1,0 +1,6 @@
+'use strict';
+const assert = require('node:assert');
+const { McpAppCatalog } = require('../packages/workbuddy-server/src/mcp-apps/catalog');
+const { AppResolver } = require('../packages/workbuddy-server/src/mcp-apps/resolver');
+async function main() { let listener; const proxy = { listAllTools: () => [{ name: 'server_tool', description: 'demo', _meta: { ui: { resourceUri: 'ui://demo' } }, inputSchema: {} }], onToolsChanged: (cb) => { listener = cb; return () => {}; }, readResourceForTool: async () => ({ contents: [{ text: '<html>demo</html>', _meta: { ui: { csp: {} } } }] }) }; const catalog = new McpAppCatalog({ proxy, resolveConfigId: () => 'mcp:server', resolveOriginalToolName: (name) => name }); catalog.onChanged((apps) => { listener = apps; }); catalog.start(); assert.strictEqual(catalog.listApps()[0].mcpAppId, 'server/server_tool'); const resolver = new AppResolver(proxy); const resolved = await resolver.resolve(catalog.listApps()[0]); assert.strictEqual(resolved.html, '<html>demo</html>'); assert.deepStrictEqual(resolver.resolve ? resolved.uiMetadata : null, { csp: {} }); catalog.stop(); console.log('mcp app primitive tests passed'); }
+main().catch((error) => { console.error(error); process.exitCode = 1; });
