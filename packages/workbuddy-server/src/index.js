@@ -72,6 +72,7 @@ module.exports = Object.freeze({
   ...require("./shared/error-codes"),
   ...require("./session/usage-cache-service"),
   ...require("./session/media-extensions"),
+  ...require("./session/local-document-media-policy"),
   ...require("./session/no-response-watchdog"),
   ...require("./session/diagnostics-logger-adapter"),
   ...require("./session/contract"),
