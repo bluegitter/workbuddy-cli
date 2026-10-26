@@ -157,6 +157,8 @@ module.exports = Object.freeze({
   ...require("./claw/constants"),
   ...require("./claw/claw-content-utils"),
   ...require("./claw/claw-power-lifecycle"),
+  ...require("./claw/claw-lifecycle"),
+  ...require("./claw/claw-settings-store"),
   ...require("./growth/handlers"),
   ...require("./msg-center/handlers"),
   ...require("./personal-skills/handlers"),
