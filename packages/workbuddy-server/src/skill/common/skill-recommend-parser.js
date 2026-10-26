@@ -1,0 +1,8 @@
+'use strict';
+function parseSseContent(raw) { if (typeof raw !== 'string' || !raw) return ''; let output = ''; for (const line of raw.split(/\r?\n/)) { const trimmed = line.trim(); if (!trimmed.startsWith('data:')) continue; const payload = trimmed.slice(5).trim(); if (!payload || payload === '[DONE]') continue; try { const piece = JSON.parse(payload).choices?.[0]?.delta?.content ?? JSON.parse(payload).choices?.[0]?.message?.content; if (typeof piece === 'string') output += piece; } catch {} } return output; }
+function extractContentFromResponse(data) { if (data == null) return ''; if (typeof data === 'string') { if (/(^|\n)\s*data:/.test(data)) return parseSseContent(data); try { return JSON.parse(data).choices?.[0]?.message?.content ?? ''; } catch { return ''; } } return data.choices?.[0]?.message?.content ?? ''; }
+const QUOTE_CHARS = new Set(['"', "'", '“', '”', '‘', '’', '「', '」', '『', '』']);
+function stripWrappingQuotes(value) { let start = 0; let end = value.length; while (start < end && QUOTE_CHARS.has(value[start])) start++; while (end > start && QUOTE_CHARS.has(value[end - 1])) end--; return value.slice(start, end); }
+function safeStringifyResponse(data) { if (data == null) return ''; if (typeof data === 'string') return data.slice(0, 500); try { return JSON.stringify(data).slice(0, 500); } catch { return String(data).slice(0, 500); } }
+function parseLlmContent(raw, catalogIds) { if (typeof raw !== 'string') return []; const cleaned = stripWrappingQuotes(raw.trim()).trim(); return cleaned ? cleaned.split(',').map((value) => value.trim()).filter((value) => value && catalogIds.has(value)).slice(0, 3) : []; }
+module.exports = { parseSseContent, extractContentFromResponse, stripWrappingQuotes, safeStringifyResponse, parseLlmContent };
