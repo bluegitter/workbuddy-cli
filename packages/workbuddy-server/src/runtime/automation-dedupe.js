@@ -1,11 +1,2 @@
 'use strict';
-const path = require('path');
-function normalizeText(value) { return (value ?? '').trim().replace(/\s+/g, ' '); }
-function normalizePath(value) { return path.resolve(path.normalize(value)).replace(/[\\/]+$/, '').replace(/\\/g, '/'); }
-function normalizeGeneratedWorkspacePath(value) { const normalized = normalizePath(value); const match = path.posix.basename(normalized).match(/^(automation(?:-claw)?)(?:-\d{4}-\d{2}-\d{2}-task-\d+|-\d+(?:-\d+)?)$/); return match ? `${path.posix.dirname(normalized)}/<generated:${match[1]}>` : normalized; }
-function normalizeStringList(values) { return [...values ?? []].map(normalizeText).filter(Boolean).sort(); }
-function normalizeCwds(cwds) { return [...cwds ?? []].map(normalizeGeneratedWorkspacePath).filter(Boolean).sort(); }
-function getAutomationRunIdentity(automation) { return JSON.stringify({ prompt: normalizeText(automation.prompt), scheduleType: automation.scheduleType, schedule: automation.scheduleType === 'once' ? normalizeText(automation.scheduledAt) : normalizeText(automation.rrule).toUpperCase(), validFrom: normalizeText(automation.validFrom), validUntil: normalizeText(automation.validUntil), cwds: normalizeCwds(automation.cwds), modelId: normalizeText(automation.modelId), modelIsThinking: automation.modelIsThinking === true, skills: normalizeStringList(automation.skills), pushToWeChat: automation.pushToWeChat === true, pushToWecomBot: automation.pushToWecomBot === true, expertId: normalizeText(automation.expertId), expertMarketplace: normalizeText(automation.expertMarketplace), connectorIds: normalizeStringList(automation.connectorIds) }); }
-function compareAutomationCanonicalOrder(a, b) { return a.created_at !== b.created_at ? a.created_at - b.created_at : a.id.localeCompare(b.id); }
-function findEquivalentActiveAutomation(candidate, automations) { if (candidate.status !== 'ACTIVE') return undefined; const identity = getAutomationRunIdentity(candidate); return automations.filter((item) => item.id !== candidate.id && item.status === 'ACTIVE' && getAutomationRunIdentity(item) === identity).sort(compareAutomationCanonicalOrder)[0]; }
-module.exports = { normalizeText, normalizePath, normalizeGeneratedWorkspacePath, normalizeStringList, normalizeCwds, getAutomationRunIdentity, compareAutomationCanonicalOrder, findEquivalentActiveAutomation };
+module.exports = require('../automation/automation-dedupe');
