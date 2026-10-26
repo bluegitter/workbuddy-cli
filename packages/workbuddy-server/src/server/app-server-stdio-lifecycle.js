@@ -1,0 +1,6 @@
+'use strict';
+const { writeDaemonStdioFrame } = require('./stdio-framing');
+const { serveDaemonRpcOverStdio } = require('./stdio-server');
+const { registerDaemonLifecycleHandlers } = require('./daemon-lifecycle-handlers');
+function startWorkbuddyAppServerStdioLifecycle({ server, getPingStatus, shutdown: stopServices, input = process.stdin, output = process.stdout, onUnhandledFrame, emitReady = true, logger = console, exit }) { let dispose; let stopped = false; let readySignaled = false; const signalReady = () => { if (readySignaled) return; readySignaled = true; writeDaemonStdioFrame(output, { type: 'ready', pid: process.pid }); }; const shutdown = async () => { if (stopped) return; stopped = true; dispose?.(); await stopServices(); exit?.(0); }; registerDaemonLifecycleHandlers(server, { getPingStatus, shutdown }); dispose = serveDaemonRpcOverStdio({ server, input, output, onUnhandledFrame, emitReady, logger: { warn: (message, meta) => logger.warn(message, meta) } }); if (emitReady) readySignaled = true; return { signalReady, shutdown, dispose: () => { stopped = true; dispose?.(); dispose = undefined; } }; }
+module.exports = Object.freeze({ startWorkbuddyAppServerStdioLifecycle });
