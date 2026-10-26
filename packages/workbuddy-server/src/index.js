@@ -23,6 +23,7 @@ module.exports = Object.freeze({
   ...require("./expert/import-share-metric"),
   ...require("./my-files/task-artifacts"),
   ...require("./my-files/service"),
+  ...require("./migration/media-index-migration"),
   ...require("./runtime/connector-config"),
   ...require("./connector/version-compatibility"),
   ...require("./connector/poi-consent-registry"),
