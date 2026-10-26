@@ -1,0 +1,19 @@
+'use strict';
+function resolveConnectionMode(account) { return String(account?.platformMeta?.connectionMode || account?.credential?.connectionMode || 'websocket'); }
+class ClawPluginHost {
+  constructor(logger = console, hostConfig = {}, telemetryService) { this.logger = logger; this.hostConfig = hostConfig; this.telemetryService = telemetryService; this.factories = new Map(); this.plugins = new Map(); this.accounts = new Map(); this.inboundHandlers = new Set(); this.stateHandlers = new Set(); this.startPromises = new Map(); }
+  registerPlugin(factory) { const plugin = factory({ logger: this.logger, hostConfig: this.hostConfig }); this.factories.set(plugin.id, factory); this.plugins.set(plugin.id, plugin); this.wirePlugin(plugin); }
+  getRegisteredPlugins() { return [...this.plugins.keys()]; } getRunningPlugins() { return [...this.accounts.keys()]; } getMeta(id) { return this.plugins.get(id)?.meta; } getGateway(id) { return this.plugins.get(id)?.gateway; } getRunningGateways() { return [...this.accounts.keys()].map((id) => ({ channelId: id, gateway: this.plugins.get(id)?.gateway, meta: this.plugins.get(id)?.meta })).filter((item) => item.gateway); } getConnectionState(id) { return this.plugins.get(id)?.gateway?.getConnectionState(); } hasOutboundAdapter(id) { return Boolean(this.plugins.get(id)?.outbound); } getCapabilities(id) { return this.plugins.get(id)?.capabilities; }
+  async sendOutbound(id, message) { const outbound = this.plugins.get(id)?.outbound; return outbound ? outbound.send(message) : { success: false, error: `Outbound adapter not available for ${id}` }; }
+  async ensureStarted(id, rawConfig) { const plugin = this.plugins.get(id); if (!plugin) throw new Error(`Plugin not registered: ${id}`); const account = plugin.config.resolveAccount(rawConfig); const previous = this.accounts.get(id); if (previous && JSON.stringify(previous) === JSON.stringify(account) && this.getConnectionState(id)?.status === 'connected') return { action: 'reused', account: previous }; if (previous) await this.stopPlugin(id); await this.startPlugin(plugin, account); return { action: previous ? 'restarted' : 'started', account }; }
+  async startPlugin(plugin, account) { this.accounts.set(plugin.id, account); if (!plugin.gateway) return; await plugin.gateway.startAccount(account); const state = plugin.gateway.getConnectionState?.(); if (resolveConnectionMode(account) === 'websocket' && state?.status && state.status !== 'connected') throw new Error(state.error || `Channel ${plugin.id} did not connect`); }
+  async stopPlugin(id) { const plugin = this.plugins.get(id); await plugin?.gateway?.stopAccount?.(); this.accounts.delete(id); }
+  async stopAll() { for (const id of this.getRunningPlugins()) await this.stopPlugin(id); }
+  pushInboundMessage(id, message) { const plugin = this.plugins.get(id); if (plugin?.gateway?.pushInboundMessage) plugin.gateway.pushInboundMessage(message); else this.emitInbound(id, message); }
+  onInboundMessage(handler) { this.inboundHandlers.add(handler); return { dispose: () => this.inboundHandlers.delete(handler) }; }
+  onConnectionStateChange(handler) { this.stateHandlers.add(handler); return { dispose: () => this.stateHandlers.delete(handler) }; }
+  wirePlugin(plugin) { if (!plugin.gateway) return; plugin.gateway.onInboundMessage = (message) => this.emitInbound(plugin.id, message); plugin.gateway.onConnectionStateChange = (state) => this.emitState(plugin.id, state); }
+  emitInbound(id, message) { if (message.group && message.botMentioned === false && this.accounts.get(id)?.platformMeta?.requireMention !== false) return; for (const handler of this.inboundHandlers) handler(id, message); }
+  emitState(id, state) { for (const handler of this.stateHandlers) handler(id, state); }
+}
+module.exports = Object.freeze({ resolveConnectionMode, ClawPluginHost });
