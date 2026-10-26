@@ -17,6 +17,7 @@ const collaboration = require('./_internal/cloud-task-collaboration');
 const skill = require('./_internal/cloud-skill');
 const netdrive = require('./_internal/cloud-netdrive-history');
 const message = require('./_internal/cloud-project-message');
+const messageResolver = require('./_internal/cloud-message');
 const smartsheet = require('./_internal/smartsheet/smartsheet-http-adapter');
 
 function bindMethods(target, source, names, httpName = 'http') {
@@ -62,6 +63,8 @@ class ProjectService {
     try { this.logWriter.append(`${date}/teams-${projectId}/api.log`, `[${new Date().toISOString()}] [${tag}] ${payload}\n`); } catch {}
   }
 
+  resolveMessage(params) { return messageResolver.resolveMessage(this.http, params, (tag, data) => this.writeLog(params?.conversationId, tag, data)); }
+
   async createInvitation(projectId, request, currentUid) { return invitation.createProjectInvitation(projectId, request, this.http, currentUid ?? await this.getCurrentUserId?.()); }
   getInvitationDetail(token) { return invitation.getProjectInvitationDetail(token, this.http); }
   async acceptInvitation(token, currentUid) { return invitation.acceptProjectInvitation(token, this.http, currentUid ?? await this.getCurrentUserId?.()); }
@@ -72,13 +75,13 @@ class ProjectService {
   handoffTodoGraphQL(params) { return todo.handoffTodoGraphQL(this.handoffHttp, params); }
   handoffTask(conversationId, params) { return task.handoffTask(this.handoffHttp, conversationId, params); }
   listTodoSyncSources(projectId, params) { return todoSync.listTodoSyncSources(this.http, projectId, params); }
-  listSkills(projectId, params) { return skill.listProjectSkills(this.http, projectId, params); }
-  listCustomSkills(projectId, params) { return skill.listProjectCustomSkills(this.http, projectId, params); }
-  uploadSkill(projectId, params) { return skill.uploadProjectSkill(this.http, projectId, { ...params, resolveUploadFile: (file) => this.resolveUploadFile(file) }); }
-  addSkill(projectId, params) { return skill.addProjectSkill(this.http, projectId, params); }
-  removeSkill(projectId, skillId) { return skill.removeProjectSkill(this.http, projectId, skillId); }
-  removeCustomSkill(projectId, skillId) { return skill.removeCustomSkill(this.http, projectId, skillId); }
-  updateSkills(projectId, params) { return skill.updateProjectSkills(this.http, projectId, params); }
+  listSkills(projectId) { return skill.listProjectSkills(this.http, projectId, this.logWriter); }
+  listCustomSkills(projectId) { return skill.listProjectCustomSkills(this.http, projectId, this.logWriter); }
+  uploadSkill(projectId, params) { return skill.uploadProjectSkill(this.http, projectId, params.file, params.options || params, this.logWriter, (file) => this.resolveUploadFile(file), this.getMultipartHttpConfig()); }
+  addSkill(projectId, params) { return skill.addProjectSkill(this.http, projectId, params, this.logWriter); }
+  removeSkill(projectId, skillId) { return skill.removeProjectSkill(this.http, projectId, skillId, this.logWriter); }
+  removeCustomSkill(projectId, skillId) { return skill.removeCustomSkill(this.http, projectId, skillId, this.logWriter); }
+  updateSkills(projectId, params) { return skill.updateProjectSkills(this.http, projectId, params, this.logWriter); }
 
   getMultipartHttpConfig() { return undefined; }
   async resolveUploadFile(file) {
