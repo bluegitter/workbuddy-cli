@@ -207,6 +207,8 @@ module.exports = Object.freeze({
   ...require("./claw/plugins/custom/custom-plugin"),
   ...require("./claw/plugins/wecom-ioa/wecom-ioa-plugin"),
   ...require("./claw/plugins/wecom-new/wecom-new-plugin"),
+  ...require("./claw/plugins/telegram/telegram-html-utils"),
+  ...require("./claw/plugins/wecomaibot/wecomaibot-support"),
   ...require("./growth/handlers"),
   ...require("./msg-center/handlers"),
   ...require("./personal-skills/handlers"),
