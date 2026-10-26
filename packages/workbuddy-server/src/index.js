@@ -74,7 +74,7 @@ module.exports = Object.freeze({
   ...require("./idle-capability/tool-usage-bridge"),
   ...require("./idle-capability/contract"),
   ...require("./security-center/audit-acp-adapter"),
-  ...require("./runtime/intent-recall-core"),
+  ...require("./intent-recognition/recall/recall-service"),
   ...require("./memory/async-mutex"),
   ...require("./memory/with-timeout"),
   ...require("./memory/file-lock"),
