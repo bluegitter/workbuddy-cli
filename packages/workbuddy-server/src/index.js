@@ -184,6 +184,7 @@ module.exports = Object.freeze({
   ...require("./data-retention/file-utils"),
   ...require("./data-retention/contract"),
   ...require("./data-retention/handlers"),
+  ...require("./data-retention/service"),
   ...require("./credit-prediction/contract"),
   ...require("./credit-prediction/handlers"),
   ...require("./feedback/contract"),
