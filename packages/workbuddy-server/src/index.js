@@ -187,6 +187,8 @@ module.exports = Object.freeze({
   ...require("./mcp-apps/catalog"),
   ...require("./mcp-apps/resolver"),
   ...require("./mcp-apps/handlers"),
+  ...require("./mcp-apps/static-html-server"),
+  ...require("./mcp-apps/tmap-proxy"),
   ...require("./claw/core/plugin-types"),
   ...require("./claw/plugins/wecomaibot/wecomaibot-support"),
   ...require("./claw/plugins/weixin/weixin-types"),
