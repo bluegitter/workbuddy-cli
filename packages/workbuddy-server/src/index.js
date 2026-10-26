@@ -182,6 +182,7 @@ module.exports = Object.freeze({
   ...require("./skill/marketplace/skillhub"),
   ...require("./skill/marketplace/knot"),
   ...require("./skill/marketplace/builtin-market"),
+  ...require("./skill/service-shared"),
   ...require("./skill/security/skill-scan-helpers"),
   ...require("./skill/security/skill-security-client"),
   ...require("./skill/security-app-key"),
