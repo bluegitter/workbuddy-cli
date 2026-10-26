@@ -49,4 +49,8 @@ module.exports = Object.freeze({
   ...require("./adapter/sandbox-preview-resolver"),
   ...require("./adapter/session/replay-event-classifier"),
   ...require("./core/renderer-logger"),
+  ...require("./session-store/runtime"),
+  ...require("./session-store/permissions"),
+  ...require("./session-store/progress"),
+  ...require("./session-store/context-usage"),
 });
