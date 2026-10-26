@@ -25,6 +25,7 @@ module.exports = Object.freeze({
   ...require("./my-files/service"),
   ...require("./migration/media-index-migration"),
   ...require("./sandbox/sandbox-preview-mount"),
+  ...require("./sandbox/sandbox-preview-handler"),
   ...require("./runtime/connector-config"),
   ...require("./connector/version-compatibility"),
   ...require("./connector/poi-consent-registry"),
