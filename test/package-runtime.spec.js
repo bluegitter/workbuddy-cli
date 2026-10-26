@@ -56,6 +56,7 @@ const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-polic
 const projectHttpSource = require('../packages/workbuddy-server/src/source/http.js');
 const { HANDOFF_CANARY_HEADERS, ROUTE_PREFIX, withAcceptLanguageHeader } = require('../packages/workbuddy-server/src');
 const { SHARE_CHANNEL_MAP, SHARE_RPC_CHANNELS, registerShareHandlers } = require('../packages/workbuddy-server/src');
+const { LEXIANG_COOKIE_DOMAINS, LexiangSpApiError, TENCENT_LEXIANG_CHANNEL_MAP, TENCENT_LEXIANG_RPC_CHANNELS, registerTencentLexiangHandlers } = require('../packages/workbuddy-server/src');
 const { sessionRecordToTaskConversation } = require('../packages/workbuddy-server/src');
 const { createSessionRecordStore, SessionRuntimeEventService, DefaultUsageCacheService, createUsageCacheStore } = require('../packages/workbuddy-server/src');
 const mcpSchemaSource = require('../packages/workbuddy-server/src/runtime/mcp-schema.js');
@@ -2657,6 +2658,34 @@ async function main() {
     ['uploadFile', { path: '/tmp/a' }],
     ['generateWxMPQRCode', 'artifact', 'code', 'url', 'title', 'cover'],
   ]);
+  assert.deepStrictEqual(LEXIANG_COOKIE_DOMAINS, ['lexiangla.com', 'lexiang-app.com', 'lexiangla.net']);
+  assert.deepStrictEqual(TENCENT_LEXIANG_CHANNEL_MAP.lexiangGatewayPost, {
+    type: 'invoke', channel: TENCENT_LEXIANG_RPC_CHANNELS.GATEWAY_POST,
+  });
+  const lexiangError = new LexiangSpApiError({
+    message: 'unauthorized', status: 401, method: 'GET', path: '/spapi/test', reqId: 'local',
+    serverRequestId: 'remote', bodySnippet: 'denied',
+  });
+  assert.strictEqual(lexiangError.name, 'LexiangSpApiError');
+  assert.strictEqual(lexiangError.status, 401);
+  const lexiangCalls = [];
+  const lexiangHandlers = new Map();
+  registerTencentLexiangHandlers(
+    { handle: (channel, handler) => lexiangHandlers.set(channel, handler) },
+    { services: { tencentLexiang: {
+      gatewayPost: (...args) => lexiangCalls.push(['gatewayPost', ...args]),
+      uploadLexiangFile: () => undefined,
+      resolveAssetUrl: () => undefined,
+      clearWebCookies: () => undefined,
+      checkLicense: () => undefined,
+      checkCompanyStatus: () => undefined,
+      spApiRequest: () => undefined,
+      invalidateAccessToken: () => undefined,
+    } } },
+  );
+  assert.strictEqual(lexiangHandlers.size, Object.keys(TENCENT_LEXIANG_RPC_CHANNELS).length);
+  await lexiangHandlers.get(TENCENT_LEXIANG_RPC_CHANNELS.GATEWAY_POST)('/spapi/test', { value: 1 });
+  assert.deepStrictEqual(lexiangCalls, [['gatewayPost', '/spapi/test', { value: 1 }]]);
   assert.strictEqual(getHostedCliSessionOwnerKey({ account: { uid: 'u1' }, auth: { domain: 'd' } }), 'u1|d|');
   class FakeAcpClient { constructor(options) { this.options = options; this.connection = { prompt: async (value) => value }; } connect() { return Promise.resolve(); } disconnect() {} debugState() { return 'ready'; } resolvePermission() {} rejectPermission() {} answerQuestion() {} cancelQuestion() {} respondElicitation() {} resolveInterruption() {} }
   const acpFacade = createWorkbuddyAgentAcpClient({ ClientClass: FakeAcpClient, endpoint: 'http://127.0.0.1:1' });
