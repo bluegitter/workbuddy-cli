@@ -143,6 +143,8 @@ module.exports = Object.freeze({
   ...require("./auth/core-service"),
   ...require("./identity/handlers"),
   ...require("./cloud-assistant/handlers"),
+  ...require("./cloud-agent/list-item-normalizer"),
+  ...require("./cloud-agent/service-utils"),
   ...require("./idle-capability/handlers"),
   ...require("./automation/facade"),
   ...require("./data-retention/types"),
