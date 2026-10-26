@@ -23,4 +23,10 @@ module.exports = Object.freeze({
   ...require("./session-store/task-list-projection"),
   ...require("./shared/session-owner-visibility"),
   ...require("./adapter/connector-types"),
+  ...require("./adapter/share-adapter-utils"),
+  ...require("./adapter/file-tree-ignore"),
+  ...require("./adapter/permission-decision"),
+  ...require("./adapter/read-path-utils"),
+  ...require("./adapter/runtime/queue-teammate-filter"),
+  ...require("./shared/team-runtime"),
 });
