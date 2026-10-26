@@ -18,4 +18,9 @@ module.exports = Object.freeze({
   ...require("./runtime/deep-link"),
   ...require("./runtime/pending-open-queue"),
   ...require("./runtime/shortcut-state"),
+  ...require("./session-store/cloners"),
+  ...require("./session-store/conversation-status"),
+  ...require("./session-store/task-list-projection"),
+  ...require("./shared/session-owner-visibility"),
+  ...require("./adapter/connector-types"),
 });
