@@ -5,4 +5,4 @@ class AgentMailApiError extends Error {
   get retryAfter() { return typeof this.data?.retryAfter === 'number' ? this.data.retryAfter : undefined; }
 }
 
-module.exports = Object.freeze({ AgentMailApiError });
+module.exports = { AgentMailApiError };

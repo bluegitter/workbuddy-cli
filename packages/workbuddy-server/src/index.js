@@ -56,6 +56,8 @@ module.exports = Object.freeze({
   ...require("./runtime/edge-sync-artifacts"),
   ...require("./agent/agent-teams-env"),
   ...require("./agent-mail/contract"),
+  ...require("./agent-mail/service"),
+  ...require("./agent-mail/handlers"),
   ...require("./agent/agent-teams-env-resolver"),
   ...require("./agent/cli-runtime-args"),
   ...require("./agent/cli-runtime-process"),
