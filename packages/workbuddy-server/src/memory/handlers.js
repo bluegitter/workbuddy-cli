@@ -1,0 +1,4 @@
+'use strict';
+const { MEMORY_RPC_CHANNELS } = require('./contract');
+function registerMemoryHandlers(registry, deps) { const service = Promise.resolve(deps.memory); registry.handle(MEMORY_RPC_CHANNELS.GET_PROFILE, async () => (await service).getProfile()); registry.handle(MEMORY_RPC_CHANNELS.SAVE_SETTINGS, async (params) => (await service).saveSettings(params)); registry.handle(MEMORY_RPC_CHANNELS.SUBMIT_SUGGESTION, async (params) => (await service).submitSuggestion(params)); registry.handle(MEMORY_RPC_CHANNELS.IMPORT_CONTENT, async (params) => (await service).importContent(params)); registry.handle(MEMORY_RPC_CHANNELS.CLEAR_PROFILE, async () => (await service).clearProfile()); registry.handle(MEMORY_RPC_CHANNELS.CHECK_UPDATING, async () => (await service).checkUpdating()); }
+module.exports = Object.freeze({ registerMemoryHandlers });
