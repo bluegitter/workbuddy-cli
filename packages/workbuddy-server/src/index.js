@@ -207,6 +207,7 @@ module.exports = Object.freeze({
   ...require("./claw/plugins/weixin/weixin-plugin"),
   ...require("./mcp/tools/automation-update-tool"),
   ...require("./network/diagnostics-service"),
+  ...require("./plugin/service"),
   ...require("./shared/file-lock"),
   ...require("./shared/settings-store"),
   ...require("./project/_internal/cloud-activity"),
