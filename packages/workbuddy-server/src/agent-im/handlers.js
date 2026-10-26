@@ -1,6 +1,7 @@
 'use strict';
 
 const { handleRpc } = require('../server/handler-registry');
+const { AgentImService } = require('./agent-im-service');
 
 const CHANNELS = Object.freeze({
   LIST_BINDINGS: 'agentImListBindings', GET_BINDING: 'agentImGetBinding',
@@ -18,7 +19,7 @@ function registerAgentImHandlers(registry, deps = {}) {
   const logger = deps.logger || fallbackLogger();
   let servicePromise;
   const getService = () => {
-    servicePromise ||= Promise.resolve(deps.service || deps.createService?.({ ...deps, logger, channels: CHANNELS }));
+    servicePromise ||= Promise.resolve(deps.service || deps.createService?.({ ...deps, logger, channels: CHANNELS }) || new AgentImService({ ...deps, logger }));
     return servicePromise.then((service) => { if (!service) throw new Error('agent-im service is required'); return service; });
   };
   const register = (channel, method) => handleRpc(registry, deps.channels?.[channel] || CHANNELS[channel], async (params) => { try { return await method(await getService(), params); } catch (error) { return errorResult(error, channel.includes('GET_BIND_STATUS') ? { bound: false } : {}); } });

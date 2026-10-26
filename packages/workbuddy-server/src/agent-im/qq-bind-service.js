@@ -1,0 +1,44 @@
+'use strict';
+
+const DEFAULT_BACKEND_MODE = 'local';
+const QQ_CHANNEL_TYPE = 'qq';
+const QQ_SESSION_TIMEOUT_MS = 10 * 60 * 1000;
+const BINDING_STALE_THRESHOLD_MS = 15 * 60 * 1000;
+
+class QQBindService {
+  constructor(deps = {}) { this.logger = deps.logger || console; this.store = deps.store; this.deps = deps; this.sessions = new Map(); this.opCounter = 0; }
+  setEventEmitter(emitter) { this.eventEmitter = emitter; }
+  getActiveQQConflict(userId, currentTarget) {
+    const currentKey = `${currentTarget.targetType}:${currentTarget.targetId}`;
+    for (const [key, session] of this.sessions) if (key !== currentKey && !session.completed) { const [targetType, targetId] = key.split(':'); return { reason: 'active_scan', targetType, targetId }; }
+    const now = Date.now();
+    const conflict = this.store.listBindings(userId, { channelType: QQ_CHANNEL_TYPE }).find((binding) => { if (binding.targetType === currentTarget.targetType && binding.targetId === currentTarget.targetId) return false; if (binding.status === 'bound' && binding.enabled) return true; return binding.status === 'binding' && now - binding.updatedAt < BINDING_STALE_THRESHOLD_MS; });
+    return conflict ? { reason: conflict.status === 'binding' ? 'register_in_flight' : 'already_bound', targetType: conflict.targetType, targetId: conflict.targetId } : undefined;
+  }
+  async startBind(params) {
+    const userId = this.deps.requireUserId(); const target = this.deps.normalizeTarget(params); const backendMode = params.backendMode || DEFAULT_BACKEND_MODE; const key = `${target.targetType}:${target.targetId}`; const conflict = this.getActiveQQConflict(userId, target);
+    if (conflict) return { success: false, message: `QQ channel is currently occupied by another colleague (${conflict.targetId}). Please wait or unbind it first.` };
+    this.stopSession(key); const operationId = `op-${++this.opCounter}-${Date.now()}`; const session = { operationId, completed: false, cancelled: false, resolved: false, stop: () => {} }; this.sessions.set(key, session);
+    let startQrConnect; try { ({ startQrConnect } = await import('@tencent-connect/qqbot-connector')); } catch (error) { this.sessions.delete(key); this.logger.warn(`[QQBindService] connector unavailable: ${error}`); return { success: false, message: 'QQ connector module unavailable' }; }
+    if (session.cancelled) { this.sessions.delete(key); return { success: false, message: 'Binding cancelled' }; }
+    return new Promise((resolve) => {
+      session.settle = resolve;
+      const settle = (value) => { if (!session.resolved) { session.resolved = true; resolve(value); } };
+      const saveBinding = (patch) => this.store.upsertBinding({ ...this.store.getBinding(userId, { ...target, backendMode, channelType: QQ_CHANNEL_TYPE }), bindingId: this.deps.buildBindingId(userId, target, backendMode, QQ_CHANNEL_TYPE), userId, ...target, backendMode, channelType: QQ_CHANNEL_TYPE, sessionId: this.deps.buildSessionId(userId, target, backendMode, QQ_CHANNEL_TYPE), ...patch, updatedAt: Date.now() });
+      session.stop = startQrConnect({
+        onQrDisplayed: (qrcodeUrl) => { if (session.completed) return; session.lastQrUrl = qrcodeUrl; if (!session.resolved) { saveBinding({ enabled: false, status: 'binding' }); settle({ success: true, qrcodeUrl }); } else this.eventEmitter?.onQrUpdate?.(target.targetType, target.targetId, qrcodeUrl); },
+        onQrExpired: () => { if (!session.completed) this.eventEmitter?.onQrExpired?.(target.targetType, target.targetId); },
+        onFailure: (error) => { if (session.completed) return; session.completed = true; clearTimeout(session.timeoutHandle); this.sessions.delete(key); settle({ success: false, message: error?.message || String(error) }); },
+        onSuccess: (credentials) => { if (session.completed) return; session.completed = true; clearTimeout(session.timeoutHandle); const credential = credentials?.[0]; if (!credential) { this.sessions.delete(key); settle({ success: false, message: 'QQ connector returned no credentials' }); return; } const binding = saveBinding({ enabled: false, status: 'binding', accountId: credential.appId, displayName: `QQBot-${credential.appId.slice(-6)}` }); settle({ success: true }); const operationIdForCallback = operationId; const isCurrent = () => this.isCurrentOperation(key, operationIdForCallback); Promise.resolve(this.deps.registerClawChannel?.(credential.appId, credential.appSecret, () => !isCurrent()) || { success: true }).then((result) => { if (!isCurrent()) return; if (result.success) { this.store.upsertBinding({ ...binding, enabled: true, status: 'bound', updatedAt: Date.now() }); this.eventEmitter?.onBindSuccess?.(target.targetType, target.targetId, credential.appId, credential.appSecret); } else { this.store.upsertBinding({ ...binding, enabled: false, status: 'bind_failed', updatedAt: Date.now() }); this.eventEmitter?.onBindFailed?.(target.targetType, target.targetId, result.error || 'Claw channel registration failed', result.error); } }).catch((error) => { if (!isCurrent()) return; this.store.upsertBinding({ ...binding, enabled: false, status: 'bind_failed', updatedAt: Date.now() }); this.eventEmitter?.onBindFailed?.(target.targetType, target.targetId, error instanceof Error ? error.message : String(error)); }).finally(() => { if (isCurrent()) this.sessions.delete(key); }); }
+      }, { displayQrCodeToConsole: false, source: 'workbuddy' });
+      session.timeoutHandle = setTimeout(() => { if (this.sessions.get(key) !== session || session.completed) return; session.completed = true; session.stop(); this.sessions.delete(key); settle({ success: false, message: 'QQ binding session timed out' }); }, QQ_SESSION_TIMEOUT_MS);
+    });
+  }
+  cancelBind(params) { const target = this.deps.normalizeTarget(params); this.stopSession(`${target.targetType}:${target.targetId}`); return { success: true }; }
+  async getBindStatus(params) { const userId = this.deps.requireUserId(); const target = this.deps.normalizeTarget(params); const backendMode = params.backendMode || DEFAULT_BACKEND_MODE; const binding = this.store.getBinding(userId, { ...target, backendMode, channelType: QQ_CHANNEL_TYPE }); return binding ? { success: true, bound: binding.status === 'bound', binding, appId: binding.accountId } : { success: false, bound: false, message: 'QQ binding not found' }; }
+  async manualBind(params) { const userId = this.deps.requireUserId(); const target = this.deps.normalizeTarget(params); const backendMode = params.backendMode || DEFAULT_BACKEND_MODE; if (!params.appId?.trim() || !params.appSecret?.trim()) return { success: false, message: 'appId and appSecret are required' }; const conflict = this.getActiveQQConflict(userId, target); if (conflict) return { success: false, message: `QQ channel is currently occupied by another colleague (${conflict.targetId}). Please wait or unbind it first.` }; const now = Date.now(); const binding = { bindingId: this.deps.buildBindingId(userId, target, backendMode, QQ_CHANNEL_TYPE), userId, ...target, backendMode, channelType: QQ_CHANNEL_TYPE, sessionId: this.deps.buildSessionId(userId, target, backendMode, QQ_CHANNEL_TYPE), enabled: true, status: 'bound', accountId: params.appId.trim(), displayName: `QQBot-${params.appId.trim().slice(-6)}`, createdAt: now, updatedAt: now }; if (this.deps.registerClawChannel) { const result = await this.deps.registerClawChannel(params.appId.trim(), params.appSecret.trim(), () => false); if (!result?.success) return { success: false, message: `QQ channel bound but Claw registration failed: ${result?.error || 'unknown error'}`, clawError: result?.error }; } return { success: true, binding: this.store.upsertBinding(binding) }; }
+  async unbind(params) { const userId = this.deps.requireUserId(); const target = this.deps.normalizeTarget(params); const backendMode = params.backendMode || DEFAULT_BACKEND_MODE; this.stopSession(`${target.targetType}:${target.targetId}`); const binding = this.store.getBinding(userId, { ...target, backendMode, channelType: QQ_CHANNEL_TYPE }); if (!binding) return { success: false, message: 'QQ binding not found' }; await this.deps.unregisterClawChannel?.(); return { success: true, binding: this.store.upsertBinding({ ...binding, enabled: false, status: 'unbound', token: undefined, expiresAt: undefined, updatedAt: Date.now() }) }; }
+  stopSession(key) { const session = this.sessions.get(key); if (!session) return; session.completed = true; session.cancelled = true; clearTimeout(session.timeoutHandle); session.stop?.(); this.sessions.delete(key); if (!session.resolved) { session.resolved = true; session.settle?.({ success: false, message: 'Binding cancelled' }); } }
+  isCurrentOperation(key, operationId) { return this.sessions.get(key)?.operationId === operationId; }
+}
+module.exports = { QQBindService, DEFAULT_BACKEND_MODE, QQ_CHANNEL_TYPE, QQ_SESSION_TIMEOUT_MS, BINDING_STALE_THRESHOLD_MS };
