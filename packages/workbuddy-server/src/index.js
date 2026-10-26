@@ -187,6 +187,8 @@ module.exports = Object.freeze({
   ...require("./tencent-docs/contract"),
   ...require("./runtime/mqq-selection-router"),
   ...require("./docs/system-open-local-file"),
+  ...require("./docs/service"),
+  ...require("./docs/handlers"),
   ...require("./docs/contract"),
   ...require("./docs/runtime-paths"),
   ...require("./runtime/local-docs-helpers"),
