@@ -138,6 +138,8 @@ module.exports = Object.freeze({
   ...require("./backend/factory"),
   ...require("./backend/handlers"),
   ...require("./asr/facade"),
+  ...require("./asr/handlers"),
+  ...require("./app/contract"),
   ...require("./auth/core-service"),
   ...require("./automation/facade"),
   ...require("./data-retention/types"),
