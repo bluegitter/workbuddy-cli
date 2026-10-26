@@ -75,6 +75,7 @@ module.exports = Object.freeze({
   ...require("./session/no-response-watchdog"),
   ...require("./session/diagnostics-logger-adapter"),
   ...require("./session/contract"),
+  ...require("./session/client"),
   ...require("./session/document-lifecycle-port"),
   ...require("./session/queries"),
   ...require("./session/tencent-docs-agent-editor-tracker"),
