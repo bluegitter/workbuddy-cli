@@ -329,6 +329,7 @@ module.exports = Object.freeze({
   ...require("./license/handlers"),
   ...require("./runtime/skill-upload-policy-service"),
   ...require("./server/app-server-entry-runtime"),
+  ...require("./server/app-server-event-bridges"),
   ...require("./server/app-server-stdio-lifecycle"),
   ...require("./server/daemon-runtime-handlers"),
   ...require("./server/app-server-services"),
