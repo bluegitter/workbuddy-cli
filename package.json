@@ -9,7 +9,7 @@
     "build:packages": "node scripts/check-packages.js",
     "typecheck:agent": "tsc -p tsconfig.agent.json --noEmit",
     "test:agent": "node packages/agent-provider/test/runtime.spec.js",
-    "test:packages": "node test/package-runtime.spec.js && node test/storage-repositories.spec.js && node test/storage-recovery.spec.js && node test/session-manager-helpers.spec.js && node test/brain-artifact-service.spec.js && node test/team-runtime-loader.spec.js && node test/core-dependency-boundary.spec.js && node test/server-dependency-boundary.spec.js",
+    "test:packages": "node test/package-runtime.spec.js && node test/storage-repositories.spec.js && node test/storage-recovery.spec.js && node test/session-manager-helpers.spec.js && node test/brain-artifact-service.spec.js && node test/team-runtime-loader.spec.js && node test/media-artifact-index.spec.js && node test/core-dependency-boundary.spec.js && node test/server-dependency-boundary.spec.js",
     "test": "npm run verify:structure && npm run build:packages && npm run typecheck:agent && npm run test:agent && npm run test:packages"
   },
   "devDependencies": {

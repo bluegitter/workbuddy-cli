@@ -98,6 +98,7 @@ module.exports = Object.freeze({
   ...require("./session/session-runtime-config-resolver"),
   ...require("./session/brain-artifact-service"),
   ...require("./session/team-runtime-loader"),
+  ...require("./session/media-artifact-index"),
   ...require("./session/session-manager-meta"),
   ...require("./session/session-runtime-identity"),
   ...require("./session/session-history-events"),
