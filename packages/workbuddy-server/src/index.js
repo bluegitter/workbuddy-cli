@@ -77,6 +77,7 @@ module.exports = Object.freeze({
   ...require("./server/stdio-framing"),
   ...require("./server/rpc-dispatcher"),
   ...require("./server/composite-connection"),
+  ...require("./server/rpc-connection"),
   ...require("./runtime/stdio-rpc"),
   ...require("./runtime/sidecar-utils"),
   ...require("./agent/sidecar-manager"),
