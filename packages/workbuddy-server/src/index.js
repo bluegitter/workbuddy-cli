@@ -152,6 +152,7 @@ module.exports = Object.freeze({
   ...require("./skill/common/skill-upload-form-fields"),
   ...require("./skill/security-app-key"),
   ...require("./claw/constants"),
+  ...require("./claw/claw-content-utils"),
   ...require("./claw/core/plugin-types"),
   ...require("./claw/plugins/wecomaibot/wecomaibot-support"),
   ...require("./claw/plugins/weixin/weixin-types"),

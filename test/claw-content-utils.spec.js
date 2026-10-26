@@ -1,0 +1,5 @@
+'use strict';
+const assert = require('node:assert');
+const { stripMarkdownToPlaintext, chunkByBytes, extractMediaFromText, stripReasoningTags, extractVisibleTextFromContent } = require('../packages/workbuddy-server/src/claw/claw-content-utils');
+async function main() { assert.strictEqual(stripMarkdownToPlaintext('**hello** [site](https://example.com)'), 'hello https://example.com'); const chunks = chunkByBytes('中文'.repeat(100), 20); assert(chunks.every((chunk) => Buffer.byteLength(chunk) <= 20)); const media = extractMediaFromText('![a](/tmp/a.png) [b](/tmp/b.pdf)'); assert.deepStrictEqual(media.localFiles.map((file) => file.filePath), ['/tmp/a.png', '/tmp/b.pdf']); assert.strictEqual(stripReasoningTags('<think>secret</think>answer'), 'answer'); assert.strictEqual(extractVisibleTextFromContent({ content: [{ type: 'tool_result', text: 'x' }, { type: 'text', text: 'ok' }] }), 'ok'); console.log('claw content utility tests passed'); }
+main().catch((error) => { console.error(error); process.exitCode = 1; });
