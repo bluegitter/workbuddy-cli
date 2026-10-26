@@ -203,6 +203,8 @@ module.exports = Object.freeze({
   ...require("./claw/plugins/wechatmp/wechatmp-plugin"),
   ...require("./claw/plugins/wechatkf/wechatkf-plugin"),
   ...require("./claw/plugins/weixin/weixin-media"),
+  ...require("./claw/plugins/weixin/weixin-client"),
+  ...require("./claw/plugins/weixin/weixin-plugin"),
   ...require("./shared/file-lock"),
   ...require("./shared/settings-store"),
   ...require("./project/_internal/cloud-activity"),
