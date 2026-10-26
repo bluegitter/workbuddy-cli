@@ -1,0 +1,5 @@
+'use strict';
+
+function mapAggregatedItemToBuiltinSkill(item = {}) { const id = item.skill_id || item.item_ref || item.name || ''; return { id, skill_id: id, name: item.name || '', version: item.version || '', description: item.display_name || item.display_name_zh || item.description || item.name || '', description_zh: item.description_zh, description_en: item.description_en, display_name_en: item.display_name_en, source: item.namespace?.trim() || 'official', examples_zh: item.examples_zh, examples_en: item.examples_en, categories: item.categories, edition_mode: item.edition_mode, tenant_mode: item.tenant_mode, owner_tenant: item.owner_tenant, tenant_list: item.tenant_list, featured: item.featured, featured_order: item.featured_order, icon: item.icon, logo: item.logo, created_at: item.created_at, updated_at: item.updated_at }; }
+function mapAggregatedItemsToBuiltinSkills(items) { return (Array.isArray(items) ? items : []).map(mapAggregatedItemToBuiltinSkill).filter((item) => item.id); }
+module.exports = { mapAggregatedItemToBuiltinSkill, mapAggregatedItemsToBuiltinSkills };

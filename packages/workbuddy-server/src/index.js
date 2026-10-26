@@ -169,6 +169,7 @@ module.exports = Object.freeze({
   ...require("./skill/common/skill-upload-slug"),
   ...require("./skill/common/skill-upload-form-fields"),
   ...require("./skill/common/skill-upload-metadata"),
+  ...require("./skill/common/aggregated-skill-mapper"),
   ...require("./skill/security-app-key"),
   ...require("./claw/constants"),
   ...require("./claw/claw-content-utils"),
