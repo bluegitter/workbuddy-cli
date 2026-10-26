@@ -52,6 +52,7 @@ module.exports = Object.freeze({
   ...require("./agent/cli-runtime-files"),
   ...require("./agent/gateway-secret"),
   ...require("./agent/cli-product-env"),
+  ...require("./agent/acp-client"),
   ...require("./session/session-replay"),
   ...require("./runtime/media-types"),
   ...require("./session/terminal-proxy"),
