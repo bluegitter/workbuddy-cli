@@ -43,4 +43,7 @@ module.exports = Object.freeze({
   ...require("./adapter/compact-message-handler"),
   ...require("./adapter/acp-transcript-assembler"),
   ...require("./adapter/acp-fallback-message-dispatcher"),
+  ...require("./adapter/file-uri-normalizer"),
+  ...require("./adapter/skill-recommend-abort"),
+  ...require("./telemetry/renderer-resource"),
 });
