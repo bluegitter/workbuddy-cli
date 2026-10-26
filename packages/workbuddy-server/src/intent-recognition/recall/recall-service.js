@@ -7,5 +7,8 @@ module.exports = Object.freeze({
   ...require('./candidate-augmentation'),
   ...require('./bm25'),
   ...require('./recall-index'),
-  ...require('./rate-limiter')
+  ...require('./rate-limiter'),
+  ...require('./recall-warmup'),
+  ...require('./candidate-provider'),
+  ...require('./service')
 });

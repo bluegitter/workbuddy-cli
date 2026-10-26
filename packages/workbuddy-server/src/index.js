@@ -131,6 +131,8 @@ module.exports = Object.freeze({
   ...require("./idle-capability/contract"),
   ...require("./security-center/audit-acp-adapter"),
   ...require("./intent-recognition/protocol"),
+  ...require("./intent-recognition/service"),
+  ...require("./intent-recognition/setup"),
   ...require("./intent-recognition/recall/recall-service"),
   ...require("./memory/async-mutex"),
   ...require("./memory/with-timeout"),
