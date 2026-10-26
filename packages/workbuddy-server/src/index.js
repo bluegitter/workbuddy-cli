@@ -173,6 +173,8 @@ module.exports = Object.freeze({
   ...require("./skill/common/skill-upload-metadata"),
   ...require("./skill/common/aggregated-skill-mapper"),
   ...require("./skill/common/skill-recommend-service"),
+  ...require("./skill/common/cloud-enterprise-skills-repo"),
+  ...require("./skill/common/cloud-personal-skills-repo"),
   ...require("./skill/security/skill-scan-helpers"),
   ...require("./skill/security/skill-security-client"),
   ...require("./skill/security-app-key"),
