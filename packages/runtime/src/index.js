@@ -22,4 +22,5 @@ module.exports = Object.freeze({
   ...require("./common/notifier/default-notifier"),
   ...require("./common/userinfo/userinfo-provider"),
   ...require("./common/uri/uri-services"),
+  ...require("./centrifugo-client"),
 });
