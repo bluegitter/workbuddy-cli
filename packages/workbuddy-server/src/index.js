@@ -109,6 +109,7 @@ module.exports = Object.freeze({
   ...require("./common/buffered-file-logger"),
   ...require("./storage/sqlite/runtime"),
   ...require("./storage/drizzle/schema"),
+  ...require("./storage/drizzle/migrator"),
   ...require("./storage/sqlite/connection"),
   ...require("./storage/repositories/migration-meta-repository"),
   ...require("./storage/database-file-logger"),
