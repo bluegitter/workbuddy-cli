@@ -81,7 +81,7 @@ module.exports = Object.freeze({
   ...require("./storage/sqlite/runtime"),
   ...require("./runtime/backend-factory"),
   ...require("./runtime/cloud-agent-utils"),
-  ...require("./runtime/media-lifecycle-utils"),
+  ...require("./session/media-lifecycle"),
   ...require("./session/session-persistence"),
   ...require("./automation/automation-delivery-outbox-worker"),
   ...require("./intent-recognition/recall/embedding-client"),
