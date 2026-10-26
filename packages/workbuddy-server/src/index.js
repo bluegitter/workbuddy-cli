@@ -179,6 +179,7 @@ module.exports = Object.freeze({
   ...require("./skill/desktop-enterprise-skills-repo"),
   ...require("./skill/personal/handlers"),
   ...require("./skill/marketplace/local-marketplace"),
+  ...require("./skill/marketplace/skillhub"),
   ...require("./skill/security/skill-scan-helpers"),
   ...require("./skill/security/skill-security-client"),
   ...require("./skill/security-app-key"),
