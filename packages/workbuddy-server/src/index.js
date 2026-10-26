@@ -279,6 +279,7 @@ module.exports = Object.freeze({
   ...require("./claw/plugins/wecom-new/wecom-new-plugin"),
   ...require("./claw/plugins/telegram/telegram-html-utils"),
   ...require("./claw/plugins/wecomaibot/wecomaibot-support"),
+  ...require("./claw/plugins/yuanbao/yuanbao-codec"),
   ...require("./cloud-agent/handlers"),
   ...require("./enhance-prompt/cli-pulse-client"),
   ...require("./tencent-lexiang/origins"),
