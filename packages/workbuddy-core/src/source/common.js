@@ -48596,6 +48596,38 @@ var esm_exports = /* @__PURE__ */ require_chunk.__exportAll({
 });
 var esm_default;
 var init_esm$13 = require_chunk.__esmMin((() => {
+	const otelApi = require("@opentelemetry/api");
+	({
+		DiagConsoleLogger,
+		DiagLogLevel,
+		INVALID_SPANID,
+		INVALID_SPAN_CONTEXT,
+		INVALID_TRACEID,
+		ProxyTracer,
+		ProxyTracerProvider,
+		ROOT_CONTEXT,
+		SamplingDecision: SamplingDecision$1,
+		SpanKind,
+		SpanStatusCode,
+		TraceFlags,
+		ValueType,
+		baggageEntryMetadataFromString,
+		context,
+		createContextKey,
+		createNoopMeter,
+		createTraceState,
+		defaultTextMapGetter,
+		defaultTextMapSetter,
+		diag,
+		isSpanContextValid,
+		isValidSpanId,
+		isValidTraceId,
+		metrics,
+		propagation,
+		trace,
+	} = otelApi);
+	esm_default = otelApi.default;
+	return;
 	init_utils$6();
 	init_context$1();
 	init_consoleLogger();
