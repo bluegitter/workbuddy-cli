@@ -172,6 +172,7 @@ module.exports = Object.freeze({
   ...require("./skill/common/aggregated-skill-mapper"),
   ...require("./skill/common/skill-recommend-service"),
   ...require("./skill/security/skill-scan-helpers"),
+  ...require("./skill/security/skill-security-client"),
   ...require("./skill/security-app-key"),
   ...require("./claw/constants"),
   ...require("./claw/claw-content-utils"),
