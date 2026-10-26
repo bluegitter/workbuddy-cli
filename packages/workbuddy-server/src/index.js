@@ -166,6 +166,8 @@ module.exports = Object.freeze({
   ...require("./claw/claw-power-lifecycle"),
   ...require("./claw/claw-lifecycle"),
   ...require("./claw/claw-settings-store"),
+  ...require("./claw/claw-i18n"),
+  ...require("./claw/bg-agent-api-client"),
   ...require("./growth/handlers"),
   ...require("./msg-center/handlers"),
   ...require("./personal-skills/handlers"),
