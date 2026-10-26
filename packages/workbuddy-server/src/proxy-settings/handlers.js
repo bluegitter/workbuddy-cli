@@ -1,0 +1,4 @@
+'use strict';
+const CHANNELS = Object.freeze({ GET_SETTINGS: 'proxySettings:getSettings', SAVE_SETTINGS: 'proxySettings:saveSettings', TEST_CONNECTION: 'proxySettings:testConnection' });
+function registerProxySettingsHandlers(registry, deps) { const service = Promise.resolve(deps.service); registry.handle(deps.channels?.GET_SETTINGS ?? CHANNELS.GET_SETTINGS, () => service.then((value) => value.getSettings())); registry.handle(deps.channels?.SAVE_SETTINGS ?? CHANNELS.SAVE_SETTINGS, (settings) => service.then((value) => value.saveSettings(settings))); registry.handle(deps.channels?.TEST_CONNECTION ?? CHANNELS.TEST_CONNECTION, (url) => service.then((value) => value.testConnection(url))); deps.logger?.log?.('[ProxySettingsHandlers] registered'); return registry; }
+module.exports = Object.freeze({ CHANNELS, registerProxySettingsHandlers });
