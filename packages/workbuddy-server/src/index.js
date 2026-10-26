@@ -229,6 +229,7 @@ module.exports = Object.freeze({
   ...require("./plugin/plugin-metric"),
   ...require("./tencent-docs/mappers"),
   ...require("./migration/automation-migration"),
+  ...require("./project/_internal/cloud-project-message"),
   ...require("./growth/handlers"),
   ...require("./msg-center/handlers"),
   ...require("./personal-skills/handlers"),
