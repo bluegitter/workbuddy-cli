@@ -3,8 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { AuthenticationStoragePriority, getLogoutMarkerPath } = require('./authentication-protocol');
-const { Subject } = require('./default-authentication-storage');
+const { AuthenticationStoragePriority, getLogoutMarkerPath } = require('../common/authentication-protocol');
+const { Subject } = require('../common/default-authentication-storage');
 
 let authenticationConfigurationProvider = () => undefined;
 let legacySessionMigrator;
