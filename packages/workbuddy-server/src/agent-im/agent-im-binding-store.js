@@ -1,0 +1,17 @@
+'use strict';
+const fs = require('node:fs'); const path = require('node:path');
+const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
+const emptyFile = () => ({ version: 1, users: {} });
+class AgentImBindingStore {
+  constructor(storePath) { this.storePath = storePath; }
+  getStorePath() { return this.storePath; }
+  listBindings(userId, params = {}) { const targets = this.readFile().users[userId]?.targets; if (!targets) return []; const result = []; for (const [targetType, targetMap] of Object.entries(targets)) { if (params.targetType && params.targetType !== targetType) continue; if (!isObject(targetMap)) continue; for (const [targetId, targetScope] of Object.entries(targetMap)) { if (params.targetId && params.targetId !== targetId) continue; for (const [backendMode, channels] of Object.entries(targetScope.backends || {})) { if (params.backendMode && params.backendMode !== backendMode || !isObject(channels)) continue; for (const [channelType, binding] of Object.entries(channels)) if ((!params.channelType || params.channelType === channelType) && this.isBinding(binding)) result.push({ ...binding }); } } } return result; }
+  getBinding(userId, selector) { const value = this.readFile().users[userId]?.targets?.[selector.targetType]?.[selector.targetId]?.backends?.[selector.backendMode]?.[selector.channelType]; return value ? { ...value } : undefined; }
+  upsertBinding(binding) { const file = this.readFile(); const user = file.users[binding.userId] || {}; const targetMap = user.targets?.[binding.targetType] || {}; const scope = targetMap[binding.targetId] || {}; const backends = scope.backends || {}; const channels = backends[binding.backendMode] || {}; channels[binding.channelType] = { ...binding }; backends[binding.backendMode] = channels; scope.backends = backends; targetMap[binding.targetId] = scope; user.targets = { ...(user.targets || {}), [binding.targetType]: targetMap }; file.users[binding.userId] = user; this.writeFile(file); return { ...binding }; }
+  removeBinding(userId, selector) { const file = this.readFile(); const channels = file.users[userId]?.targets?.[selector.targetType]?.[selector.targetId]?.backends?.[selector.backendMode]; if (!channels || !(selector.channelType in channels)) return; delete channels[selector.channelType]; this.writeFile(file); }
+  findByWechatBotInstance(userId, instanceId) { return this.listBindings(userId, { channelType: 'wechatbot' }).find((binding) => binding.instanceId === instanceId); }
+  readFile() { try { if (!fs.existsSync(this.storePath)) return emptyFile(); const parsed = JSON.parse(fs.readFileSync(this.storePath, 'utf8')); return isObject(parsed) && parsed.version === 1 && isObject(parsed.users) ? parsed : emptyFile(); } catch { return emptyFile(); } }
+  writeFile(file) { fs.mkdirSync(path.dirname(this.storePath), { recursive: true }); const tmp = `${this.storePath}.tmp`; fs.writeFileSync(tmp, JSON.stringify(file, null, 2), 'utf8'); fs.renameSync(tmp, this.storePath); }
+  isBinding(value) { return isObject(value) && typeof value.bindingId === 'string' && typeof value.userId === 'string' && ['assistant', 'colleague'].includes(value.targetType) && typeof value.targetId === 'string' && ['local', 'cloud'].includes(value.backendMode) && ['wechatbot', 'qq'].includes(value.channelType) && typeof value.sessionId === 'string'; }
+}
+module.exports = { AgentImBindingStore };
