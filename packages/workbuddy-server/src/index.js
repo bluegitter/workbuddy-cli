@@ -218,6 +218,7 @@ module.exports = Object.freeze({
   ...require("./claw/plugins/feishu/feishu-media"),
   ...require("./claw/plugins/feishu/feishu-inbound-content"),
   ...require("./claw/plugins/feishu/feishu-support"),
+  ...require("./claw/plugins/feishu/feishu-plugin"),
   ...require("./claw/plugins/custom/custom-plugin"),
   ...require("./claw/plugins/wecom-ioa/wecom-ioa-plugin"),
   ...require("./claw/plugins/wecom-new/wecom-new-plugin"),
