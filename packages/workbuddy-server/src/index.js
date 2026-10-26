@@ -186,6 +186,8 @@ module.exports = Object.freeze({
   ...require("./data-retention/handlers"),
   ...require("./data-retention/service"),
   ...require("./cloud-agent/service"),
+  ...require("./asr/service"),
+  ...require("./asr/facade"),
   ...require("./credit-prediction/contract"),
   ...require("./credit-prediction/handlers"),
   ...require("./feedback/contract"),
