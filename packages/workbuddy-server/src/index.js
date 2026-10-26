@@ -82,6 +82,8 @@ module.exports = Object.freeze({
   ...require("./memory/contract"),
   ...require("./common/buffered-file-logger"),
   ...require("./storage/sqlite/runtime"),
+  ...require("./storage/drizzle/schema"),
+  ...require("./storage/sqlite/connection"),
   ...require("./runtime/backend-factory"),
   ...require("./runtime/cloud-agent-utils"),
   ...require("./session/media-lifecycle"),
