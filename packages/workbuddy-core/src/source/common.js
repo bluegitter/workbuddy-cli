@@ -24978,6 +24978,11 @@ var init_common$6 = require_chunk.__esmMin((() => {
 //#region ../../node_modules/vscode-uri/lib/esm/index.mjs
 var LIB, URI$1, Utils;
 var init_esm$14 = require_chunk.__esmMin((() => {
+	// Keep the public URI/Utils contract while resolving the maintained package
+	// from the workspace instead of the bundled ESM copy.
+	LIB = require("vscode-uri");
+	({ URI: URI$1, Utils } = LIB);
+	return;
 	(() => {
 		"use strict";
 		var t = { 975: (t) => {
