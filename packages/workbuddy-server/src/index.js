@@ -139,6 +139,7 @@ module.exports = Object.freeze({
   ...require("./backend/handlers"),
   ...require("./asr/facade"),
   ...require("./auth/core-service"),
+  ...require("./automation/facade"),
   ...require("./binary/facade"),
   ...require("./binary/handlers"),
   ...require("./agent/hosted-cli-auth-lifecycle"),
