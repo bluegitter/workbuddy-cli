@@ -17,4 +17,5 @@ module.exports = Object.freeze({
   ...require("./common/logger/date-range-utils"),
   ...require("./common/tracing/deterministic-id-generator"),
   ...require("./common/tracing/otel-env"),
+  ...require("./claw-telemetry"),
 });
