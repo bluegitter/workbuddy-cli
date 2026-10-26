@@ -73,6 +73,7 @@ module.exports = Object.freeze({
   ...require("./session/session-meta/session-meta-writer"),
   ...require("./session/runtime-config"),
   ...require("./server/stdio-framing"),
+  ...require("./server/rpc-dispatcher"),
   ...require("./runtime/stdio-rpc"),
   ...require("./runtime/sidecar-utils"),
   ...require("./agent/sidecar-manager"),
