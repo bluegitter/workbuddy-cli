@@ -26,4 +26,5 @@ module.exports = Object.freeze({
   ...require("./utils/ardot-background-bootstrap"),
   ...require("./utils/session-event-routing"),
   ...require("./hooks/share-selection-helpers"),
+  ...require("./utils/share/template-share/share-template-utils"),
 });
