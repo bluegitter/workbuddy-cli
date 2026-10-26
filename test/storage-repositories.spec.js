@@ -8,10 +8,12 @@ const {
   AutomationDeliveryOutboxRepository,
   AutomationRepository,
   CURRENT_REQUIRED_TABLE_COLUMNS,
+  WorkbuddyDatabaseService,
   WORKBUDDY_SQLITE_MIGRATION_FILES,
   adoptLegacyWorkbuddySqliteSchema,
   assertWorkbuddySqliteSchema,
   createWorkbuddyDrizzleDatabase,
+  createWorkbuddyServerDatabase,
   ensureSessionUsageTableSchema,
   getAutomationRunsRunsJsonColumnType,
   getMissingTableColumns,
@@ -66,6 +68,7 @@ function outboxRow(overrides = {}) {
 function main() {
   verifyLegacySchemaAdoption();
   verifyMigrationPipeline();
+  verifyDatabaseService();
   const { raw, db } = createTestDatabase();
   try {
     const automations = new AutomationRepository(() => db);
@@ -116,6 +119,43 @@ function main() {
     raw.close();
   }
   console.log('storage repository tests passed');
+}
+
+function verifyDatabaseService() {
+  const configDir = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-database-service-'));
+  const logger = { info() {}, warn() {}, error() {} };
+  const database = createWorkbuddyServerDatabase({ configDir, logger });
+  try {
+    assert.strictEqual(database instanceof WorkbuddyDatabaseService, true);
+    database.initialize();
+    assert.strictEqual(database.getDatabasePath(), path.join(configDir, 'workbuddy.db'));
+    database.upsertSession({
+      id: 'service-session', cwd: configDir, userId: 'user-1', status: 'Completed',
+      createdAt: 100, updatedAt: 200,
+    });
+    assert.strictEqual(database.getSession('service-session').userId, 'user-1');
+    assert.deepStrictEqual(database.getSessions({ userId: 'user-1' }).map((item) => item.id), [
+      'service-session',
+    ]);
+    database.upsertAutomation(automation({ id: 'service-automation' }));
+    database.flushAutomationFileBackupsSync();
+    assert.strictEqual(database.getAutomation('service-automation').name, 'Daily summary');
+    assert.strictEqual(database.recoverAutomationsFromFileBackup()[0].id, 'service-automation');
+    database.upsertSessionUsage({ sessionId: 'service-session', used: 2, size: 4, updatedAt: 300 });
+    assert.strictEqual(database.getSessionUsage('service-session').used, 2);
+    database.setMigrationMeta('test-key', 'test-value');
+    assert.strictEqual(database.getMigrationMeta('test-key'), 'test-value');
+    assert.strictEqual(database.quickCheck(), 'ok');
+
+    fs.writeFileSync(`${database.getDatabasePath()}.recovered`, JSON.stringify({ recoveredAt: 'now' }));
+    assert.deepStrictEqual(database.consumeRecoveryNotice(), { recoveredAt: 'now' });
+    assert.strictEqual(database.consumeRecoveryNotice(), undefined);
+    database.dispose();
+    assert.throws(() => database.initialize(), /Cannot initialize after dispose/);
+  } finally {
+    database.dispose();
+    fs.rmSync(configDir, { recursive: true, force: true });
+  }
 }
 
 function verifyMigrationPipeline() {

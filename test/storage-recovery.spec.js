@@ -6,7 +6,11 @@ const os = require('node:os');
 const path = require('node:path');
 const {
   AutomationFileBackupStore,
+  DatabaseCorruptionRecovery,
   SessionHistoryRecovery,
+  WAL_MAGIC_1,
+  WalMaintenance,
+  openWorkbuddyRawSqliteDatabase,
 } = require('../packages/workbuddy-server/src');
 
 async function main() {
@@ -14,10 +18,83 @@ async function main() {
   try {
     await verifyAutomationBackups(root);
     verifySessionHistoryRecovery(root);
+    await verifyWalMaintenance(root);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
   console.log('storage recovery tests passed');
+}
+
+async function verifyWalMaintenance(root) {
+  const databaseDir = path.join(root, 'database-maintenance');
+  fs.mkdirSync(databaseDir, { recursive: true });
+  const dbPath = path.join(databaseDir, 'workbuddy.db');
+  const raw = openWorkbuddyRawSqliteDatabase(dbPath);
+  raw.exec('CREATE TABLE sample (id TEXT PRIMARY KEY)');
+  raw.close();
+
+  const logs = [];
+  const logger = {
+    info: (...args) => logs.push(['info', ...args]),
+    warn: (...args) => logs.push(['warn', ...args]),
+    error: (...args) => logs.push(['error', ...args]),
+  };
+  let health = 'ok';
+  const maintenance = new WalMaintenance({
+    dbPath,
+    getRawDatabase: () => ({ pragma: () => [{ quick_check: health }] }),
+    openRawDatabase: openWorkbuddyRawSqliteDatabase,
+    cleanupGhostData: () => ({
+      emptyCwdSessions: 0,
+      missingCwdSessions: 0,
+      missingCwdAutomations: 0,
+      missingSourceCwdRuns: 0,
+    }),
+    logger,
+  });
+
+  const walPath = `${dbPath}-wal`;
+  fs.writeFileSync(walPath, Buffer.alloc(5000));
+  assert.strictEqual(maintenance.checkWalHeaderMagic(walPath), false);
+  assert.deepStrictEqual(maintenance.detectPreExistingCorruptWal(), { walPath, walSize: 5000 });
+  const validWal = Buffer.alloc(5000);
+  validWal.writeUInt32BE(WAL_MAGIC_1, 0);
+  fs.writeFileSync(walPath, validWal);
+  assert.strictEqual(maintenance.checkWalHeaderMagic(walPath), true);
+  assert.strictEqual(maintenance.detectPreExistingCorruptWal(), null);
+
+  health = 'malformed';
+  maintenance.scheduleHealthCheck(0);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.strictEqual(fs.existsSync(`${dbPath}.needs-recovery`), true);
+  health = 'ok';
+  maintenance.scheduleHealthCheck(0);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.strictEqual(fs.existsSync(`${dbPath}.needs-recovery`), false);
+
+  fs.writeFileSync(walPath, Buffer.alloc(5000));
+  const recovery = new DatabaseCorruptionRecovery({
+    dbPath,
+    openRawDatabase: openWorkbuddyRawSqliteDatabase,
+    logger,
+    openDatabase() {},
+    getRawDatabase: () => undefined,
+    initializeSchemas() {},
+    pruneCorruptBackups() {},
+    clearConnections() {},
+  });
+  assert.strictEqual(recovery.isDatabaseCorruptionError(new Error('database disk image is malformed')), true);
+  assert.strictEqual(recovery.isDatabaseCorruptionError(new Error('database or disk is full')), false);
+  assert.strictEqual(recovery.isDatabaseAccessError(new Error('disk I/O error')), true);
+  assert.strictEqual(recovery.diagnoseDamageType().status, 'WAL_DAMAGED');
+  assert.strictEqual(fs.existsSync(walPath), true);
+
+  fs.writeFileSync(`${dbPath}-shm`, 'shm');
+  recovery.backupCorruptedFiles('fixed');
+  assert.strictEqual(fs.existsSync(`${dbPath}.corrupt-fixed`), true);
+  assert.strictEqual(fs.existsSync(`${walPath}.corrupt-fixed`), true);
+  assert.strictEqual(fs.existsSync(`${dbPath}-shm.corrupt-fixed`), true);
+  maintenance.dispose();
 }
 
 async function verifyAutomationBackups(root) {

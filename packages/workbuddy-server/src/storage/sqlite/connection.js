@@ -13,6 +13,13 @@ function createWorkbuddyDrizzleDatabase(rawDb) {
   return drizzle({ client: rawDb, schema });
 }
 
+function asBetterSqliteDatabase(rawDb) { return rawDb; }
 function excludedColumn(columnName) { return sql.raw(`excluded.${columnName}`); }
 
-module.exports = Object.freeze({ openWorkbuddyRawSqliteDatabase, createWorkbuddyDrizzleDatabase, excludedColumn, eq });
+module.exports = Object.freeze({
+  asBetterSqliteDatabase,
+  createWorkbuddyDrizzleDatabase,
+  eq,
+  excludedColumn,
+  openWorkbuddyRawSqliteDatabase,
+});
