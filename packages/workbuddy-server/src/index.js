@@ -241,6 +241,7 @@ module.exports = Object.freeze({
   ...require("./monitor/handlers"),
   ...require("./my-files/handlers"),
   ...require("./tencent-docs/service-stubs"),
+  ...require("./tencent-docs/core-service"),
   ...require("./claw/plugins/qq/qq-types"),
   ...require("./claw/plugins/qq/qq-api"),
   ...require("./claw/plugins/qq/qq-client"),
