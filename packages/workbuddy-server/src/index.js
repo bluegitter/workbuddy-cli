@@ -197,6 +197,7 @@ module.exports = Object.freeze({
   ...require("./server/app-server-code-backend"),
   ...require("./server/app-server-host-capabilities"),
   ...require("./server/app-server-session-runtime"),
+  ...require("./server/app-server-mcp-apps-host"),
   ...require("./project/_internal/cloud-member"),
   ...require("./project/_internal/todo-errors"),
   ...require("./network/diagnostics-factory"),
