@@ -9,4 +9,5 @@ module.exports = Object.freeze({
   ...require("./runtime/plugin-manifest"),
   ...require("./runtime/skill-loader"),
   ...require("./runtime/safe-discovery"),
+  ...require("./telegram-html-utils"),
 });
