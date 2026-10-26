@@ -171,6 +171,8 @@ module.exports = Object.freeze({
   ...require("./plugin/builtin-plugin-marketplace-updater"),
   ...require("./workspace/default-workspace-root"),
   ...require("./claw/reply-error-classifier"),
+  ...require("./inspiration/handlers"),
+  ...require("./perf/handlers"),
   ...require("./asr/handlers"),
   ...require("./app/contract"),
   ...require("./auth/core-service"),
