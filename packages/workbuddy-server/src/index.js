@@ -143,6 +143,8 @@ module.exports = Object.freeze({
   ...require("./data-retention/types"),
   ...require("./data-retention/config-store"),
   ...require("./data-retention/file-utils"),
+  ...require("./config/contract"),
+  ...require("./config/handlers"),
   ...require("./binary/facade"),
   ...require("./binary/handlers"),
   ...require("./agent/hosted-cli-auth-lifecycle"),
