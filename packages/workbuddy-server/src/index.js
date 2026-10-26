@@ -231,6 +231,7 @@ module.exports = Object.freeze({
   ...require("./migration/automation-migration"),
   ...require("./migration/claw-settings-migration"),
   ...require("./migration/plan-migration"),
+  ...require("./binary/service"),
   ...require("./project/_internal/cloud-project-message"),
   ...require("./growth/handlers"),
   ...require("./msg-center/handlers"),
