@@ -210,6 +210,8 @@ module.exports = Object.freeze({
   ...require("./docs/handlers"),
   ...require("./docs/route-mqq-selection"),
   ...require("./docs/preview/local-file-open-check-open"),
+  ...require("./docs/preview/local-file-open-conflict"),
+  ...require("./docs/preview/local-sdk-editor-file-id"),
   ...require("./docs/contract"),
   ...require("./docs/runtime-paths"),
   ...require("./runtime/local-docs-helpers"),
