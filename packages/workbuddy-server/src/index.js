@@ -67,7 +67,7 @@ module.exports = Object.freeze({
   ...require("./runtime/stdio-framing"),
   ...require("./runtime/stdio-rpc"),
   ...require("./runtime/sidecar-utils"),
-  ...require("./runtime/sidecar-manager"),
+  ...require("./agent/sidecar-manager"),
   ...require("./runtime/tool-usage-bridge"),
   ...require("./runtime/audit-acp-adapter"),
   ...require("./runtime/intent-recall-core"),
