@@ -476,6 +476,7 @@ module.exports = Object.freeze({
   ...require("./tencent-lexiang/contract"),
   ...require("./tencent-lexiang/client"),
   ...require("./tencent-lexiang/handlers"),
+  ...require("./tencent-lexiang/facade"),
   ...require("./tts/contract"),
   ...require("./tts/client"),
   ...require("./tts/handlers"),
