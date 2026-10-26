@@ -214,6 +214,8 @@ module.exports = Object.freeze({
   ...require("./docs/preview/local-sdk-editor-file-id"),
   ...require("./docs/save/local-preview-text"),
   ...require("./docs/preview/native-host-decisions"),
+  ...require("./docs/preview/dirty-editor-close-decision"),
+  ...require("./docs/preview/original-file-conflict-decision"),
   ...require("./docs/contract"),
   ...require("./docs/runtime-paths"),
   ...require("./runtime/local-docs-helpers"),
