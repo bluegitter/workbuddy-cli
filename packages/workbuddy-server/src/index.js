@@ -206,6 +206,7 @@ module.exports = Object.freeze({
   ...require("./claw/core/plugin-types"),
   ...require("./claw/core/plugin-host"),
   ...require("./claw/core/runtime"),
+  ...require("./claw/handlers"),
   ...require("./claw/plugins/wecomaibot/wecomaibot-support"),
   ...require("./claw/plugins/weixin/weixin-types"),
   ...require("./memory/contract"),
