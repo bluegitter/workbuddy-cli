@@ -162,6 +162,7 @@ module.exports = Object.freeze({
   ...require("./mcp/tools/visualizer-guidelines"),
   ...require("./mcp/tools/visualizer-read-me-tool"),
   ...require("./mcp/tools/preview-resolver"),
+  ...require("./mcp/tools/agently-cli-utils"),
   ...require("./mcp/contract"),
   ...require("./connector/runtime-progress-notifier"),
   ...require("./connector/connector-node-runtime-env"),
