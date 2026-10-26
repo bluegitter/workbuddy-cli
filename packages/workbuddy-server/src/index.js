@@ -96,6 +96,8 @@ module.exports = Object.freeze({
   ...require("./server/desktop-host-events"),
   ...require("./server/runtime-context"),
   ...require("./server/server-http-fetch"),
+  ...require("./server/daemon-lifecycle-handlers"),
+  ...require("./server/runtime-handlers"),
   ...require("./slot/handlers"),
   ...require("./runtime/stdio-rpc"),
   ...require("./runtime/sidecar-utils"),
