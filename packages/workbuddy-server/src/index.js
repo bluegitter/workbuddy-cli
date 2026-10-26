@@ -141,6 +141,8 @@ module.exports = Object.freeze({
   ...require("./asr/handlers"),
   ...require("./app/contract"),
   ...require("./auth/core-service"),
+  ...require("./identity/handlers"),
+  ...require("./idle-capability/handlers"),
   ...require("./automation/facade"),
   ...require("./data-retention/types"),
   ...require("./data-retention/config-store"),
