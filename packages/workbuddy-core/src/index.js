@@ -17,4 +17,12 @@ module.exports = Object.freeze({
   ...require("./runtime/language-model"),
   ...require("./runtime/auth-contract"),
   ...require("./runtime/model-catalog"),
+  ...require("./sdk/version"),
+  ...require("./infra/bus/event-bus"),
+  ...require("./domains/config/wb"),
+  ...require("./sdk/namespaces/telemetry"),
+  ...require("./infra/wb-error"),
+  ...require("./sdk/helpers/shape"),
+  ...require("./sdk/bridge/client"),
+  ...require("./infra/storage/wb"),
 });
