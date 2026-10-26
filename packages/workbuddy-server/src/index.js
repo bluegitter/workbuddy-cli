@@ -92,6 +92,7 @@ module.exports = Object.freeze({
   ...require("./storage/service"),
   ...require("./storage/database-factory"),
   ...require("./storage/database-service"),
+  ...require("./storage/drizzle/migration-bundle"),
   ...require("./storage/database-data-recovery"),
   ...require("./storage/handlers"),
   ...require("./storage/contract"),

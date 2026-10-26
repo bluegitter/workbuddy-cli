@@ -9,7 +9,7 @@ const {
   adoptLegacyWorkbuddySqliteSchema,
   assertWorkbuddySqliteSchema,
 } = require('./legacy-schema-adoption');
-const { WORKBUDDY_SQLITE_MIGRATION_JOURNAL, WORKBUDDY_SQLITE_MIGRATION_FILES } = require('../../runtime/workbuddy-database');
+const { WORKBUDDY_SQLITE_MIGRATION_JOURNAL, WORKBUDDY_SQLITE_MIGRATION_FILES } = require('./migration-bundle');
 
 const WORKBUDDY_DRIZZLE_MIGRATIONS_TABLE = '__workbuddy_drizzle_migrations';
 
