@@ -71426,6 +71426,9 @@ var require_extension = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, m
 //#endregion
 //#region ../../packages/workbuddy-server/node_modules/ws/lib/websocket.js
 var require_websocket = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, module) => {
+	// Use the workspace WebSocket implementation in the live server path.
+	module.exports = require("ws");
+	return;
 	var EventEmitter$2 = require("events");
 	var https$1 = require("https");
 	var http$2 = require("http");
@@ -72546,6 +72549,8 @@ var require_subprotocol = /* @__PURE__ */ require_chunk.__commonJSMin(((exports,
 //#endregion
 //#region ../../packages/workbuddy-server/node_modules/ws/lib/websocket-server.js
 var require_websocket_server = /* @__PURE__ */ require_chunk.__commonJSMin(((exports, module) => {
+	module.exports = require("ws").WebSocketServer;
+	return;
 	var EventEmitter$1 = require("events");
 	var http$1 = require("http");
 	var { Duplex: Duplex$2 } = require("stream");
