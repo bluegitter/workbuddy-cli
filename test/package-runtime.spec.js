@@ -55,6 +55,7 @@ const { buildStartupSpans: buildStartupSpansFromPackage } = require('../packages
 const { FsProtectionPolicy, PathPolicy } = require('../packages/enterprise-policy/src');
 const projectHttpSource = require('../packages/workbuddy-server/src/source/http.js');
 const { HANDOFF_CANARY_HEADERS, ROUTE_PREFIX, withAcceptLanguageHeader } = require('../packages/workbuddy-server/src');
+const { SHARE_CHANNEL_MAP, SHARE_RPC_CHANNELS, registerShareHandlers } = require('../packages/workbuddy-server/src');
 const { sessionRecordToTaskConversation } = require('../packages/workbuddy-server/src');
 const { createSessionRecordStore, SessionRuntimeEventService, DefaultUsageCacheService, createUsageCacheStore } = require('../packages/workbuddy-server/src');
 const mcpSchemaSource = require('../packages/workbuddy-server/src/runtime/mcp-schema.js');
@@ -2630,6 +2631,32 @@ async function main() {
   const handlers = new Map();
   assert.deepStrictEqual(registerServiceHandlers({ handle: (channel, fn) => handlers.set(channel, fn) }, 'demo', { ping() { return 'pong'; } }, {}, { info() {} }), ['ping']);
   assert.strictEqual(handlers.get('demo:ping')(), 'pong');
+  assert.deepStrictEqual(SHARE_CHANNEL_MAP.shareUploadFile, { type: 'invoke', channel: 'share:uploadFile' });
+  const shareCalls = [];
+  const shareHandlers = new Map();
+  const shareService = {
+    uploadFile(params) { shareCalls.push(['uploadFile', params]); return 'uploaded'; },
+    generateWxMPQRCode(...args) { shareCalls.push(['generateWxMPQRCode', ...args]); return 'qr-code'; },
+  };
+  const shareServices = new Proxy(shareService, {
+    get(target, property) {
+      if (property in target) return target[property];
+      return (params) => shareCalls.push([property, params]);
+    },
+  });
+  registerShareHandlers(
+    { handle: (channel, handler) => shareHandlers.set(channel, handler) },
+    { services: Promise.resolve({ share: shareServices }) },
+  );
+  assert.strictEqual(shareHandlers.size, Object.keys(SHARE_RPC_CHANNELS).length);
+  assert.strictEqual(await shareHandlers.get(SHARE_RPC_CHANNELS.UPLOAD_FILE)({ path: '/tmp/a' }), 'uploaded');
+  assert.strictEqual(await shareHandlers.get(SHARE_RPC_CHANNELS.GENERATE_WXMP_QRCODE)({
+    bizType: 'artifact', shareCode: 'code', shareUrl: 'url', shareTitle: 'title', shareCover: 'cover',
+  }), 'qr-code');
+  assert.deepStrictEqual(shareCalls, [
+    ['uploadFile', { path: '/tmp/a' }],
+    ['generateWxMPQRCode', 'artifact', 'code', 'url', 'title', 'cover'],
+  ]);
   assert.strictEqual(getHostedCliSessionOwnerKey({ account: { uid: 'u1' }, auth: { domain: 'd' } }), 'u1|d|');
   class FakeAcpClient { constructor(options) { this.options = options; this.connection = { prompt: async (value) => value }; } connect() { return Promise.resolve(); } disconnect() {} debugState() { return 'ready'; } resolvePermission() {} rejectPermission() {} answerQuestion() {} cancelQuestion() {} respondElicitation() {} resolveInterruption() {} }
   const acpFacade = createWorkbuddyAgentAcpClient({ ClientClass: FakeAcpClient, endpoint: 'http://127.0.0.1:1' });
