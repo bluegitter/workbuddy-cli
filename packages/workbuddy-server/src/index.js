@@ -436,6 +436,7 @@ module.exports = Object.freeze({
   ...require("./mcp/tools/agently-cli-utils"),
   ...require("./mcp/tools/download-attachment-tool"),
   ...require("./mcp/tools/conversation-search-tool"),
+  ...require("./mcp/tools/cloudstudio-deploy-tool"),
   ...require("./mcp/tools/index"),
   ...require("./mcp/contract"),
   ...require("./claw/claw-types"),
