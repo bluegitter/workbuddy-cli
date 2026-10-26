@@ -213,6 +213,7 @@ module.exports = Object.freeze({
   ...require("./docs/preview/local-file-open-conflict"),
   ...require("./docs/preview/local-sdk-editor-file-id"),
   ...require("./docs/save/local-preview-text"),
+  ...require("./docs/preview/native-host-decisions"),
   ...require("./docs/contract"),
   ...require("./docs/runtime-paths"),
   ...require("./runtime/local-docs-helpers"),
