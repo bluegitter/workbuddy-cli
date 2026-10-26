@@ -58,6 +58,7 @@ module.exports = Object.freeze({
   ...require("./agent/gateway-secret"),
   ...require("./agent/cli-product-env"),
   ...require("./agent/acp-client"),
+  ...require("./agent/codebuddy-code-backend"),
   ...require("./session/session-replay"),
   ...require("./runtime/media-types"),
   ...require("./session/terminal-proxy"),
