@@ -168,6 +168,8 @@ module.exports = Object.freeze({
   ...require("./migration/migration-file-logger"),
   ...require("./security-center/audit-i18n"),
   ...require("./security-center/audit-log-utils"),
+  ...require("./security-center/audit-message"),
+  ...require("./security-center/audit-log-verifier"),
   ...require("./security-center/default-file-safety-rules"),
   ...require("./security-center/sandbox-allowwrite"),
   ...require("./ima/auth-event-emitter"),
