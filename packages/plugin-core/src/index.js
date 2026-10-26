@@ -10,4 +10,5 @@ module.exports = Object.freeze({
   ...require("./runtime/skill-loader"),
   ...require("./runtime/safe-discovery"),
   ...require("./telegram-html-utils"),
+  ...require("./centrifugo-message-handler"),
 });
