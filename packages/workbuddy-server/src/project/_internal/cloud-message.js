@@ -1,0 +1,3 @@
+'use strict';
+async function resolveMessage(http, params, log) { const body = { content: params.content }; if (params.conversationId) body.conversation_id = params.conversationId; if (params.tdriveRootId) body.tdrive_root_id = params.tdriveRootId; if (params.tdriveRootDirName) body.tdrive_root_dir_name = params.tdriveRootDirName; log?.('resolveMessage:req', body); const response = await http.post('/console/as/message/resolve', body); if (response.code !== 0) throw new Error(response.msg || 'resolveMessage failed'); const result = { content: response.data?.content ?? [] }; log?.('resolveMessage:res', result); return result; }
+module.exports = Object.freeze({ resolveMessage });
