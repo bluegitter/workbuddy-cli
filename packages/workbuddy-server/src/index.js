@@ -205,6 +205,7 @@ module.exports = Object.freeze({
   ...require("./sandbox/handlers"),
   ...require("./migration/archived-sync-service"),
   ...require("./migration/session-fragment-repair-service"),
+  ...require("./migration/migration-service"),
   ...require("./mcp/tools/marketplace-skill-tool"),
   ...require("./project/_internal/cloud-skill"),
   ...require("./claw/plugins/wechatmp/wechatmp-plugin"),
