@@ -231,6 +231,8 @@ module.exports = Object.freeze({
   ...require("./migration/automation-migration"),
   ...require("./migration/claw-settings-migration"),
   ...require("./migration/plan-migration"),
+  ...require("./migration/legacy-todos-migration"),
+  ...require("./tencent-docs/service"),
   ...require("./binary/service"),
   ...require("./auth/handlers"),
   ...require("./auth/service"),
