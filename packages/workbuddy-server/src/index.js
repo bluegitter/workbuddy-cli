@@ -28,6 +28,7 @@ module.exports = Object.freeze({
   ...require("./server/app-server-migration-runtime"),
   ...require("./server/app-server-database"),
   ...require("./runtime/legacy-localstorage-migration"),
+  ...require("./migration/vscdb-reader"),
   ...require("./runtime/desktop-host-bridge"),
   ...require("./runtime/daemon-utils"),
   ...require("./net/pac-rpc-service"),
@@ -405,4 +406,5 @@ module.exports = Object.freeze({
   ...require("./docs/runtime-paths"),
   ...require("./runtime/local-docs-helpers"),
   ...require("./docs/local/local-docs-facade"),
+  ...require("./docs/local-docs-facade"),
 });
