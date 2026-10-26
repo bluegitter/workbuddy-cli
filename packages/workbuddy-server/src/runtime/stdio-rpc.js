@@ -2,11 +2,85 @@
 
 const crypto = require('crypto');
 const { writeDaemonStdioFrame, createDaemonStdioFrameReader, extractBizDetail } = require('./stdio-framing');
+
 const RPC_ERROR_CODES = Object.freeze({ NO_HANDLER: 4001, HANDLER_ERROR: 4002, AUTH_FAILED: 4003, PARSE_ERROR: 4004 });
-function createDaemonRpcError(error, channel, prefix = 'Daemon') { const result = new Error(error?.message || `${prefix} RPC failed for "${channel}"`); result.code = error?.bizCode ?? error?.code ?? RPC_ERROR_CODES.HANDLER_ERROR; if (error?.bizCode !== undefined) result.bizCode = error.bizCode; if (error?.httpStatus !== undefined) result.httpStatus = error.httpStatus; if (error?.data !== undefined) result.data = error.data; return result; }
-function createStdioParentRpcClient(options) { const pending = new Map(); const rejectAll = (error) => { for (const request of pending.values()) request.reject(error); pending.clear(); }; return { invoke(channel, ...args) { const id = crypto.randomUUID(); return new Promise((resolve, reject) => { pending.set(id, { channel, resolve, reject }); try { writeDaemonStdioFrame(options.output, { type: 'rpc-request', id, channel, args }); } catch (error) { pending.delete(id); reject(error); } }); }, handleFrame(frame) { if (frame.type !== 'rpc-response' && frame.type !== 'rpc-error') return false; const request = pending.get(frame.id); if (!request) return false; pending.delete(frame.id); if (frame.type === 'rpc-response') request.resolve(frame.result); else request.reject(createDaemonRpcError(frame.error, frame.channel ?? request.channel, 'Parent')); return true; }, rejectPending: rejectAll }; }
-function createStdioDaemonRpcConnection(options) { const pending = new Map(); const listeners = new Set(); let requestHandler = options.requestHandler; const reader = createDaemonStdioFrameReader(options.input, { onFrame: (frame) => { if (frame.type === 'ready') options.onReady?.(); else if (frame.type === 'rpc-response') resolvePending(frame, pending); else if (frame.type === 'rpc-error') rejectPending(frame, pending); else if (frame.type === 'rpc-event') for (const listener of listeners) listener(frame.channel, frame.result); else if (frame.type === 'rpc-request') handleRequest(options, frame, () => requestHandler); }, onInvalidLine: options.onInvalidLine }); const rejectAll = (error) => { for (const request of pending.values()) request.reject(error); pending.clear(); }; return { invoke(channel, ...args) { const id = crypto.randomUUID(); return new Promise((resolve, reject) => { pending.set(id, { channel, resolve, reject }); try { writeDaemonStdioFrame(options.output, { type: 'rpc-request', id, channel, args }); } catch (error) { pending.delete(id); reject(error); } }); }, onEvent(listener) { listeners.add(listener); return () => listeners.delete(listener); }, setRequestHandler(handler) { requestHandler = handler; }, rejectPending: rejectAll, dispose() { reader.dispose(); rejectAll(new Error('Daemon stdio connection disposed')); listeners.clear(); } }; }
+
+function createDaemonRpcError(error, channel, prefix = 'Daemon') {
+  const result = new Error(error?.message || `${prefix} RPC failed for "${channel}"`);
+  result.code = error?.bizCode ?? error?.code ?? RPC_ERROR_CODES.HANDLER_ERROR;
+  if (error?.bizCode !== undefined) result.bizCode = error.bizCode;
+  if (error?.httpStatus !== undefined) result.httpStatus = error.httpStatus;
+  if (error?.data !== undefined) result.data = error.data;
+  return result;
+}
+
+function createStdioParentRpcClient(options) {
+  const pending = new Map();
+  const rejectAll = (error) => { for (const request of pending.values()) request.reject(error); pending.clear(); };
+  return {
+    invoke(channel, ...args) {
+      const id = crypto.randomUUID();
+      return new Promise((resolve, reject) => {
+        pending.set(id, { channel, resolve, reject });
+        try { writeDaemonStdioFrame(options.output, { type: 'rpc-request', id, channel, args }); }
+        catch (error) { pending.delete(id); reject(error); }
+      });
+    },
+    handleFrame(frame) {
+      if (frame.type !== 'rpc-response' && frame.type !== 'rpc-error') return false;
+      const request = pending.get(frame.id);
+      if (!request) return false;
+      pending.delete(frame.id);
+      if (frame.type === 'rpc-response') request.resolve(frame.result);
+      else request.reject(createDaemonRpcError(frame.error, frame.channel ?? request.channel, 'Parent'));
+      return true;
+    },
+    rejectPending: rejectAll,
+  };
+}
+
+function createStdioDaemonRpcConnection(options) {
+  const pending = new Map();
+  const listeners = new Set();
+  let requestHandler = options.requestHandler;
+  const reader = createDaemonStdioFrameReader(options.input, {
+    onFrame: (frame) => {
+      if (frame.type === 'ready') options.onReady?.();
+      else if (frame.type === 'rpc-response') resolvePending(frame, pending);
+      else if (frame.type === 'rpc-error') rejectPending(frame, pending);
+      else if (frame.type === 'rpc-event') for (const listener of listeners) listener(frame.channel, frame.result);
+      else if (frame.type === 'rpc-request') handleRequest(options, frame, () => requestHandler);
+    },
+    onInvalidLine: options.onInvalidLine,
+  });
+  const rejectAll = (error) => { for (const request of pending.values()) request.reject(error); pending.clear(); };
+  return {
+    invoke(channel, ...args) {
+      const id = crypto.randomUUID();
+      return new Promise((resolve, reject) => {
+        pending.set(id, { channel, resolve, reject });
+        try { writeDaemonStdioFrame(options.output, { type: 'rpc-request', id, channel, args }); }
+        catch (error) { pending.delete(id); reject(error); }
+      });
+    },
+    onEvent(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+    setRequestHandler(handler) { requestHandler = handler; },
+    rejectPending: rejectAll,
+    dispose() { reader.dispose(); rejectAll(new Error('Daemon stdio connection disposed')); listeners.clear(); },
+  };
+}
+
 function resolvePending(frame, pending) { const request = pending.get(frame.id); if (!request) return; pending.delete(frame.id); request.resolve(frame.result); }
 function rejectPending(frame, pending) { const request = pending.get(frame.id); if (!request) return; pending.delete(frame.id); request.reject(createDaemonRpcError(frame.error, frame.channel ?? request.channel)); }
-async function handleRequest(options, frame, getHandler) { const handler = getHandler(); if (!handler) { writeDaemonStdioFrame(options.output, { type: 'rpc-error', id: frame.id, channel: frame.channel, error: { code: RPC_ERROR_CODES.NO_HANDLER, message: `No parent handler for "${frame.channel}"` } }); return; } try { const result = await handler(frame.channel, ...(Array.isArray(frame.args) ? frame.args : [])); writeDaemonStdioFrame(options.output, { type: 'rpc-response', id: frame.id, channel: frame.channel, result }); } catch (error) { writeDaemonStdioFrame(options.output, { type: 'rpc-error', id: frame.id, channel: frame.channel, error: { code: error instanceof Error && /^No handler for /.test(error.message) ? RPC_ERROR_CODES.NO_HANDLER : RPC_ERROR_CODES.HANDLER_ERROR, message: error instanceof Error ? error.message : String(error), ...extractBizDetail(error) } }); } }
+async function handleRequest(options, frame, getHandler) {
+  const handler = getHandler();
+  if (!handler) { writeDaemonStdioFrame(options.output, { type: 'rpc-error', id: frame.id, channel: frame.channel, error: { code: RPC_ERROR_CODES.NO_HANDLER, message: `No parent handler for "${frame.channel}"` } }); return; }
+  try {
+    const result = await handler(frame.channel, ...(Array.isArray(frame.args) ? frame.args : []));
+    writeDaemonStdioFrame(options.output, { type: 'rpc-response', id: frame.id, channel: frame.channel, result });
+  } catch (error) {
+    writeDaemonStdioFrame(options.output, { type: 'rpc-error', id: frame.id, channel: frame.channel, error: { code: error instanceof Error && /^No handler for /.test(error.message) ? RPC_ERROR_CODES.NO_HANDLER : RPC_ERROR_CODES.HANDLER_ERROR, message: error instanceof Error ? error.message : String(error), ...extractBizDetail(error) } });
+  }
+}
+
 module.exports = Object.freeze({ RPC_ERROR_CODES, createDaemonRpcError, createStdioParentRpcClient, createStdioDaemonRpcConnection });
