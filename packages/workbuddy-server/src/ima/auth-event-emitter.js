@@ -1,0 +1,4 @@
+'use strict';
+class ImaAuthEventEmitter { constructor() { this.listeners = new Set(); this.lastValue = undefined; } on(callback) { this.listeners.add(callback); return { dispose: () => this.listeners.delete(callback) }; } emit(value) { if (this.lastValue === value) return; this.lastValue = value; for (const listener of this.listeners) try { listener(value); } catch {} } getLast() { return this.lastValue; } dispose() { this.listeners.clear(); } }
+class ImaUploadEventEmitter { constructor() { this.listeners = new Set(); } on(callback) { this.listeners.add(callback); return { dispose: () => this.listeners.delete(callback) }; } emit(value) { for (const listener of this.listeners) try { listener(value); } catch {} } dispose() { this.listeners.clear(); } }
+module.exports = Object.freeze({ ImaAuthEventEmitter, ImaUploadEventEmitter });
