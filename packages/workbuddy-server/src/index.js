@@ -228,6 +228,7 @@ module.exports = Object.freeze({
   ...require("./project/_internal/cloud-todo-webhook"),
   ...require("./plugin/plugin-metric"),
   ...require("./tencent-docs/mappers"),
+  ...require("./migration/automation-migration"),
   ...require("./growth/handlers"),
   ...require("./msg-center/handlers"),
   ...require("./personal-skills/handlers"),
