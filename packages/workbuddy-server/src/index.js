@@ -61,7 +61,7 @@ module.exports = Object.freeze({
   ...require("./runtime/session-paths"),
   ...require("./runtime/edsdk-parser"),
   ...require("./common/log-details"),
-  ...require("./runtime/usage-cache"),
+  ...require("./session/usage-cache-service"),
   ...require("./session/media-extensions"),
   ...require("./session/no-response-watchdog"),
   ...require("./session/session-meta/session-meta-writer"),

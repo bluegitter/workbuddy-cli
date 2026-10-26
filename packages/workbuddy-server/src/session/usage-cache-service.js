@@ -1,0 +1,4 @@
+'use strict';
+function tryParseAcpUsageUpdate(update) { if (!update || typeof update !== 'object' || update.sessionUpdate !== 'usage_update' || typeof update.used !== 'number' || !Number.isFinite(update.used) || update.used < 0 || typeof update.size !== 'number' || !Number.isFinite(update.size) || update.size < 0) return null; return { sessionUpdate: 'usage_update', used: update.used, size: update.size }; }
+function tryParseAcpUsageByCategory(meta) { const raw = meta?.['codebuddy.ai/usageByCategory']; if (!raw || typeof raw !== 'object' || raw.version !== 1) return null; const keys = ['systemPrompt', 'conversation', 'tools', 'mcp', 'skills']; if (keys.some((key) => typeof raw[key] !== 'number' || !Number.isFinite(raw[key]) || raw[key] < 0)) return null; return { ...Object.fromEntries(keys.map((key) => [key, raw[key]])), version: 1 }; }
+module.exports = Object.freeze({ tryParseAcpUsageUpdate, tryParseAcpUsageByCategory });
