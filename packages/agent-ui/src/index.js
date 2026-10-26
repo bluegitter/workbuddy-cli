@@ -21,4 +21,9 @@ module.exports = Object.freeze({
   ...require("./hooks/ardot-instance-cache"),
   ...require("./constants/artifact"),
   ...require("./share/moderation"),
+  ...require("./utils/session-cwd-error"),
+  ...require("./hooks/file-tree-watch-utils"),
+  ...require("./utils/ardot-background-bootstrap"),
+  ...require("./utils/session-event-routing"),
+  ...require("./hooks/share-selection-helpers"),
 });
