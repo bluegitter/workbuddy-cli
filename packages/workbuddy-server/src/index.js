@@ -193,6 +193,8 @@ module.exports = Object.freeze({
   ...require("./project/_internal/cloud-join-request"),
   ...require("./project/_internal/cloud-invitation"),
   ...require("./project/_internal/cloud-task-queue"),
+  ...require("./project/_internal/cloud-task"),
+  ...require("./project/_internal/cloud-todo-sync-source"),
   ...require("./shared/file-lock"),
   ...require("./shared/settings-store"),
   ...require("./project/_internal/cloud-activity"),
