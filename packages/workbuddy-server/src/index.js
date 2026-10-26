@@ -195,6 +195,7 @@ module.exports = Object.freeze({
   ...require("./server/daemon-runtime-handlers"),
   ...require("./server/app-server-services"),
   ...require("./server/app-server-code-backend"),
+  ...require("./server/app-server-host-capabilities"),
   ...require("./project/_internal/cloud-member"),
   ...require("./project/_internal/todo-errors"),
   ...require("./network/diagnostics-factory"),
