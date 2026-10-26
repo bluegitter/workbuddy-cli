@@ -46,4 +46,7 @@ module.exports = Object.freeze({
   ...require("./adapter/file-uri-normalizer"),
   ...require("./adapter/skill-recommend-abort"),
   ...require("./telemetry/renderer-resource"),
+  ...require("./adapter/sandbox-preview-resolver"),
+  ...require("./adapter/session/replay-event-classifier"),
+  ...require("./core/renderer-logger"),
 });

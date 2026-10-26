@@ -1,0 +1,10 @@
+'use strict';
+
+function asRecord(value) { return value && typeof value === 'object' && !Array.isArray(value) ? value : undefined; }
+function getMetaSources(value) { const event = asRecord(value); const update = asRecord(event?.update); return [event?._meta, update?._meta].map(asRecord).filter(Boolean); }
+function readMode(sources) { for (const meta of sources) { const nested = asRecord(meta['codebuddy.ai']); for (const candidate of [nested?.mode, meta['codebuddy.ai/mode']]) if (typeof candidate === 'string') return candidate; } return undefined; }
+function readHistoryReplayMarker(sources) { for (const meta of sources) { const nested = asRecord(meta['codebuddy.ai']); for (const candidate of [meta['codebuddy.ai/historyReplay'], nested?.historyReplay]) if (candidate !== undefined) return { boundary: candidate === 'start' || candidate === 'end' ? candidate : undefined, present: true }; } return { present: false }; }
+function hasBooleanMarker(sources, flatKey, nestedKey) { return sources.some((meta) => meta[flatKey] === true || asRecord(meta['codebuddy.ai'])?.[nestedKey] === true); }
+function classifyReplayEvent(event) { const sources = getMetaSources(event); const mode = readMode(sources); const historyReplay = readHistoryReplayMarker(sources); const renderer = hasBooleanMarker(sources, 'codebuddy.ai/rendererHistoryReplay', 'rendererHistoryReplay'); const owner = hasBooleanMarker(sources, 'codebuddy.ai/ownerSnapshotHistoryReplay', 'ownerSnapshotHistoryReplay'); const hasReplayMarker = historyReplay.present || renderer || owner; const isExplicitLive = mode === 'stream'; return { mode, boundary: historyReplay.boundary, hasHistoryReplayMarker: historyReplay.present, hasRendererHistoryReplayMarker: renderer, hasOwnerSnapshotHistoryReplayMarker: owner, hasReplayMarker, isExplicitLive, isHistoryReplay: !isExplicitLive && (mode === 'history' || hasReplayMarker) }; }
+
+module.exports = Object.freeze({ asRecord, getMetaSources, readMode, readHistoryReplayMarker, hasBooleanMarker, classifyReplayEvent });
