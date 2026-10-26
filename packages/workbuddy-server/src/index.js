@@ -119,8 +119,9 @@ module.exports = Object.freeze({
   ...require("./runtime/deeplink-mock-repo"),
   ...require("./identity/local-memory-files"),
   ...require("./identity/contract"),
+  ...require("./identity/service"),
   ...require("./runtime/identity-service"),
-  ...require("./runtime/idle-capability"),
+  ...require("./idle-capability/service"),
   ...require("./automation/schedule-utils"),
   ...require("./automation/automation-dedupe"),
   ...require("./automation/automation-owner"),
@@ -185,6 +186,7 @@ module.exports = Object.freeze({
   ...require("./runtime/mqq-selection-router"),
   ...require("./docs/system-open-local-file"),
   ...require("./docs/contract"),
+  ...require("./docs/runtime-paths"),
   ...require("./runtime/local-docs-helpers"),
   ...require("./docs/local/local-docs-facade"),
 });
