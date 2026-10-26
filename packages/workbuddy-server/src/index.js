@@ -68,6 +68,7 @@ module.exports = Object.freeze({
   ...require("./storage/usage-cache-store"),
   ...require("./storage/session-runtime-event-service"),
   ...require("./storage/service"),
+  ...require("./storage/database-factory"),
   ...require("./storage/handlers"),
   ...require("./storage/contract"),
   ...require("./session/local-paths"),
