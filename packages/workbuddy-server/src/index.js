@@ -199,6 +199,7 @@ module.exports = Object.freeze({
   ...require("./migration/archived-sync-service"),
   ...require("./migration/session-fragment-repair-service"),
   ...require("./mcp/tools/marketplace-skill-tool"),
+  ...require("./project/_internal/cloud-skill"),
   ...require("./shared/file-lock"),
   ...require("./shared/settings-store"),
   ...require("./project/_internal/cloud-activity"),
