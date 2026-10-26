@@ -157,6 +157,8 @@ module.exports = Object.freeze({
   ...require("./runtime/connector-caches"),
   ...require("./connector/mcp-custom-defaults"),
   ...require("./mcp/handlers"),
+  ...require("./mcp/tools/pick-location-tool"),
+  ...require("./mcp/tools/visualizer-show-widget-tool"),
   ...require("./mcp/contract"),
   ...require("./connector/runtime-progress-notifier"),
   ...require("./connector/connector-node-runtime-env"),
