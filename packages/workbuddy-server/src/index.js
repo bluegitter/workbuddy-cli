@@ -266,6 +266,7 @@ module.exports = Object.freeze({
   ...require("./binary/handlers"),
   ...require("./agent/hosted-cli-auth-lifecycle"),
   ...require("./runtime/acp-client-facade"),
+  ...require("./runtime/workbuddy-acp-client"),
   ...require("./poi/poi-map-gate"),
   ...require("./runtime/prewarm-utils"),
   ...require("./agent/cli-prewarm-pool"),

@@ -1,4 +1,6 @@
 'use strict';
 
-// Compatibility facade for the recovered agent/acp-client module.
-module.exports = require('../agent/acp-client');
+// Compatibility facade for callers that still import the runtime boundary.
+const { WorkbuddyACPClient } = require('./workbuddy-acp-client');
+const factory = require('../agent/acp-client');
+module.exports = Object.freeze({ ...factory, WorkbuddyACPClient });
