@@ -25,4 +25,9 @@ module.exports = Object.freeze({
   ...require("./sdk/helpers/shape"),
   ...require("./sdk/bridge/client"),
   ...require("./infra/storage/wb"),
+  ...require("./sdk/namespaces/http"),
+  ...require("./sdk/namespaces/utils/feedback"),
+  ...require("./sdk/namespaces/utils/swr"),
+  ...require("./sdk/namespaces/utils/create"),
+  ...require("./domains/connector/wb"),
 });
