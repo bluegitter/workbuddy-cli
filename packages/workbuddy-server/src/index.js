@@ -161,6 +161,7 @@ module.exports = Object.freeze({
   ...require("./mcp/tools/visualizer-show-widget-tool"),
   ...require("./mcp/tools/visualizer-guidelines"),
   ...require("./mcp/tools/visualizer-read-me-tool"),
+  ...require("./mcp/tools/preview-resolver"),
   ...require("./mcp/contract"),
   ...require("./connector/runtime-progress-notifier"),
   ...require("./connector/connector-node-runtime-env"),
