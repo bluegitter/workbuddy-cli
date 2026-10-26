@@ -2,13 +2,14 @@
 
 const { handleRpc } = require('../server/handler-registry');
 const { reportLoginStep } = require('./auth-metric');
+const { createWorkbuddyAuthService } = require('./service');
 
 const STATUS_CHANGED = 'authStatusChanged';
 
 function createService(deps, registry, reporter) {
   if (deps.service) return deps.service;
-  if (typeof deps.createService !== 'function') throw new Error('auth service is required');
-  return deps.createService({
+  const factory = deps.createService || createWorkbuddyAuthService;
+  return factory({
     ...deps,
     reporter,
     onAuthUrlChanged: (payload) => registry.push('authUrlChanged', payload),

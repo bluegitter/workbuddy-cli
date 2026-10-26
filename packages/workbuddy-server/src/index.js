@@ -233,6 +233,7 @@ module.exports = Object.freeze({
   ...require("./migration/plan-migration"),
   ...require("./binary/service"),
   ...require("./auth/handlers"),
+  ...require("./auth/service"),
   ...require("./moderation/service"),
   ...require("./msg-center/service"),
   ...require("./feedback/facade"),
