@@ -1,0 +1,7 @@
+'use strict';
+const { ROUTE_PREFIX, unwrap } = require('../../runtime/http-contract');
+function buildQuery(params) { if (!params) return ''; const parts = []; if (params.category !== undefined) parts.push(`category=${encodeURIComponent(String(params.category))}`); if (params.actorIds?.length) parts.push(`actor_ids=${encodeURIComponent(params.actorIds.join(','))}`); if (params.automationIds?.length) parts.push(`automation_ids=${encodeURIComponent(params.automationIds.join(','))}`); if (params.cursor) parts.push(`cursor=${encodeURIComponent(params.cursor)}`); if (params.limit !== undefined) parts.push(`limit=${encodeURIComponent(String(params.limit))}`); return parts.length ? `?${parts.join('&')}` : ''; }
+async function listProjectActivities(http, projectId, params) { return unwrap(await http.get(`${ROUTE_PREFIX}/${encodeURIComponent(projectId)}/activities${buildQuery(params)}`), 'list project activities'); }
+async function getProjectActivityUnread(http, projectId) { return unwrap(await http.get(`${ROUTE_PREFIX}/${encodeURIComponent(projectId)}/activities/unread`), 'get project activity unread'); }
+async function markProjectActivityRead(http, projectId) { unwrap(await http.post(`${ROUTE_PREFIX}/${encodeURIComponent(projectId)}/activities/mark-read`, {}), 'mark project activity read'); }
+module.exports = { buildQuery, listProjectActivities, getProjectActivityUnread, markProjectActivityRead };
