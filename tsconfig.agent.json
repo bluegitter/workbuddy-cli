@@ -8,9 +8,12 @@
     "noEmit": true
   },
   "include": [
-    "packages/agent-provider/src/runtime/messages.ts",
-    "packages/agent-provider/src/runtime/permission-result.ts",
-    "packages/agent-provider/src/runtime/tool-definition.ts",
-    "packages/agent-provider/src/runtime/agent-loop-state.ts"
+    "packages/agent-provider/src/types/message.ts",
+    "packages/agent-provider/src/permissions/permissionResult.ts",
+    "packages/agent-provider/src/services/tools/Tool.ts",
+    "packages/agent-provider/src/services/tools/toolOrchestration.ts",
+    "packages/agent-provider/src/session/sessionManager.ts",
+    "packages/agent-provider/src/query/agentLoopState.ts",
+    "packages/agent-provider/src/query/agentLoop.ts"
   ]
 }
