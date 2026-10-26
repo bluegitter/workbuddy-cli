@@ -44,6 +44,7 @@ module.exports = Object.freeze({
   ...require("./server/app-server-celljs-deps"),
   ...require("./server/daemon-rpc-handler-deps"),
   ...require("./share/facade"),
+  ...require("./expert/package-installer"),
   ...require("./server/app-server-background-services"),
   ...require("./runtime/legacy-localstorage-migration"),
   ...require("./migration/vscdb-reader"),
