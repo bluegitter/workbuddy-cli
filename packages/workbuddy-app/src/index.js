@@ -41,4 +41,6 @@ module.exports = Object.freeze({
   ...require("./adapter/acp-tool-call-update-coordinator"),
   ...require("./adapter/acp-transcript-event-classifier"),
   ...require("./adapter/compact-message-handler"),
+  ...require("./adapter/acp-transcript-assembler"),
+  ...require("./adapter/acp-fallback-message-dispatcher"),
 });
