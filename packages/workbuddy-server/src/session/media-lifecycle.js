@@ -3,7 +3,7 @@
 const os = require('os');
 const path = require('path');
 const { ALL_MEDIA_EXTS } = require('./media-extensions');
-const { extractPreviewUrlLocalPath } = require('../runtime/session-paths');
+const { extractPreviewUrlLocalPath } = require('./local-paths');
 
 const IMAGE_TOOL_NAMES = new Set(['imagegen', 'imageedit', 'image_gen', 'image_edit']);
 const BASH_TOOL_NAMES = new Set(['Bash', 'bash']);
