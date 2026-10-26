@@ -50,6 +50,8 @@ module.exports = Object.freeze({
   ...require("./agent/cli-settings-language"),
   ...require("./agent/cli-runtime-env"),
   ...require("./agent/cli-runtime-files"),
+  ...require("./agent/gateway-secret"),
+  ...require("./agent/cli-product-env"),
   ...require("./session/session-replay"),
   ...require("./runtime/media-types"),
   ...require("./session/terminal-proxy"),
