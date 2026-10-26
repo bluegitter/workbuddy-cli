@@ -81,6 +81,7 @@ module.exports = Object.freeze({
   ...require("./session/session-meta/types"),
   ...require("./session/session-meta/session-meta-writer"),
   ...require("./session/runtime-config"),
+  ...require("./session/session-runtime-config-resolver"),
   ...require("./server/stdio-framing"),
   ...require("./server/rpc-dispatcher"),
   ...require("./server/composite-connection"),
