@@ -30,4 +30,5 @@ module.exports = Object.freeze({
   ...require("./sdk/namespaces/utils/swr"),
   ...require("./sdk/namespaces/utils/create"),
   ...require("./domains/connector/wb"),
+  ...require("./sdk"),
 });
