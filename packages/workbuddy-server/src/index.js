@@ -26,6 +26,7 @@ module.exports = Object.freeze({
   ...require("./runtime/mcp-schema"),
   ...require("./runtime/daemon-app-server-entry"),
   ...require("./server/app-server-migration-runtime"),
+  ...require("./server/app-server-database"),
   ...require("./runtime/legacy-localstorage-migration"),
   ...require("./runtime/desktop-host-bridge"),
   ...require("./runtime/daemon-utils"),
