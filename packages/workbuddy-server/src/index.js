@@ -123,6 +123,7 @@ module.exports = Object.freeze({
   ...require("./storage/sqlite/runtime"),
   ...require("./storage/drizzle/schema"),
   ...require("./storage/drizzle/migrator"),
+  ...require("./storage/drizzle/legacy-schema-adoption"),
   ...require("./storage/sqlite/connection"),
   ...require("./storage/repositories/migration-meta-repository"),
   ...require("./storage/repositories/session-usage-repository"),

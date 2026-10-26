@@ -1,12 +1,22 @@
 'use strict';
 
 const assert = require('node:assert');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const {
   AutomationDeliveryOutboxRepository,
   AutomationRepository,
+  CURRENT_REQUIRED_TABLE_COLUMNS,
   WORKBUDDY_SQLITE_MIGRATION_FILES,
+  adoptLegacyWorkbuddySqliteSchema,
+  assertWorkbuddySqliteSchema,
   createWorkbuddyDrizzleDatabase,
+  ensureSessionUsageTableSchema,
+  getAutomationRunsRunsJsonColumnType,
+  getMissingTableColumns,
   openWorkbuddyRawSqliteDatabase,
+  runWorkbuddyDrizzleMigrations,
 } = require('../packages/workbuddy-server/src');
 
 function createTestDatabase() {
@@ -54,6 +64,8 @@ function outboxRow(overrides = {}) {
 }
 
 function main() {
+  verifyLegacySchemaAdoption();
+  verifyMigrationPipeline();
   const { raw, db } = createTestDatabase();
   try {
     const automations = new AutomationRepository(() => db);
@@ -104,6 +116,64 @@ function main() {
     raw.close();
   }
   console.log('storage repository tests passed');
+}
+
+function verifyMigrationPipeline() {
+  const configDir = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-migrations-'));
+  const raw = openWorkbuddyRawSqliteDatabase(':memory:');
+  try {
+    runWorkbuddyDrizzleMigrations(raw, { configDir });
+    assertWorkbuddySqliteSchema(raw);
+    assert.strictEqual(
+      raw.prepare("SELECT COUNT(*) count FROM sqlite_master WHERE type = 'table'").get().count >= 9,
+      true,
+    );
+  } finally {
+    raw.close();
+    fs.rmSync(configDir, { recursive: true, force: true });
+  }
+}
+
+function verifyLegacySchemaAdoption() {
+  const raw = openWorkbuddyRawSqliteDatabase(':memory:');
+  try {
+    raw.exec(`
+      CREATE TABLE sessions (id TEXT PRIMARY KEY);
+      CREATE TABLE workspaces (path TEXT PRIMARY KEY);
+      CREATE TABLE automations (id TEXT PRIMARY KEY);
+      CREATE TABLE automation_runs (thread_id TEXT PRIMARY KEY);
+      CREATE TABLE automation_runtime_state (automation_id TEXT PRIMARY KEY);
+      CREATE TABLE automation_delivery_outbox (id TEXT PRIMARY KEY);
+      CREATE TABLE migration_meta (key TEXT PRIMARY KEY);
+      CREATE TABLE session_usage (session_id TEXT PRIMARY KEY);
+      INSERT INTO sessions (id) VALUES ('legacy-session');
+    `);
+    adoptLegacyWorkbuddySqliteSchema(raw);
+    adoptLegacyWorkbuddySqliteSchema(raw);
+    assertWorkbuddySqliteSchema(raw);
+    assert.deepStrictEqual(getMissingTableColumns(
+      raw,
+      'sessions',
+      CURRENT_REQUIRED_TABLE_COLUMNS.sessions,
+    ), []);
+    assert.strictEqual(getAutomationRunsRunsJsonColumnType(raw), 'TEXT');
+    assert.strictEqual(raw.prepare('SELECT status FROM sessions WHERE id = ?').get('legacy-session').status, 'Pending');
+  } finally {
+    raw.close();
+  }
+
+  const empty = openWorkbuddyRawSqliteDatabase(':memory:');
+  try {
+    ensureSessionUsageTableSchema(empty);
+    assert.deepStrictEqual(getMissingTableColumns(
+      empty,
+      'session_usage',
+      CURRENT_REQUIRED_TABLE_COLUMNS.session_usage,
+    ), []);
+    assert.throws(() => assertWorkbuddySqliteSchema(empty), /sessions\.\*/);
+  } finally {
+    empty.close();
+  }
 }
 
 main();

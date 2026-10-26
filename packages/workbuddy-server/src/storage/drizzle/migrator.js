@@ -5,15 +5,21 @@ const path = require('node:path');
 const { migrate } = require('drizzle-orm/better-sqlite3/migrator');
 const { drizzle } = require('drizzle-orm/better-sqlite3');
 const { schema } = require('./schema');
+const {
+  adoptLegacyWorkbuddySqliteSchema,
+  assertWorkbuddySqliteSchema,
+} = require('./legacy-schema-adoption');
 const { WORKBUDDY_SQLITE_MIGRATION_JOURNAL, WORKBUDDY_SQLITE_MIGRATION_FILES } = require('../../runtime/workbuddy-database');
 
 const WORKBUDDY_DRIZZLE_MIGRATIONS_TABLE = '__workbuddy_drizzle_migrations';
 
 function runWorkbuddyDrizzleMigrations(db, options = {}) {
-  options.adoptLegacySchema?.(db);
+  const adoptLegacySchema = options.adoptLegacySchema ?? adoptLegacyWorkbuddySqliteSchema;
+  const assertSchema = options.assertSchema ?? assertWorkbuddySqliteSchema;
+  adoptLegacySchema(db);
   const migrationsFolder = materializeWorkbuddySqliteMigrations(options.configDir);
   migrate(drizzle({ client: db, schema }), { migrationsFolder, migrationsTable: WORKBUDDY_DRIZZLE_MIGRATIONS_TABLE });
-  options.assertSchema?.(db);
+  assertSchema(db);
 }
 
 function materializeWorkbuddySqliteMigrations(configDir) {
