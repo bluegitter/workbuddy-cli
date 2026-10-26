@@ -268,8 +268,14 @@ const {
   reduceTaskStatus,
   deriveTaskStatus,
   extractPreviewUrlLocalPath,
+  SESSION_CWD_UNAVAILABLE,
+  SessionCwdUnavailableError,
+  assertSessionCwdUsable,
+  classifyErrno,
   parseEdsdkCall,
   formatLogDetailsSuffix,
+  safeStringifyLogDetails,
+  sanitizeLogDetailValue,
   tryParseAcpUsageUpdate,
   ALL_MEDIA_EXTS,
   NoResponseWatchdog,
@@ -2586,8 +2592,30 @@ async function main() {
   task = reduceTaskStatus(task, { type: 'turn_started', timestamp: 2 });
   assert.strictEqual(deriveTaskStatus(task), 'planning');
   assert.strictEqual(extractPreviewUrlLocalPath('file:///tmp/a%20b.txt'), '/tmp/a b.txt');
+  assert.strictEqual(classifyErrno('ENOENT'), 'missing');
+  assert.strictEqual(classifyErrno('EPERM'), 'permission_denied');
+  assert.strictEqual(classifyErrno('EIO'), 'unknown');
+  await assertSessionCwdUsable(root);
+  const cwdFile = path.join(root, 'not-a-directory.txt');
+  fs.writeFileSync(cwdFile, 'file');
+  await assert.rejects(() => assertSessionCwdUsable(cwdFile), (error) => (
+    error instanceof SessionCwdUnavailableError
+      && error.code === SESSION_CWD_UNAVAILABLE
+      && error.data.reason === 'not_a_directory'
+  ));
+  await assert.rejects(() => assertSessionCwdUsable(path.join(root, 'missing')), (error) => (
+    error.code === SESSION_CWD_UNAVAILABLE && error.data.reason === 'missing'
+  ));
   assert.deepStrictEqual(parseEdsdkCall("python3 edsdk.py call open_file path='/tmp/a'"), { tool: 'open_file', args: { path: '/tmp/a' } });
   assert.strictEqual(formatLogDetailsSuffix({ count: 1 }), ' {"count":1}');
+  assert.strictEqual(safeStringifyLogDetails({ count: 2n }), '{"count":"2"}');
+  const detailError = new Error('failed', { cause: 'root cause' });
+  detailError.code = 'E_TEST';
+  detailError.data = { nested: { deeper: { hidden: true } } };
+  const serializedDetailError = JSON.parse(safeStringifyLogDetails(detailError));
+  assert.strictEqual(serializedDetailError.code, 'E_TEST');
+  assert.strictEqual(serializedDetailError.cause, 'root cause');
+  assert.strictEqual(sanitizeLogDetailValue({ a: { b: { c: true } } }).a.b, '[truncated]');
   assert.deepStrictEqual(tryParseAcpUsageUpdate({ sessionUpdate: 'usage_update', used: 2, size: 10 }), { sessionUpdate: 'usage_update', used: 2, size: 10 });
   assert.strictEqual(ALL_MEDIA_EXTS.has('png'), true);
   const telemetryEvents = [];

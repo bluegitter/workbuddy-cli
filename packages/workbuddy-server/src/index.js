@@ -78,6 +78,7 @@ module.exports = Object.freeze({
   ...require("./storage/handlers"),
   ...require("./storage/contract"),
   ...require("./session/local-paths"),
+  ...require("./session/session-cwd-precheck"),
   ...require("./session/parse-edsdk-call"),
   ...require("./common/log-details"),
   ...require("./shared/error-codes"),

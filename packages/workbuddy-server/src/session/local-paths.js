@@ -1,7 +1,18 @@
 'use strict';
 const path = require('path');
-function extractPreviewUrlLocalPath(url) { if (typeof url !== 'string' || !url) return undefined; let filePath; if (url.startsWith('file://')) try { filePath = decodeURIComponent(new URL(url).pathname); } catch { return undefined; } else if (path.isAbsolute(url)) filePath = url; else return undefined; return filePath ? path.normalize(filePath) : undefined; }
-function classifyErrno(errno) { return errno === 'ENOENT' || errno === 'ENOTDIR' ? 'missing' : errno === 'EACCES' || errno === 'EPERM' ? 'permission_denied' : 'unknown'; }
-class SessionCwdUnavailableError extends Error { constructor(message, data) { super(message); this.name = 'SessionCwdUnavailableError'; this.code = 'SESSION_CWD_UNAVAILABLE'; this.data = data; } }
-async function assertSessionCwdUsable(cwd) { let stat; try { stat = await require('fs').promises.stat(cwd); } catch (error) { const reason = classifyErrno(error.code); throw new SessionCwdUnavailableError(reason === 'missing' ? `Session working directory does not exist or was removed: ${cwd}` : reason === 'permission_denied' ? `Permission denied for session working directory: ${cwd}` : `Cannot access session working directory: ${cwd} (${error.code || 'unknown'})`, { cwd, reason, errno: error.code, systemMessage: String(error.message || error) }); } if (!stat.isDirectory()) throw new SessionCwdUnavailableError(`Session working directory path is not a directory: ${cwd}`, { cwd, reason: 'not_a_directory' }); try { await require('fs').promises.access(cwd, require('fs').constants.R_OK | require('fs').constants.X_OK); } catch (error) { throw new SessionCwdUnavailableError(`Permission denied for session working directory: ${cwd}`, { cwd, reason: 'permission_denied', errno: error.code, systemMessage: String(error.message || error) }); } }
-module.exports = Object.freeze({ extractPreviewUrlLocalPath, classifyErrno, SessionCwdUnavailableError, assertSessionCwdUsable });
+const cwdPrecheck = require('./session-cwd-precheck');
+
+function extractPreviewUrlLocalPath(url) {
+  if (typeof url !== 'string' || !url) return undefined;
+  let filePath;
+  if (url.startsWith('file://')) {
+    try { filePath = decodeURIComponent(new URL(url).pathname); } catch { return undefined; }
+  } else if (path.isAbsolute(url)) {
+    filePath = url;
+  } else {
+    return undefined;
+  }
+  return filePath ? path.normalize(filePath) : undefined;
+}
+
+module.exports = Object.freeze({ extractPreviewUrlLocalPath, ...cwdPrecheck });
