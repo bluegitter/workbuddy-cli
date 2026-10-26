@@ -173,6 +173,7 @@ module.exports = Object.freeze({
   ...require("./claw/reply-error-classifier"),
   ...require("./inspiration/handlers"),
   ...require("./perf/handlers"),
+  ...require("./connector/lifecycle"),
   ...require("./asr/handlers"),
   ...require("./app/contract"),
   ...require("./auth/core-service"),
