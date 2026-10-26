@@ -18,4 +18,5 @@ module.exports = Object.freeze({
   ...require("./common/tracing/deterministic-id-generator"),
   ...require("./common/tracing/otel-env"),
   ...require("./claw-telemetry"),
+  ...require("./channel-main-tracing"),
 });
