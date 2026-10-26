@@ -236,6 +236,7 @@ module.exports = Object.freeze({
   ...require("./tencent-docs/online/online-doc-preview-registry"),
   ...require("./tencent-docs/online/online-document-selection-store"),
   ...require("./tencent-docs/contract"),
+  ...require("./tencent-docs/create-document-lifecycle-deps"),
   ...require("./runtime/mqq-selection-router"),
   ...require("./docs/system-open-local-file"),
   ...require("./docs/service"),
