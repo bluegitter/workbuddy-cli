@@ -113,6 +113,7 @@ module.exports = Object.freeze({
   ...require("./storage/drizzle/migrator"),
   ...require("./storage/sqlite/connection"),
   ...require("./storage/repositories/migration-meta-repository"),
+  ...require("./storage/repositories/session-usage-repository"),
   ...require("./storage/database-file-logger"),
   ...require("./storage/sqlite/ghost-cleanup"),
   ...require("./storage/sqlite/legacy-vscdb-reader"),
