@@ -177,6 +177,7 @@ module.exports = Object.freeze({
   ...require("./skill/common/cloud-personal-skills-repo"),
   ...require("./skill/desktop-personal-skills-repo"),
   ...require("./skill/desktop-enterprise-skills-repo"),
+  ...require("./skill/personal/handlers"),
   ...require("./skill/security/skill-scan-helpers"),
   ...require("./skill/security/skill-security-client"),
   ...require("./skill/security-app-key"),
