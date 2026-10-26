@@ -128,6 +128,7 @@ module.exports = Object.freeze({
   isTerminalToolCallStatus: require("./session/session-team-runtime").isTerminalToolCallStatus,
   deriveTerminalExportStatus: require("./session/session-team-runtime").deriveTerminalExportStatus,
   ...require("./server/stdio-framing"),
+  ...require("./server/builtin-market-deps"),
   ...require("./server/rpc-dispatcher"),
   ...require("./server/composite-connection"),
   ...require("./server/rpc-connection"),
