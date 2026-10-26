@@ -29,4 +29,11 @@ module.exports = Object.freeze({
   ...require("./adapter/read-path-utils"),
   ...require("./adapter/runtime/queue-teammate-filter"),
   ...require("./shared/team-runtime"),
+  ...require("./desktop/host-platform"),
+  ...require("./shared/ipc-channels"),
+  ...require("./adapter/acp-user-message-chunk-accumulator"),
+  ...require("./adapter/credit-usage-accumulator"),
+  ...require("./adapter/enhance-prompt-abort"),
+  ...require("./adapter/progress-phase-formatter"),
+  ...require("./adapter/session-runtime-types"),
 });
