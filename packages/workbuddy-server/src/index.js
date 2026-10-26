@@ -138,6 +138,8 @@ module.exports = Object.freeze({
   ...require("./memory/with-timeout"),
   ...require("./memory/file-lock"),
   ...require("./memory/path-resolver"),
+  ...require("./memory/pending-mutation-store"),
+  ...require("./memory/polling-lease"),
   ...require("./memory/contract"),
   ...require("./memory/handlers"),
   ...require("./models/service"),
