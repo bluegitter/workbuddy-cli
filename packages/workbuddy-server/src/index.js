@@ -197,6 +197,7 @@ module.exports = Object.freeze({
   ...require("./project/_internal/cloud-todo-sync-source"),
   ...require("./sandbox/handlers"),
   ...require("./migration/archived-sync-service"),
+  ...require("./migration/session-fragment-repair-service"),
   ...require("./shared/file-lock"),
   ...require("./shared/settings-store"),
   ...require("./project/_internal/cloud-activity"),
