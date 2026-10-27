@@ -19,6 +19,7 @@ const { DaemonTraceServiceImpl } = require('../packages/workbuddy-server/src/tel
 const { WorkbuddyExternalLinkAuthenticationProvider, setWorkbuddyAuthDevEnvProvider, rewriteStagingAuthUrl } = require('../packages/workbuddy-server/src/auth/external-link-authentication-provider');
 const { WorkbuddyBootstrapAuthenticationStorage } = require('../packages/workbuddy-server/src/auth/workbuddy-bootstrap-authentication-storage');
 const { WorkbuddyAuthenticationManager, setWorkbuddyAuthSessionSyncer } = require('../packages/workbuddy-server/src/auth/workbuddy-authentication-manager');
+const { WorkbuddyCustomModelsProductProvider } = require('../packages/workbuddy-server/src/runtime/custom-models-product-provider');
 
 async function main() {
 assert.equal(typeof metric.ConnectorMetricReporter, 'function');
@@ -68,6 +69,24 @@ let synced;
 setWorkbuddyAuthSessionSyncer(async (session) => { synced = session; });
 await new WorkbuddyAuthenticationManager().syncProductAfterSessionChange({ account: { uid: 'u1' } });
 assert.equal(synced.account.uid, 'u1');
+const customModelsFileSystem = {
+  existsSync: () => true,
+  readFileSync: () => JSON.stringify({ models: [{ id: 'local-model', apiKey: '${TEST_CUSTOM_KEY}', url: '${TEST_CUSTOM_URL}' }], availableModels: ['cloud-model'] }),
+  watch: () => ({ on() {}, close() {} }),
+};
+const customProvider = new WorkbuddyCustomModelsProductProvider({
+  fileSystem: customModelsFileSystem,
+  runtimeConfigDir: '/tmp/workbuddy-test-config',
+  logger: { info() {}, warn() {}, error() {} },
+});
+process.env.TEST_CUSTOM_KEY = 'secret';
+process.env.TEST_CUSTOM_URL = 'https://custom.example.test';
+const customConfig = await customProvider.provide({ current: { productFeatures: { CustomModelsJSON: true, CustomModelIdPrefix: true }, availableModels: ['built-in'] } });
+delete process.env.TEST_CUSTOM_KEY;
+delete process.env.TEST_CUSTOM_URL;
+assert.deepEqual(customConfig.models[0], { disabled: false, id: 'custom-local:local-model', apiKey: 'secret', url: 'https://custom.example.test', tags: ['custom'] });
+assert.deepEqual(customConfig.availableModels, ['cloud-model', 'custom-local:cloud-model']);
+assert.equal(customConfig.mergeStrategy, 'smartMerge');
 assert.equal(executor.extractExecutable("'cli tool' --flag"), 'cli tool');
 assert.equal(executor.extractExecutable('cli | malicious'), 'cli');
 assert.equal(executor.extractExecutable('"unterminated'), null);
