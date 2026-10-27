@@ -15,6 +15,7 @@ const { SessionNoResponseTimeoutProcessor } = require('../packages/workbuddy-ser
 const { WorkbuddyExtensionInfoEventProcessor } = require('../packages/workbuddy-server/src/telemetry/workbuddy-extension-info-processor');
 const { WorkbuddyHostIDEInfoEventProcessor } = require('../packages/workbuddy-server/src/telemetry/workbuddy-host-ide-info-processor');
 const { WorkbuddyResourceProvider, WorkbuddyDaemonResourceProvider } = require('../packages/workbuddy-server/src/telemetry/trace/daemon-resource-provider');
+const { DaemonTraceServiceImpl } = require('../packages/workbuddy-server/src/telemetry/trace/daemon-trace-service');
 
 async function main() {
 assert.equal(typeof metric.ConnectorMetricReporter, 'function');
@@ -46,6 +47,13 @@ await new WorkbuddyHostIDEInfoEventProcessor({ clientInfoProvider: { get: async 
 assert.equal(hostEvent.ideName, 'darwin');
 assert.equal(typeof WorkbuddyResourceProvider, 'symbol');
 assert.equal(new WorkbuddyDaemonResourceProvider().provide()['service.name'], 'workbuddy-daemon');
+let traceConfig;
+const traceService = new DaemonTraceServiceImpl({ resourceProviders: [{ provide: () => ({ region: 'test', ignored: null }) }], providerFactory: async (config) => { traceConfig = config; return { provider: { forceFlush() {}, shutdown() {} }, tracer: { name: 'test' } }; } });
+assert.equal(await traceService.initialize(), true);
+assert.equal(traceService.ready, true);
+assert.equal(traceConfig.resourceAttributes.region, 'test');
+await traceService.shutdown();
+assert.equal(traceService.ready, false);
 assert.equal(executor.extractExecutable("'cli tool' --flag"), 'cli tool');
 assert.equal(executor.extractExecutable('cli | malicious'), 'cli');
 assert.equal(executor.extractExecutable('"unterminated'), null);

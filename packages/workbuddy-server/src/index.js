@@ -520,6 +520,7 @@ module.exports = Object.freeze({
   ...require("./telemetry/workbuddy-host-ide-info-processor"),
   ...require("./telemetry/trace/protocol"),
   ...require("./telemetry/trace/daemon-resource-provider"),
+  ...require("./telemetry/trace/daemon-trace-service"),
   ...require("./connector/connector-managed-npx-resolver"),
   ...require("./runtime/connector-mcp-metric"),
   ...require("./runtime/connector-mcp-transport"),
