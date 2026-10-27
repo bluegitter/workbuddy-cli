@@ -20,6 +20,8 @@ const { WorkbuddyExternalLinkAuthenticationProvider, setWorkbuddyAuthDevEnvProvi
 const { WorkbuddyBootstrapAuthenticationStorage } = require('../packages/workbuddy-server/src/auth/workbuddy-bootstrap-authentication-storage');
 const { WorkbuddyAuthenticationManager, setWorkbuddyAuthSessionSyncer } = require('../packages/workbuddy-server/src/auth/workbuddy-authentication-manager');
 const { WorkbuddyCustomModelsProductProvider } = require('../packages/workbuddy-server/src/runtime/custom-models-product-provider');
+const { WorkbuddyRestOperationsProxyInterceptor, NET_LOG_KEY } = require('../packages/workbuddy-server/src/net/rest-operations-proxy-interceptor');
+const { WorkbuddyTlsVerificationInterceptor } = require('../packages/workbuddy-server/src/net/tls-verification-interceptor');
 
 async function main() {
 assert.equal(typeof metric.ConnectorMetricReporter, 'function');
@@ -87,6 +89,35 @@ delete process.env.TEST_CUSTOM_URL;
 assert.deepEqual(customConfig.models[0], { disabled: false, id: 'custom-local:local-model', apiKey: 'secret', url: 'https://custom.example.test', tags: ['custom'] });
 assert.deepEqual(customConfig.availableModels, ['cloud-model', 'custom-local:cloud-model']);
 assert.equal(customConfig.mergeStrategy, 'smartMerge');
+const requestInterceptors = [];
+const responseInterceptors = [];
+const netLogs = [];
+const restOperations = { interceptors: { request: { use(fn) { requestInterceptors.push(fn); } }, response: { use(ok, fail) { responseInterceptors.push({ ok, fail }); } } } };
+const restInterceptor = new WorkbuddyRestOperationsProxyInterceptor({
+  restOperations,
+  getProductEndpoint: () => 'https://api.example.test/',
+  getAxiosAgentsForUrl: () => ({ httpsAgent: { name: 'agent' } }),
+  describeProxyForLog: () => 'proxy=127.0.0.1:8080',
+  logNetRequest: (entry) => netLogs.push(entry),
+});
+assert.equal(await restInterceptor.initialize(), true);
+const requestConfig = requestInterceptors[0]({ url: '/v1/test', method: 'post' });
+assert.equal(requestConfig.url, '/v1/test');
+assert.deepEqual(requestConfig.httpsAgent, { name: 'agent' });
+assert.equal(requestConfig[NET_LOG_KEY].url, 'https://api.example.test/v1/test');
+responseInterceptors[0].ok({ status: 204, config: requestConfig });
+assert.equal(netLogs[0].source, 'RestOperations');
+const requestError = Object.assign(new Error('network down'), { response: { status: 503 }, config: requestConfig });
+await assert.rejects(() => responseInterceptors[0].fail(requestError), /network down/);
+assert.equal(netLogs[1].status, 503);
+assert.equal(netLogs[1].error, requestError);
+const tlsEvents = [];
+let configurationListener;
+const tlsManager = { configuration: { getValue: () => ({ productFeatures: { DisableTlsVerification: true } }), subscribe(fn) { configurationListener = fn; } } };
+const tlsInterceptor = new WorkbuddyTlsVerificationInterceptor({ productManager: tlsManager, suppressTlsRejectWarning: () => tlsEvents.push('suppress'), disableTlsVerification: (reason) => tlsEvents.push(reason) });
+await tlsInterceptor.initialize();
+configurationListener();
+assert.deepEqual(tlsEvents, ['suppress', 'ProductFeature.DisableTlsVerification', 'ProductFeature.DisableTlsVerification']);
 assert.equal(executor.extractExecutable("'cli tool' --flag"), 'cli tool');
 assert.equal(executor.extractExecutable('cli | malicious'), 'cli');
 assert.equal(executor.extractExecutable('"unterminated'), null);

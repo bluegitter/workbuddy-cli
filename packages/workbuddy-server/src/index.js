@@ -525,6 +525,8 @@ module.exports = Object.freeze({
   ...require("./auth/workbuddy-bootstrap-authentication-storage"),
   ...require("./auth/workbuddy-authentication-manager"),
   ...require("./runtime/custom-models-product-provider"),
+  ...require("./net/rest-operations-proxy-interceptor"),
+  ...require("./net/tls-verification-interceptor"),
   ...require("./connector/connector-managed-npx-resolver"),
   ...require("./runtime/connector-mcp-metric"),
   ...require("./runtime/connector-mcp-transport"),
