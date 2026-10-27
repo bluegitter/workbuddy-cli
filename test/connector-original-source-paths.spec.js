@@ -16,6 +16,9 @@ const { WorkbuddyExtensionInfoEventProcessor } = require('../packages/workbuddy-
 const { WorkbuddyHostIDEInfoEventProcessor } = require('../packages/workbuddy-server/src/telemetry/workbuddy-host-ide-info-processor');
 const { WorkbuddyResourceProvider, WorkbuddyDaemonResourceProvider } = require('../packages/workbuddy-server/src/telemetry/trace/daemon-resource-provider');
 const { DaemonTraceServiceImpl } = require('../packages/workbuddy-server/src/telemetry/trace/daemon-trace-service');
+const { WorkbuddyExternalLinkAuthenticationProvider, setWorkbuddyAuthDevEnvProvider, rewriteStagingAuthUrl } = require('../packages/workbuddy-server/src/auth/external-link-authentication-provider');
+const { WorkbuddyBootstrapAuthenticationStorage } = require('../packages/workbuddy-server/src/auth/workbuddy-bootstrap-authentication-storage');
+const { WorkbuddyAuthenticationManager, setWorkbuddyAuthSessionSyncer } = require('../packages/workbuddy-server/src/auth/workbuddy-authentication-manager');
 
 async function main() {
 assert.equal(typeof metric.ConnectorMetricReporter, 'function');
@@ -54,6 +57,17 @@ assert.equal(traceService.ready, true);
 assert.equal(traceConfig.resourceAttributes.region, 'test');
 await traceService.shutdown();
 assert.equal(traceService.ready, false);
+setWorkbuddyAuthDevEnvProvider({ isOverrideEnabled: () => true, readDevEnv: () => 'staging' });
+assert.equal(new URL(rewriteStagingAuthUrl('https://www.codebuddy.cn/login')).hostname, 'staging.codebuddy.cn');
+const authProvider = new WorkbuddyExternalLinkAuthenticationProvider({ authenticationConfiguration: () => ({ type: 'cli-external-link' }) });
+assert.equal(await authProvider.support(), true);
+const stored = { async priority() {}, async store() {}, async restore() {}, async beginLogout() {}, async clean() {}, storeSessionSubject: {} };
+const bootstrap = new WorkbuddyBootstrapAuthenticationStorage({ fileAuthenticationStorage: stored, readProductConfig: (key) => key === 'ACC_PRODUCT_CONFIG_V3' ? JSON.stringify({ authentication: { type: 'external-link' } }) : undefined });
+assert.equal(await bootstrap.priority(), 11);
+let synced;
+setWorkbuddyAuthSessionSyncer(async (session) => { synced = session; });
+await new WorkbuddyAuthenticationManager().syncProductAfterSessionChange({ account: { uid: 'u1' } });
+assert.equal(synced.account.uid, 'u1');
 assert.equal(executor.extractExecutable("'cli tool' --flag"), 'cli tool');
 assert.equal(executor.extractExecutable('cli | malicious'), 'cli');
 assert.equal(executor.extractExecutable('"unterminated'), null);
