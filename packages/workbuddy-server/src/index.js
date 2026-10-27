@@ -13,6 +13,7 @@ module.exports = Object.freeze({
   ...require("./automation/automation-prompt-builder"),
   ...require("./automation/automation-power-lifecycle"),
   ...require("./automation/automation-service"),
+  ...require("./automation/automation-main-service"),
   ...require("./automation/sqlite-automation-storage-adapter"),
   ...require("./automation/service-factory"),
   ...require("./runtime/mcp-registry"),
