@@ -126,6 +126,7 @@ module.exports = Object.freeze({
   ...require("./session/brain-artifact-service"),
   ...require("./session/team-runtime-loader"),
   ...require("./session/media-artifact-index"),
+  ...require("./session/media-artifact-service"),
   ...require("./server/app-server-session-manager"),
   ...require("./session/session-manager-meta"),
   ...require("./session/session-runtime-identity"),
