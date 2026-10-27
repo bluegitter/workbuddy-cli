@@ -129,6 +129,7 @@ module.exports = Object.freeze({
   ...require("./session/media-artifact-service"),
   ...require("./server/app-server-session-manager"),
   ...require("./session/session-manager-meta"),
+  ...require("./session/session-manager"),
   ...require("./session/session-runtime-identity"),
   ...require("./session/session-history-events"),
   ...require("./session/session-prompt-errors"),
