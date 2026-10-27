@@ -109,6 +109,7 @@ module.exports = Object.freeze({
   ...require("./session/parse-edsdk-call"),
   ...require("./common/log-details"),
   ...require("./shared/error-codes"),
+  ...require("./shared/traceparent"),
   ...require("./session/usage-cache-service"),
   ...require("./session/media-extensions"),
   ...require("./session/local-document-media-policy"),

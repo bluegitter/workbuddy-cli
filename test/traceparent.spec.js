@@ -1,0 +1,10 @@
+'use strict';
+const assert = require('node:assert');
+const { isValidW3CTraceId, formatTraceparent } = require('../packages/workbuddy-server/src/shared/traceparent');
+const traceId = '0123456789abcdef0123456789abcdef';
+const spanId = '0123456789abcdef';
+assert.strictEqual(isValidW3CTraceId(traceId), true);
+assert.strictEqual(isValidW3CTraceId('0'.repeat(32)), false);
+assert.strictEqual(formatTraceparent({ traceId, spanId, flags: 1 }), `00-${traceId}-${spanId}-01`);
+assert.strictEqual(formatTraceparent({ traceId, spanId: '0'.repeat(16) }), undefined);
+console.log('traceparent tests passed');
