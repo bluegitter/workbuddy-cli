@@ -16,8 +16,44 @@ echo "[2/2] 桌面端启动 (isolated tmp data dir, 60s 超时)"
 TMPDATA="$(mktemp -d /tmp/wb-smoke.XXXXXX)"
 LOG="$TMPDATA/run.log"
 WORKBUDDY_USER_DATA_DIR="$TMPDATA/userdata" WORKBUDDY_CONFIG_DIR="$TMPDATA/config" \
+  WORKBUDDY_CLI_PREWARM_POOL_SIZE=0 \
   nohup "$ROOT/scripts/run.sh" > "$LOG" 2>&1 &
 MAIN_PID=$!
+
+cleanup() {
+  # Electron reparents daemon/sidecar children. Match only this checkout's
+  # runtime paths so an installed WorkBuddy instance is untouched.
+  runtime_patterns=(
+    "$ROOT/runtime-app/main/daemon-app-server-entry.js"
+    "$ROOT/runtime-app/main/sidecar-entry.js"
+    "$ROOT/runtime-app/main/cli/bin/codebuddy"
+    "$ROOT/runtime-app/cli/bin/codebuddy"
+  )
+  matching_pids() {
+    ps -axo pid=,command= | awk -v pattern="$1" '$0 !~ /awk/ && $0 !~ /ps -axo/ && index($0, pattern) { print $1 }'
+  }
+  for round in 1 2 3 4 5; do
+    for pattern in "${runtime_patterns[@]}"; do
+      matching_pids "$pattern" | while read -r pid; do
+        [ "$pid" = "$$" ] || kill -TERM "$pid" 2>/dev/null || true
+      done
+    done
+    kill "$MAIN_PID" 2>/dev/null || true
+    sleep 1
+    active=0
+    for pattern in "${runtime_patterns[@]}"; do
+      if [ -n "$(matching_pids "$pattern")" ]; then active=1; break; fi
+    done
+    [ "$active" = 0 ] && break
+  done
+  for pattern in "${runtime_patterns[@]}"; do
+    matching_pids "$pattern" | while read -r pid; do
+      [ "$pid" = "$$" ] || kill -KILL "$pid" 2>/dev/null || true
+    done
+  done
+  rm -rf "$TMPDATA"
+}
+trap cleanup EXIT INT TERM
 
 FOUND=NO
 for i in $(seq 1 60); do
@@ -26,14 +62,6 @@ for i in $(seq 1 60); do
   if ! kill -0 $MAIN_PID 2>/dev/null; then break; fi
 done
 [ "$FOUND" = YES ] && ok "renderer bootstrap 完成 (${i}s)" || fail "启动未就绪或进程退出，见 $LOG"
-
-# 清理冒烟实例（只匹配 runtime-app 路径，不会误伤官方安装版）
-kill $MAIN_PID 2>/dev/null || true
-pkill -f "runtime-app/main/daemon-app-server-entry" 2>/dev/null || true
-pkill -f "runtime-app/main/cli/bin/codebuddy" 2>/dev/null || true
-sleep 2
-pkill -9 -f "wb-smoke.*Electron" 2>/dev/null || true
-rm -rf "$TMPDATA"
 
 echo
 echo "结果: $PASS 通过, $FAIL 失败"
