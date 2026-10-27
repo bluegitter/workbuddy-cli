@@ -1,1 +1,1 @@
-../../../../extracted-app/main/startup-perf-exporters.js
+../../../../runtime-app/main/startup-perf-exporters.js

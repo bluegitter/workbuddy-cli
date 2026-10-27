@@ -1,1 +1,1 @@
-../../../../extracted-app/main/helpers.js
+../../../../runtime-app/main/helpers.js

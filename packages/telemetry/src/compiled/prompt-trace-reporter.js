@@ -1,1 +1,1 @@
-../../../../extracted-app/main/prompt-trace-reporter.js
+../../../../runtime-app/main/prompt-trace-reporter.js

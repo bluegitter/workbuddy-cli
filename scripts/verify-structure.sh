@@ -4,6 +4,22 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PACKAGES='agent-ui agent-provider agent-client-protocol workbuddy-app workbuddy-core workbuddy-server runtime context authentication telemetry enterprise-policy plugin-core sandbox-cli'
 
+# The desktop runtime is published independently from the recovered package
+# boundaries. Keep the old extraction name out of the runnable layout so all
+# launchers resolve the same main/preload/renderer/CLI/resource tree.
+test ! -e "$ROOT/extracted-app"
+for runtime_path in \
+  runtime-app/package.json \
+  runtime-app/main/index.js \
+  runtime-app/preload/index.js \
+  runtime-app/renderer/index.html \
+  runtime-app/cli/bin/codebuddy \
+  runtime-app/resources/builtin-skills \
+  runtime-app/resources/builtin-plugins \
+  runtime-app/resources/builtin-mcp-apps; do
+  test -e "$ROOT/$runtime_path"
+done
+
 for package in $PACKAGES; do
   test -f "$ROOT/packages/$package/package.json"
   test -f "$ROOT/packages/$package/src/index.js"

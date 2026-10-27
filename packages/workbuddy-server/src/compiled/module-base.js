@@ -1,1 +1,1 @@
-../../../../extracted-app/main/module-base.js
+../../../../runtime-app/main/module-base.js

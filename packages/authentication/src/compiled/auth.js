@@ -1,1 +1,1 @@
-../../../../extracted-app/main/auth.js
+../../../../runtime-app/main/auth.js

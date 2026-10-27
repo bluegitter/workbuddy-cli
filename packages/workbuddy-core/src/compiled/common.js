@@ -1,1 +1,1 @@
-../../../../extracted-app/main/common.js
+../../../../runtime-app/main/common.js

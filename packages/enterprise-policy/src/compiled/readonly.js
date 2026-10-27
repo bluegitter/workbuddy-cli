@@ -1,1 +1,1 @@
-../../../../extracted-app/main/readonly.js
+../../../../runtime-app/main/readonly.js

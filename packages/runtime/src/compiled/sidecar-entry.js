@@ -1,1 +1,1 @@
-../../../../extracted-app/main/sidecar-entry.js
+../../../../runtime-app/main/sidecar-entry.js

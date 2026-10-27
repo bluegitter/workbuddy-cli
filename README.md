@@ -19,7 +19,7 @@
 ```text
 workbuddy-cli/
 ├── README.md
-├── extracted-app/
+├── runtime-app/
 │   ├── cli/
 │   ├── main/
 │   ├── native/
@@ -37,9 +37,9 @@ workbuddy-cli/
     └── SHA256SUMS.txt
 ```
 
-`extracted-app/` 是 `app.asar` 与当前平台外置资源合并后的代码目录，`metadata/` 保存版本、文件清单和校验信息。
+`runtime-app/` 是 `app.asar` 与当前平台外置资源合并后的代码目录，`metadata/` 保存版本、文件清单和校验信息。
 
-从编译产物中恢复出的原始 monorepo 边界位于 `packages/`。由于发布包不包含 TypeScript 源码，各包的 `src/compiled/` 使用相对链接指向 `extracted-app/` 中的同一份文件，不复制或修改运行时产物。模块职责和映射见 [docs/模块拆分说明.md](docs/模块拆分说明.md)，可用 `npm run verify:structure` 检查包清单和链接完整性。
+从编译产物中恢复出的原始 monorepo 边界位于 `packages/`。由于发布包不包含 TypeScript 源码，各包的 `src/compiled/` 使用相对链接指向 `runtime-app/` 中的同一份文件，不复制或修改运行时产物。模块职责和映射见 [docs/模块拆分说明.md](docs/模块拆分说明.md)，可用 `npm run verify:structure` 检查包清单和链接完整性。
 
 ## 3. 版本信息
 
@@ -74,7 +74,7 @@ metadata/SHA256SUMS.txt
 入口：
 
 ```text
-extracted-app/main/index.js
+runtime-app/main/index.js
 ```
 
 该文件是 CommonJS 编译产物，负责桌面应用的主要生命周期，包括：
@@ -106,7 +106,7 @@ packages/product/src/...
 入口：
 
 ```text
-extracted-app/preload/index.js
+runtime-app/preload/index.js
 ```
 
 该模块通过 `electron.contextBridge.exposeInMainWorld` 向渲染层提供桌面能力，并使用 `electron.ipcRenderer.invoke`、`send` 和事件监听与主进程通信。
@@ -144,8 +144,8 @@ workbuddy:notification:send
 入口：
 
 ```text
-extracted-app/renderer/index.html
-extracted-app/renderer/assets/index-D9ecawb_.js
+runtime-app/renderer/index.html
+runtime-app/renderer/assets/index-D9ecawb_.js
 ```
 
 渲染层采用 Vite 风格的 Chunk 组织方式，主要模块包括：
@@ -169,11 +169,11 @@ packages/agent-sidebar-ui
 主要入口：
 
 ```text
-extracted-app/main/daemon-app-server-entry.js
-extracted-app/main/daemon-app-server-main.js
-extracted-app/main/module.app-server.js
-extracted-app/main/module-base.js
-extracted-app/main/initialize.js
+runtime-app/main/daemon-app-server-entry.js
+runtime-app/main/daemon-app-server-main.js
+runtime-app/main/module.app-server.js
+runtime-app/main/module-base.js
+runtime-app/main/initialize.js
 ```
 
 这些模块组成随桌面客户端运行的本地服务，主要负责：
@@ -193,7 +193,7 @@ extracted-app/main/initialize.js
 Sidecar 入口：
 
 ```text
-extracted-app/main/sidecar-entry.js
+runtime-app/main/sidecar-entry.js
 ```
 
 Sidecar 负责启动和管理每个 Session 对应的 CLI 进程。桌面客户端通过本机 `127.0.0.1` 上的 ACP/HTTP 与 CLI 服务通信；macOS 和 Linux 使用 PTY，Windows 使用普通 Child Process。
@@ -201,9 +201,9 @@ Sidecar 负责启动和管理每个 Session 对应的 CLI 进程。桌面客户�
 CLI 入口：
 
 ```text
-extracted-app/cli/bin/codebuddy
-extracted-app/cli/bin/cbc-prewarm
-extracted-app/cli/dist/codebuddy.js
+runtime-app/cli/bin/codebuddy
+runtime-app/cli/bin/cbc-prewarm
+runtime-app/cli/dist/codebuddy.js
 ```
 
 CLI 包名为 `@genie/agent-cli`。`bin/codebuddy` 是启动脚本，核心实现位于 `dist/codebuddy.js`。
@@ -213,9 +213,9 @@ CLI 包名为 `@genie/agent-cli`。`bin/codebuddy` 是启动脚本，核心实�
 主要位置：
 
 ```text
-extracted-app/resources/builtin-skills
-extracted-app/resources/builtin-plugins
-extracted-app/resources/builtin-mcp-apps
+runtime-app/resources/builtin-skills
+runtime-app/resources/builtin-plugins
+runtime-app/resources/builtin-mcp-apps
 ```
 
 这些目录包含 JavaScript、Python、Markdown Prompt、模板、Plugin Manifest、MCP Server 和 Webview 资源。
@@ -224,12 +224,12 @@ extracted-app/resources/builtin-mcp-apps
 
 如果重点关注 Agent 的启动和运行链路，可以从以下文件开始：
 
-1. 桌面应用启动：`extracted-app/main/index.js`
-2. 本地服务启动：`extracted-app/main/daemon-app-server-entry.js`
-3. 本地服务初始化：`extracted-app/main/initialize.js`
-4. CLI 进程管理：`extracted-app/main/sidecar-entry.js`
-5. Agent CLI 启动脚本：`extracted-app/cli/bin/codebuddy`
-6. Agent CLI 主 Bundle：`extracted-app/cli/dist/codebuddy.js`
+1. 桌面应用启动：`runtime-app/main/index.js`
+2. 本地服务启动：`runtime-app/main/daemon-app-server-entry.js`
+3. 本地服务初始化：`runtime-app/main/initialize.js`
+4. CLI 进程管理：`runtime-app/main/sidecar-entry.js`
+5. Agent CLI 启动脚本：`runtime-app/cli/bin/codebuddy`
+6. Agent CLI 主 Bundle：`runtime-app/cli/dist/codebuddy.js`
 
 简化运行链路：
 
@@ -342,19 +342,19 @@ packages/sandbox-cli
 
 建议按以下顺序理解代码：
 
-1. `extracted-app/package.json`
-2. `extracted-app/main/index.js`
-3. `extracted-app/preload/index.js`
-4. `extracted-app/renderer/index.html`
-5. `extracted-app/renderer/assets/index-D9ecawb_.js`
-6. `extracted-app/main/daemon-app-server-entry.js`
-7. `extracted-app/main/daemon-app-server-main.js`
-8. `extracted-app/main/module.app-server.js`
-9. `extracted-app/main/sidecar-entry.js`
-10. `extracted-app/cli/bin/codebuddy`
-11. `extracted-app/resources/builtin-skills`
-12. `extracted-app/resources/builtin-plugins`
-13. `extracted-app/resources/builtin-mcp-apps`
+1. `runtime-app/package.json`
+2. `runtime-app/main/index.js`
+3. `runtime-app/preload/index.js`
+4. `runtime-app/renderer/index.html`
+5. `runtime-app/renderer/assets/index-D9ecawb_.js`
+6. `runtime-app/main/daemon-app-server-entry.js`
+7. `runtime-app/main/daemon-app-server-main.js`
+8. `runtime-app/main/module.app-server.js`
+9. `runtime-app/main/sidecar-entry.js`
+10. `runtime-app/cli/bin/codebuddy`
+11. `runtime-app/resources/builtin-skills`
+12. `runtime-app/resources/builtin-plugins`
+13. `runtime-app/resources/builtin-mcp-apps`
 
 可直接在项目根目录打开：
 

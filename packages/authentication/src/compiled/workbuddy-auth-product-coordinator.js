@@ -1,1 +1,1 @@
-../../../../extracted-app/main/workbuddy-auth-product-coordinator.js
+../../../../runtime-app/main/workbuddy-auth-product-coordinator.js

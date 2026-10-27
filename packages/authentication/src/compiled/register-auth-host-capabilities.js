@@ -1,1 +1,1 @@
-../../../../extracted-app/main/register-auth-host-capabilities.js
+../../../../runtime-app/main/register-auth-host-capabilities.js

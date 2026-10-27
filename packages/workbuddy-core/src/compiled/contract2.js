@@ -1,1 +1,1 @@
-../../../../extracted-app/main/contract2.js
+../../../../runtime-app/main/contract2.js

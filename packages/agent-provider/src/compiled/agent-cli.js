@@ -1,1 +1,1 @@
-../../../../extracted-app/cli/dist/codebuddy.js
+../../../../runtime-app/cli/dist/codebuddy.js

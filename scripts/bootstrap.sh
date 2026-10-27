@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 一键重建 5.3.8 提取版桌面端的 x64 运行环境（幂等，可重复执行）。
 # 用法: scripts/bootstrap.sh [--force]
-#   --force 会删除 extracted-app/node_modules 后重建
+#   --force 会删除 runtime-app/node_modules 后重建
 #
 # 依赖的外部素材（通过环境变量可覆盖默认路径）:
 #   WB_X64_NODE_MODULES  5.2.6 x64 解包产物目录 (默认 ../app_unpacked)
@@ -9,7 +9,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP="$ROOT/extracted-app"
+APP="$ROOT/runtime-app"
 PARENT="$(dirname "$ROOT")"
 UNPACKED="${WB_X64_NODE_MODULES:-$PARENT/app_unpacked}"
 RUNTIME="${WB_ELECTRON_RUNTIME:-$PARENT/electron-runtime}"

@@ -1,1 +1,1 @@
-../../../../extracted-app/main/log-acl-guard.js
+../../../../runtime-app/main/log-acl-guard.js

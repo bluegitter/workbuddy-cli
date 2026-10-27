@@ -1,1 +1,1 @@
-../../../../extracted-app/main/types.js
+../../../../runtime-app/main/types.js

@@ -1,1 +1,1 @@
-../../../../extracted-app/main/daemon-app-server-entry.js
+../../../../runtime-app/main/daemon-app-server-entry.js

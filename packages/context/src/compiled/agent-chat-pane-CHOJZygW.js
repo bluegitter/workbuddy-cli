@@ -1,1 +1,1 @@
-../../../../extracted-app/renderer/assets/agent-chat-pane-CHOJZygW.js
+../../../../runtime-app/renderer/assets/agent-chat-pane-CHOJZygW.js

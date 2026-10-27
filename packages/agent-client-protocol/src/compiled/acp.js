@@ -1,1 +1,1 @@
-../../../../extracted-app/main/acp.js
+../../../../runtime-app/main/acp.js

@@ -1,1 +1,1 @@
-../../../../extracted-app/main/http.js
+../../../../runtime-app/main/http.js

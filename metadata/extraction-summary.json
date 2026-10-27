@@ -4,7 +4,7 @@
     "asar": "/Applications/WorkBuddy.app/Contents/Resources/app.asar",
     "asar_unpacked": "/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked"
   },
-  "destination": "/Users/x/code/workbuddy-cli/extracted-app",
+  "destination": "/Users/x/code/workbuddy-cli/runtime-app",
   "application_version": "5.3.8",
   "asar_sha256": "bd77f36656d19d58862614b24a62156505e17e31c6830c3c2e0381d1d5c7f0f1",
   "asar_header_size": 4751456,

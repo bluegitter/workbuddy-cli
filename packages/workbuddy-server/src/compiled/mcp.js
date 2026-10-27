@@ -1,1 +1,1 @@
-../../../../extracted-app/main/mcp.js
+../../../../runtime-app/main/mcp.js

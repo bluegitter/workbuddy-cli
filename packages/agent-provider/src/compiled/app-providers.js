@@ -1,1 +1,1 @@
-../../../../extracted-app/renderer/assets/app-providers-CH-HgkKD.js
+../../../../runtime-app/renderer/assets/app-providers-CH-HgkKD.js

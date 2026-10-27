@@ -1,1 +1,1 @@
-../../../../extracted-app/main/logger.js
+../../../../runtime-app/main/logger.js

@@ -7,7 +7,7 @@ function resolveAppConfig(root, env = process.env) {
     root: path.resolve(root),
     userData: env.WORKBUDDY_USER_DATA_DIR || path.resolve(root, 'wb-data/userdata'),
     config: env.WORKBUDDY_CONFIG_DIR || path.resolve(root, 'wb-data/config'),
-    cli: path.resolve(root, 'extracted-app/cli/bin/codebuddy'),
+    cli: path.resolve(root, 'runtime-app/cli/bin/codebuddy'),
   });
 }
 

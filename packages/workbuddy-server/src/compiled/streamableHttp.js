@@ -1,1 +1,1 @@
-../../../../extracted-app/main/streamableHttp.js
+../../../../runtime-app/main/streamableHttp.js
