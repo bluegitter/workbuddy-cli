@@ -499,6 +499,7 @@ module.exports = Object.freeze({
   ...require("./mcp/contract"),
   ...require("./claw/claw-types"),
   ...require("./claw/claw-service"),
+  ...require("./claw/plugins/dingtalk/dingtalk-plugin"),
   ...require("./claw-control/types"),
   ...require("./claw-control/client"),
   ...require("./slot/types"),
