@@ -64,7 +64,8 @@ cp -R "$ROOT/patches/stubs/qimei-node" "$NM/@tencent/qimei-node"
 echo "  OK"
 
 echo "[5/5] cli 资源软链 + 数据目录"
-ln -sfn "$APP/cli" "$APP/main/cli"
+# Keep the asset link relative so the runtime tree remains relocatable.
+ln -sfn ../cli "$APP/main/cli"
 mkdir -p "$ROOT/wb-data/userdata" "$ROOT/wb-data/config"
 echo "  OK"
 

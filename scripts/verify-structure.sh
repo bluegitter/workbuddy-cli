@@ -11,6 +11,7 @@ test ! -e "$ROOT/extracted-app"
 for runtime_path in \
   runtime-app/package.json \
   runtime-app/main/index.js \
+  runtime-app/main/cli \
   runtime-app/preload/index.js \
   runtime-app/renderer/index.html \
   runtime-app/cli/bin/codebuddy \
@@ -19,6 +20,7 @@ for runtime_path in \
   runtime-app/resources/builtin-mcp-apps; do
   test -e "$ROOT/$runtime_path"
 done
+test -L "$ROOT/runtime-app/main/cli"
 
 for package in $PACKAGES; do
   test -f "$ROOT/packages/$package/package.json"
