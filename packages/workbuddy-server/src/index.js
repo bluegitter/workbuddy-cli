@@ -530,6 +530,7 @@ module.exports = Object.freeze({
   ...require("./expert/plugin-service"),
   ...require("./session/handlers"),
   ...require("./server/app-rpc-handlers"),
+  ...require("./server/app-server-session-events"),
   ...require("./connector/connector-managed-npx-resolver"),
   ...require("./runtime/connector-mcp-metric"),
   ...require("./runtime/connector-mcp-transport"),
