@@ -58,6 +58,28 @@ class ExpertPluginService {
   async getExpertLocalPath(expertId) { const dir = this.getPluginDir(await this.resolveBundleName(expertId)); return await this.hasPluginManifestAsync(dir) ? dir : undefined; }
   async getExpertManifest(expertId) { return this.readPluginManifestAsync(this.getPluginDir(await this.resolveBundleName(expertId))); }
   async getExpertManifestFromMarketplace(expertId, marketplace) { return this.readPluginManifestAsync(this.getPluginDirForMarketplace(await this.resolveBundleName(expertId), marketplace)); }
+  async getExpertAgentName(expertId) { const dir = await this.getExpertLocalPath(expertId); if (!dir) return undefined; return this.resolveExpertAgentName(dir, await this.readPluginManifestAsync(dir)); }
+  async getExpertAgentNameFromMarketplace(expertId, marketplace) { const dir = this.getPluginDirForMarketplace(await this.resolveBundleName(expertId), marketplace); if (!await this.hasPluginManifestAsync(dir)) return undefined; return this.resolveExpertAgentName(dir, await this.readPluginManifestAsync(dir)); }
+  async findManifestAcrossMarketplaces(expertId, hintMarketplace) {
+    if (hintMarketplace && hintMarketplace !== EXPERTS_MARKETPLACE) {
+      const manifest = await this.getExpertManifestFromMarketplace(expertId, hintMarketplace);
+      if (manifest?.name) return { manifest, marketplace: hintMarketplace };
+    }
+    const official = await this.getExpertManifest(expertId);
+    if (official?.name) return { manifest: official, marketplace: EXPERTS_MARKETPLACE };
+    const custom = await this.getExpertManifestFromMarketplace(expertId, CUSTOM_EXPERT_MARKETPLACE);
+    return custom?.name ? { manifest: custom, marketplace: CUSTOM_EXPERT_MARKETPLACE } : null;
+  }
+  async findAgentNameAcrossMarketplaces(expertId, marketplace) {
+    if (marketplace !== EXPERTS_MARKETPLACE) { const selected = await this.getExpertAgentNameFromMarketplace(expertId, marketplace); if (selected) return selected; }
+    return (await this.getExpertAgentName(expertId)) || this.getExpertAgentNameFromMarketplace(expertId, CUSTOM_EXPERT_MARKETPLACE);
+  }
+  async resolveExpertLocation(expertId, hintMarketplace) {
+    const resolved = await this.findManifestAcrossMarketplaces(expertId, hintMarketplace);
+    if (!resolved) return null;
+    const agentName = await this.findAgentNameAcrossMarketplaces(expertId, resolved.marketplace);
+    return agentName ? { manifest: resolved.manifest, marketplace: resolved.marketplace, agentName } : null;
+  }
 
   async activateExpert(expertId, pluginName, updatedAt, marketplace, downloadUrl) {
     try {
@@ -190,7 +212,22 @@ class ExpertPluginService {
   async clearCustomExpertSessionMarker(expertId) { if (this.isUnsafePath(expertId)) return; await fsp.rm(path.join(this.getConfigDirValue(), 'plugins', 'marketplaces', CUSTOM_EXPERT_MARKETPLACE, 'plugins', expertId, '.created-by-session'), { force: true }).catch(() => {}); }
   async deleteCustomExpert(expertId, userId) { if (this.isUnsafePath(expertId)) return { success: false, error: 'invalid expertId' }; const dir = path.join(this.getConfigDirValue(), 'plugins', 'marketplaces', CUSTOM_EXPERT_MARKETPLACE, 'plugins', expertId); if (!await pathExists(dir)) return { success: false, error: 'expert directory not found' }; await fsp.rm(dir, { recursive: true, force: true }); if (userId) { const ids = (await this.readUserExpertIds(userId)).filter((id) => id !== expertId); const file = this.getUserExpertsJsonPath(userId); await fsp.writeFile(file, JSON.stringify(ids, null, 2)); } return { success: true }; }
   async resolveExpertAgentName(pluginDir, manifest) { return manifest.agentName || manifest.agent || manifest.name; }
-  async resolveExpertDependencies() { return []; }
+  async resolveExpertDependencies(expertId, pluginName, marketplace, locale = 'zh') {
+    const bundleName = pluginName || await this.resolveBundleName(expertId);
+    const pluginDir = this.getPluginDirForMarketplace(bundleName, marketplace || EXPERTS_MARKETPLACE);
+    const manifest = await this.readPluginManifestAsync(pluginDir);
+    if (!manifest) return [];
+    const dependencies = [];
+    const mcpServers = manifest.dependencies?.mcpServers || manifest.mcpServers;
+    const normalized = typeof mcpServers === 'object' && mcpServers && !Array.isArray(mcpServers) ? mcpServers : {};
+    for (const [name, config] of Object.entries(normalized)) {
+      const meta = config?.['x-workbuddy'];
+      const localized = (value) => typeof value === 'string' ? value : value?.[locale] || value?.zh || value?.en;
+      dependencies.push({ type: 'mcp', name, config, displayName: localized(meta?.displayName), description: localized(meta?.description), icon: meta?.icon, workbuddy: meta });
+    }
+    for (const id of Array.isArray(manifest.dependencies?.connectors) ? manifest.dependencies.connectors : []) if (typeof id === 'string' && id.trim()) dependencies.push({ type: 'connector', id });
+    return dependencies;
+  }
   async resolveAvatarToDataUrl(avatarPath, baseDir) { if (/^(https?|data):/i.test(avatarPath)) return avatarPath; const file = path.resolve(baseDir, avatarPath.replace(/^\.\//, '')); if (!file.startsWith(`${path.resolve(baseDir)}${path.sep}`)) return ''; try { const stat = await fsp.stat(file); if (!stat.isFile() || stat.size > MAX_CUSTOM_EXPERT_AVATAR_BYTES) return ''; const ext = path.extname(file).slice(1).toLowerCase(); const mime = { jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml', webp: 'image/webp', gif: 'image/gif' }[ext] || 'image/png'; return `data:${mime};base64,${(await fsp.readFile(file)).toString('base64')}`; } catch { return ''; } }
   async removeGeneratedAgentOverrideFileIfPresent(pluginDir) { return this.removeGeneratedAgentOverrideFile(pluginDir); }
 }

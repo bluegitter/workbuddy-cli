@@ -131,6 +131,8 @@ fs.writeFileSync(path.join(expertConfigDir, 'plugins', 'marketplaces', 'my-exper
 const expertPlugin = new ExpertPluginService({ configDir: expertConfigDir, fetchImpl: async (url, init) => ({ ok: true, status: 200, async json() { return [{ name: 'demo-expert', marketplace: 'my-experts', status: 'enabled' }]; }, async text() { return ''; } }) , gatewaySecretHeaders: () => ({ 'X-Gateway': 'test' }), resolveSessionHttpBase: async () => 'http://127.0.0.1:1234' });
 const scannedExperts = await expertPlugin.scanCustomExperts();
 assert.equal(scannedExperts.length, 1); assert.equal(scannedExperts[0].isCustomExpert, true); assert.match(scannedExperts[0].avatar, /^data:image\/png;base64,/);
+assert.equal(await expertPlugin.getExpertAgentNameFromMarketplace('demo-expert', 'my-experts'), 'demo-expert');
+assert.equal((await expertPlugin.resolveExpertLocation('demo-expert', 'my-experts')).marketplace, 'my-experts');
 await expertPlugin.addUserExperts('user-1', ['demo-expert']); assert.deepEqual(await expertPlugin.readUserExpertIds('user-1'), ['demo-expert']);
 assert.equal(await expertPlugin.isExpertPluginEnabledForSession('session-1', 'demo-expert', 'my-experts'), true);
 assert.equal(await expertPlugin.switchExpertPluginForSession('session-1', undefined, 'demo-expert', 'demo-agent'), true);
