@@ -527,6 +527,7 @@ module.exports = Object.freeze({
   ...require("./runtime/custom-models-product-provider"),
   ...require("./net/rest-operations-proxy-interceptor"),
   ...require("./net/tls-verification-interceptor"),
+  ...require("./expert/plugin-service"),
   ...require("./connector/connector-managed-npx-resolver"),
   ...require("./runtime/connector-mcp-metric"),
   ...require("./runtime/connector-mcp-transport"),

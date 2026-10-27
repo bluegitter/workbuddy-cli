@@ -1,6 +1,9 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const metric = require('../packages/workbuddy-server/src/connector/connector-mcp-proxy-metric');
 const states = require('../packages/workbuddy-server/src/connector/connector-states-persistence');
@@ -22,6 +25,7 @@ const { WorkbuddyAuthenticationManager, setWorkbuddyAuthSessionSyncer } = requir
 const { WorkbuddyCustomModelsProductProvider } = require('../packages/workbuddy-server/src/runtime/custom-models-product-provider');
 const { WorkbuddyRestOperationsProxyInterceptor, NET_LOG_KEY } = require('../packages/workbuddy-server/src/net/rest-operations-proxy-interceptor');
 const { WorkbuddyTlsVerificationInterceptor } = require('../packages/workbuddy-server/src/net/tls-verification-interceptor');
+const { ExpertPluginService } = require('../packages/workbuddy-server/src/expert/plugin-service');
 
 async function main() {
 assert.equal(typeof metric.ConnectorMetricReporter, 'function');
@@ -118,6 +122,18 @@ const tlsInterceptor = new WorkbuddyTlsVerificationInterceptor({ productManager:
 await tlsInterceptor.initialize();
 configurationListener();
 assert.deepEqual(tlsEvents, ['suppress', 'ProductFeature.DisableTlsVerification', 'ProductFeature.DisableTlsVerification']);
+const expertConfigDir = fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-expert-test-'));
+const customExpertDir = path.join(expertConfigDir, 'plugins', 'marketplaces', 'my-experts', 'plugins', 'demo-expert');
+fs.mkdirSync(path.join(customExpertDir, '.codebuddy-plugin'), { recursive: true });
+fs.writeFileSync(path.join(customExpertDir, '.codebuddy-plugin', 'plugin.json'), JSON.stringify({ name: 'demo-expert', displayName: 'Demo', tags: { zh: ['演示'] }, avatar: 'avatar.png' }));
+fs.writeFileSync(path.join(customExpertDir, 'avatar.png'), Buffer.from('png')); fs.mkdirSync(path.join(expertConfigDir, 'plugins', 'marketplaces', 'my-experts', '.codebuddy-plugin'), { recursive: true });
+fs.writeFileSync(path.join(expertConfigDir, 'plugins', 'marketplaces', 'my-experts', '.codebuddy-plugin', 'marketplace.json'), JSON.stringify({ plugins: [{ name: 'demo-expert', source: './plugins/demo-expert' }] }));
+const expertPlugin = new ExpertPluginService({ configDir: expertConfigDir, fetchImpl: async (url, init) => ({ ok: true, status: 200, async json() { return [{ name: 'demo-expert', marketplace: 'my-experts', status: 'enabled' }]; }, async text() { return ''; } }) , gatewaySecretHeaders: () => ({ 'X-Gateway': 'test' }), resolveSessionHttpBase: async () => 'http://127.0.0.1:1234' });
+const scannedExperts = await expertPlugin.scanCustomExperts();
+assert.equal(scannedExperts.length, 1); assert.equal(scannedExperts[0].isCustomExpert, true); assert.match(scannedExperts[0].avatar, /^data:image\/png;base64,/);
+await expertPlugin.addUserExperts('user-1', ['demo-expert']); assert.deepEqual(await expertPlugin.readUserExpertIds('user-1'), ['demo-expert']);
+assert.equal(await expertPlugin.isExpertPluginEnabledForSession('session-1', 'demo-expert', 'my-experts'), true);
+assert.equal(await expertPlugin.switchExpertPluginForSession('session-1', undefined, 'demo-expert', 'demo-agent'), true);
 assert.equal(executor.extractExecutable("'cli tool' --flag"), 'cli tool');
 assert.equal(executor.extractExecutable('cli | malicious'), 'cli');
 assert.equal(executor.extractExecutable('"unterminated'), null);
