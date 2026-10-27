@@ -498,6 +498,7 @@ module.exports = Object.freeze({
   ...require("./mcp/tools/index"),
   ...require("./mcp/contract"),
   ...require("./claw/claw-types"),
+  ...require("./claw/claw-service"),
   ...require("./claw-control/types"),
   ...require("./claw-control/client"),
   ...require("./slot/types"),
