@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('node:assert');
+const { ExpertDesktopService } = require('../packages/workbuddy-server/src/expert/desktop-service');
+const { registerExpertHandlers, registerExpertLoadStateEventBridge } = require('../packages/workbuddy-server/src/expert/handlers');
+const service = new ExpertDesktopService({ baseService: { getExperts: async () => ({ experts: [{ id: 'a' }] }), getRecent: async () => [] } });
+const channels = new Map();
+const registry = { handle: (channel, fn) => channels.set(channel, fn) };
+registerExpertHandlers(registry, { service });
+assert.strictEqual(channels.has('expert:center:experts'), true);
+assert.strictEqual(channels.has('expert-history:recent'), true);
+const events = [];
+registerExpertLoadStateEventBridge({ push: (channel, state) => events.push({ channel, state }) }, { expertCenterService: { onLoadStateChange: (fn) => fn({ status: 'loaded' }) } });
+assert.strictEqual(events[0].channel, 'expert:center:loadStateChanged');
+console.log('expert handler tests passed');

@@ -46,6 +46,8 @@ module.exports = Object.freeze({
   ...require("./server/daemon-rpc-handler-deps"),
   ...require("./share/facade"),
   ...require("./expert/package-installer"),
+  ...require("./expert/desktop-service"),
+  ...require("./expert/handlers"),
   ...require("./server/app-server-background-services"),
   ...require("./runtime/legacy-localstorage-migration"),
   ...require("./migration/vscdb-reader"),
