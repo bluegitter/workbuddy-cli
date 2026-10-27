@@ -512,6 +512,7 @@ module.exports = Object.freeze({
   ...require("./tts/handlers"),
   ...require("./connector/runtime-progress-notifier"),
   ...require("./connector/connector-node-runtime-env"),
+  ...require("./connector/connector-cli-executor"),
   ...require("./connector/connector-managed-npx-resolver"),
   ...require("./runtime/connector-mcp-metric"),
   ...require("./runtime/connector-mcp-transport"),
