@@ -27,6 +27,7 @@ const { WorkbuddyRestOperationsProxyInterceptor, NET_LOG_KEY } = require('../pac
 const { WorkbuddyTlsVerificationInterceptor } = require('../packages/workbuddy-server/src/net/tls-verification-interceptor');
 const { ExpertPluginService } = require('../packages/workbuddy-server/src/expert/plugin-service');
 const { WORKBUDDY_SESSION_AUX_RPC_CHANNELS, registerWorkbuddySessionAuxiliaryHandlers, setEdgeSyncPromptEchoHook, getSessionEdgeSyncHooks } = require('../packages/workbuddy-server/src/session/handlers');
+const { registerWorkbuddyProfileRpcHandlers } = require('../packages/workbuddy-server/src/server/app-rpc-handlers');
 
 async function main() {
 assert.equal(typeof metric.ConnectorMetricReporter, 'function');
@@ -145,6 +146,10 @@ assert.deepEqual(await sessionHandlers.get(WORKBUDDY_SESSION_AUX_RPC_CHANNELS.FI
 assert.deepEqual(await sessionHandlers.get(WORKBUDDY_SESSION_AUX_RPC_CHANNELS.FILE_WATCH_UNSUBSCRIBE)('watch-1'), { ok: true }); assert.equal(unsubscribedId, 'watch-1');
 assert.deepEqual(await sessionHandlers.get(WORKBUDDY_SESSION_AUX_RPC_CHANNELS.LOCAL_EXPERTS_GET_PLUGIN_JSON_PATH)('../bad'), { filePath: undefined });
 setEdgeSyncPromptEchoHook(() => {}); assert.equal(typeof getSessionEdgeSyncHooks().edgeSyncPromptEchoHook, 'function');
+const rpcCalls = [];
+const rpcRegistry = {};
+registerWorkbuddyProfileRpcHandlers(rpcRegistry, { profile: 'daemon-app-server', core: { core: true }, daemon: { daemon: true }, channel: { channel: true }, configDir: fs.mkdtempSync(path.join(os.tmpdir(), 'workbuddy-rpc-test-')), registerCoreRpcHandlers: (_registry, deps, opts) => rpcCalls.push(['core', deps, opts.skip.auth, opts.skip.config]), registerDaemonServerRpcHandlers: (_registry, deps) => rpcCalls.push(['daemon', deps]), registerChannelHandlers: (_registry, deps) => rpcCalls.push(['channel', deps]) }, { createLogger: () => ({ info() {}, warn() {}, error() {} }) });
+assert.deepEqual(rpcCalls.map((entry) => entry[0]), ['core', 'daemon', 'channel']); assert.equal(rpcCalls[0][2], true); assert.equal(rpcCalls[0][3], true);
 assert.equal(executor.extractExecutable("'cli tool' --flag"), 'cli tool');
 assert.equal(executor.extractExecutable('cli | malicious'), 'cli');
 assert.equal(executor.extractExecutable('"unterminated'), null);
