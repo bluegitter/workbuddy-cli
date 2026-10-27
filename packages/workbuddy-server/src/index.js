@@ -173,6 +173,7 @@ module.exports = Object.freeze({
   ...require("./memory/with-timeout"),
   ...require("./memory/file-lock"),
   ...require("./memory/path-resolver"),
+  ...require("./memory/user-memory-archive"),
   ...require("./memory/pending-mutation-store"),
   ...require("./memory/polling-lease"),
   ...require("./idle-capability/types"),
