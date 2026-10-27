@@ -26,6 +26,7 @@ const { WorkbuddyCustomModelsProductProvider } = require('../packages/workbuddy-
 const { WorkbuddyRestOperationsProxyInterceptor, NET_LOG_KEY } = require('../packages/workbuddy-server/src/net/rest-operations-proxy-interceptor');
 const { WorkbuddyTlsVerificationInterceptor } = require('../packages/workbuddy-server/src/net/tls-verification-interceptor');
 const { ExpertPluginService } = require('../packages/workbuddy-server/src/expert/plugin-service');
+const { WORKBUDDY_SESSION_AUX_RPC_CHANNELS, registerWorkbuddySessionAuxiliaryHandlers, setEdgeSyncPromptEchoHook, getSessionEdgeSyncHooks } = require('../packages/workbuddy-server/src/session/handlers');
 
 async function main() {
 assert.equal(typeof metric.ConnectorMetricReporter, 'function');
@@ -136,6 +137,14 @@ assert.equal((await expertPlugin.resolveExpertLocation('demo-expert', 'my-expert
 await expertPlugin.addUserExperts('user-1', ['demo-expert']); assert.deepEqual(await expertPlugin.readUserExpertIds('user-1'), ['demo-expert']);
 assert.equal(await expertPlugin.isExpertPluginEnabledForSession('session-1', 'demo-expert', 'my-experts'), true);
 assert.equal(await expertPlugin.switchExpertPluginForSession('session-1', undefined, 'demo-expert', 'demo-agent'), true);
+const sessionHandlers = new Map(); const sessionRegistry = { handle(channel, fn) { sessionHandlers.set(channel, fn); } };
+let subscribedPath; let unsubscribedId;
+registerWorkbuddySessionAuxiliaryHandlers(sessionRegistry, { sessionManager: { getActiveSessions: () => [{ sessionId: 's1' }] }, getFileWatchService: () => ({ subscribe: (filePath) => { subscribedPath = filePath; return 'watch-1'; }, unsubscribe: (id) => { unsubscribedId = id; } }), localExperts: { getCustomExpertWatchPath: () => '/tmp/marketplace.json', getCustomExpertPluginJsonPath: (id) => `/tmp/${id}/plugin.json` } });
+assert.deepEqual(await sessionHandlers.get(WORKBUDDY_SESSION_AUX_RPC_CHANNELS.GET_ACTIVE_SESSIONS)(), [{ sessionId: 's1' }]);
+assert.deepEqual(await sessionHandlers.get(WORKBUDDY_SESSION_AUX_RPC_CHANNELS.FILE_WATCH_SUBSCRIBE)('/tmp/a.txt'), { id: 'watch-1' }); assert.equal(subscribedPath, '/tmp/a.txt');
+assert.deepEqual(await sessionHandlers.get(WORKBUDDY_SESSION_AUX_RPC_CHANNELS.FILE_WATCH_UNSUBSCRIBE)('watch-1'), { ok: true }); assert.equal(unsubscribedId, 'watch-1');
+assert.deepEqual(await sessionHandlers.get(WORKBUDDY_SESSION_AUX_RPC_CHANNELS.LOCAL_EXPERTS_GET_PLUGIN_JSON_PATH)('../bad'), { filePath: undefined });
+setEdgeSyncPromptEchoHook(() => {}); assert.equal(typeof getSessionEdgeSyncHooks().edgeSyncPromptEchoHook, 'function');
 assert.equal(executor.extractExecutable("'cli tool' --flag"), 'cli tool');
 assert.equal(executor.extractExecutable('cli | malicious'), 'cli');
 assert.equal(executor.extractExecutable('"unterminated'), null);

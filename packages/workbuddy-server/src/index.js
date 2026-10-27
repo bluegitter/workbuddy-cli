@@ -528,6 +528,7 @@ module.exports = Object.freeze({
   ...require("./net/rest-operations-proxy-interceptor"),
   ...require("./net/tls-verification-interceptor"),
   ...require("./expert/plugin-service"),
+  ...require("./session/handlers"),
   ...require("./connector/connector-managed-npx-resolver"),
   ...require("./runtime/connector-mcp-metric"),
   ...require("./runtime/connector-mcp-transport"),
