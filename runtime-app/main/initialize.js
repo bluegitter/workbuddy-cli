@@ -6610,13 +6610,15 @@ var SessionRepository = class {
 		}).run();
 	}
 	getWorkspaces() {
-		return this.getDb().select({ path: workspaces.path }).from(workspaces).where(sql`EXISTS (
+		const known = this.getDb().select({ path: workspaces.path }).from(workspaces).where(sql`EXISTS (
                 SELECT 1
                 FROM ${sessions}
                 WHERE ${sessions.cwd} = ${workspaces.path}
                   AND ${sessions.deletedAt} IS NULL
                   AND COALESCE(${sessions.isPlayground}, 0) = 0
-            )`).orderBy(desc(workspaces.lastOpenedAt)).all().map((row) => row.path);
+	            )`).orderBy(desc(workspaces.lastOpenedAt)).all().map((row) => row.path);
+		const discovered = this.getDb().select({ path: sessions.cwd }).from(sessions).where(sql`${sessions.cwd} IS NOT NULL AND ${sessions.cwd} != '' AND ${sessions.deletedAt} IS NULL AND COALESCE(${sessions.isPlayground}, 0) = 0`).orderBy(desc(sessions.updatedAt)).all().map((row) => row.path);
+		return [...new Set([...known, ...discovered])];
 	}
 	getUserIdsByIds(sessionIds) {
 		const ids = [...new Set(sessionIds.filter(Boolean))];
@@ -60735,6 +60737,7 @@ function createWorkbuddyStorageService(deps) {
 	return {
 		getSessions: (filter) => deps.database.getSessions(filter),
 		getWorkspaces: () => deps.database.getWorkspaces(),
+		upsertWorkspace: (workspacePath) => deps.database.upsertWorkspace(workspacePath),
 		updateSessionPermissionMode: (params) => deps.database.updateSessionPermissionMode(params.sessionId, params.permissionMode),
 		reportRuntimeEvent: (event) => deps.runtimeEvents.handleRuntimeEvent(event),
 		getRecoveryNotice: () => deps.database.consumeRecoveryNotice?.(),
@@ -190816,6 +190819,7 @@ function registerWorkspaceHandlers(registry, deps) {
 		const resolvedPath = cwd === "~" || cwd.startsWith("~/") || cwd.startsWith("~\\") ? node_path.join(node_os.homedir(), cwd.slice(1)) : cwd;
 		try {
 			await node_fs_promises.mkdir(resolvedPath, { recursive: true });
+			await Promise.resolve(deps.hostServices?.storage?.upsertWorkspace?.(resolvedPath));
 			return {
 				success: true,
 				resolvedPath

@@ -4,6 +4,7 @@ function createWorkbuddyStorageService(deps) {
   return {
     getSessions: (filter) => deps.database.getSessions(filter),
     getWorkspaces: () => deps.database.getWorkspaces(),
+    upsertWorkspace: (workspacePath) => deps.database.upsertWorkspace(workspacePath),
     updateSessionPermissionMode: (params) => deps.database.updateSessionPermissionMode(params.sessionId, params.permissionMode),
     reportRuntimeEvent: (event) => deps.runtimeEvents.handleRuntimeEvent(event),
     getRecoveryNotice: () => deps.database.consumeRecoveryNotice?.(),

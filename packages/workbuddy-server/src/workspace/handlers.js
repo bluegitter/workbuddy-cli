@@ -12,7 +12,11 @@ function registerWorkspaceHandlers(registry, deps) {
   registry.handle('workspaceInitialize', async (params) => {
     if (typeof params?.cwd !== 'string' || !params.cwd.trim()) return { success: true };
     const resolvedPath = params.cwd.trim().replace(/^~(?=\/|\\|$)/, os.homedir());
-    try { await fs.mkdir(resolvedPath, { recursive: true }); return { success: true, resolvedPath }; }
+    try {
+      await fs.mkdir(resolvedPath, { recursive: true });
+      await Promise.resolve(deps.hostServices?.storage?.upsertWorkspace?.(resolvedPath));
+      return { success: true, resolvedPath };
+    }
     catch (error) { return { success: false, error: error instanceof Error ? error.message : String(error) }; }
   });
   registry.handle('workspaceCheckPathExists', async (value) => { try { await fs.access(value); return true; } catch { return false; } });

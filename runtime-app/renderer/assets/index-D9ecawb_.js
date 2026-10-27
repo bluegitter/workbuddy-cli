@@ -38408,8 +38408,9 @@ var WorkbuddyAgentAdapterNext = class WorkbuddyAgentAdapterNext {
 				needActivated: false
 			});
 			if (result.success) this.workspaceInitCallbacks.forEach((cb) => {
+				const resolvedCwd = typeof result.resolvedPath === "string" && result.resolvedPath.trim() ? result.resolvedPath : cwd;
 				try {
-					cb(cwd);
+					cb(resolvedCwd);
 				} catch {}
 			});
 			return result;
