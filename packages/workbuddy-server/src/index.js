@@ -151,6 +151,7 @@ module.exports = Object.freeze({
   ...require("./server/daemon-lifecycle-handlers"),
   ...require("./server/daemon-rpc-handlers"),
   ...require("./server/bootstrap-server"),
+  ...require("./server/app-server-bootstrap"),
   ...require("./server/daemon-server"),
   ...require("./server/runtime-handlers"),
   ...require("./slot/handlers"),
