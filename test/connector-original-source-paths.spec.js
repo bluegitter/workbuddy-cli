@@ -9,6 +9,7 @@ const poiHeader = require('../packages/workbuddy-server/src/connector/poi-header
 const userinfo = require('../packages/workbuddy-server/src/runtime/userinfo-provider');
 const documentLifecycle = require('../packages/workbuddy-server/src/session/tencent-docs-document-lifecycle-port');
 const { ConnectorCliExecutor, semverGte } = require('../packages/workbuddy-server/src/connector/connector-cli-executor');
+const { ConnectorMcpProxy } = require('../packages/workbuddy-server/src/connector/connector-mcp-proxy');
 
 assert.equal(typeof metric.ConnectorMetricReporter, 'function');
 assert.equal(typeof metric.setConnectorMetricReporter, 'function');
@@ -24,6 +25,9 @@ const executor = new ConnectorCliExecutor({ logger: { warn() {}, info() {} } });
 assert.equal(typeof executor.runInstall, 'function');
 assert.equal(typeof executor.runAuth, 'function');
 assert.equal(typeof executor.runAuthStep, 'function');
+const proxy = new ConnectorMcpProxy({ logger: { info() {}, warn() {}, error() {} } });
+assert.equal(proxy.classifyPreflightState('missing'), 'missing');
+assert.equal(proxy.classifyError(Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' }), 'missing'), 'transport');
 assert.equal(executor.extractExecutable("'cli tool' --flag"), 'cli tool');
 assert.equal(executor.extractExecutable('cli | malicious'), 'cli');
 assert.equal(executor.extractExecutable('"unterminated'), null);
