@@ -6,7 +6,7 @@
 module.exports = Object.freeze({
   packageName: "@workbuddy/agent-ui",
   sourceRoot: __dirname + "/source",
-  rendererEntry: require.resolve("./source/renderer-entry.js"),
+  ...require("./renderer-entry-manifest"),
   ...require("./runtime/agent-view-model"),
   ...require("./runtime/todo-projection"),
   ...require("./runtime/team-runtime"),
